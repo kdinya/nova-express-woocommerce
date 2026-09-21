@@ -86,7 +86,7 @@ class GitHubUpdater {
 		$res->name          = 'Nova Express for WooCommerce';
 		$res->slug          = $slug;
 		$res->version       = $latest_version;
-		$res->author        = '<a href="https://github.com/' . esc_attr( $this->repo_owner ) . '">Nova Express</a>';
+		$res->author        = '<a href="https://github.com/' . esc_url( 'https://github.com/' . $this->repo_owner ) . '">Nova Express</a>';
 		$res->homepage      = "https://github.com/{$this->repo_owner}/{$this->repo_name}";
 		$res->download_link = $this->get_download_package( $release );
 		$res->tested        = '9.4';

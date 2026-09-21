@@ -172,6 +172,10 @@ class TtnManager {
 			throw new NovaPoshtaApiException( __( 'ТТН не знайдено в базі плагіна.', 'wc-nova-express' ) );
 		}
 
+		if ( $order instanceof \WC_Order && (int) $row['order_id'] !== (int) $order->get_id() ) {
+			throw new NovaPoshtaApiException( __( 'ТТН не належить цьому замовленню.', 'wc-nova-express' ) );
+		}
+
 		// Та сама логіка, що й cron: подія automation + без небезпечного auto-delete.
 		$runner = new \NovaExpress\Tracking\TrackingRunner(
 			$this->client,
@@ -189,7 +193,7 @@ class TtnManager {
 	private function looks_deleted( array $status ): bool {
 		$text = mb_strtolower( ( $status['Status'] ?? '' ) . ' ' . ( $status['StatusCode'] ?? '' ) );
 
-		foreach ( array( 'не знайдено', 'не існує', 'видален', 'скасован', 'not found', 'номер не знайдено' ) as $needle ) {
+		foreach ( array( 'не знайдено', 'не існує', 'видален', 'not found', 'номер не знайдено' ) as $needle ) {
 			if ( false !== mb_strpos( $text, $needle ) ) {
 				return true;
 			}
@@ -241,6 +245,10 @@ class TtnManager {
 
 		if ( ! $row ) {
 			throw new NovaPoshtaApiException( __( 'ТТН не знайдено в базі плагіна.', 'wc-nova-express' ) );
+		}
+
+		if ( $order instanceof \WC_Order && (int) $row['order_id'] !== (int) $order->get_id() ) {
+			throw new NovaPoshtaApiException( __( 'ТТН не належить цьому замовленню.', 'wc-nova-express' ) );
 		}
 
 		$np_deleted = false;
