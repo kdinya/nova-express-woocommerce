@@ -4,7 +4,7 @@ Tags: woocommerce, nova poshta, shipping, ukraine, tracking
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2026.9.9
+Stable tag: 2026.09.09
 License: GPLv2 or later
 
 Доставка Новою Поштою для WooCommerce: без розрахунку вартості на чекауті (лише вибір відділення/адреси),
@@ -43,7 +43,7 @@ License: GPLv2 or later
 
 == Changelog ==
 
-= 2026.9.9 =
+= 2026.09.09 =
 * Performance: Додано кешування транзієнтами для пошуку міст, відділень та вулиць через AJAX, що значно прискорює автокомпліт на чекауті та захищає від лімітів Nova Poshta API.
 * Uninstall: Додано автоматичне очищення мета-полів замовлень (_nvx_*) для класичних замовлень та HPOS при повному видаленні даних плагіна.
 
