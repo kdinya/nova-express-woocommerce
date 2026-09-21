@@ -1,0 +1,164 @@
+/* Nova Express — сторінка створення ЕН (standalone, без wp-admin хрому). */
+
+html, body{ margin:0; padding:0; }
+body.nvx-standalone{
+	background:var(--nvx-bg, #f4f6fb);
+	font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	color:var(--nvx-text, #1c2333);
+}
+body.nvx-standalone *{ box-sizing:border-box; }
+
+.nvx-cw-app{ max-width:1400px; margin:0 auto; padding:24px 24px 100px; }
+
+.nvx-cw-header{
+	display:flex; align-items:center; gap:16px;
+	background:linear-gradient(135deg, #7CB342 0%, #8BC34A 50%, #689f38 100%);
+	color:#fff; padding:22px 26px; border-radius:16px; margin-bottom:20px;
+	box-shadow:0 10px 28px rgba(124,179,66,.28);
+}
+.nvx-cw-header__logo{
+	width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,.18);
+	display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;
+}
+.nvx-cw-header__title{ flex:1; }
+.nvx-cw-header h1{ margin:0; font-size:20px; color:#fff; }
+.nvx-cw-header p{ margin:2px 0 0; opacity:.9; font-size:13px; }
+.nvx-cw-header .nvx-btn--ghost{ background:rgba(255,255,255,.16); color:#fff; }
+.nvx-cw-header .nvx-btn--ghost:hover{ background:rgba(255,255,255,.28); }
+
+.nvx-cw-columns{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; align-items:start; }
+@media (max-width: 1000px){ .nvx-cw-columns{ grid-template-columns:1fr; } }
+
+.nvx-cw-col{
+	background:#fff; border:1px solid var(--nvx-border, #e4e8f2); border-radius:16px;
+	padding:24px; box-shadow:0 4px 20px rgba(29,33,60,.05);
+	min-width:0; /* дозволяє grid-колонці стискатись, не виштовхуючи вміст за межі */
+}
+.nvx-cw-col h2{ margin:0 0 16px; font-size:15px; }
+
+/* У вузьких колонках (на відміну від широких карток налаштувань) поля в рядку
+   не вміщаються по двоє — примусово ставимо їх одне під одним, щоб нічого
+   не виходило за межі колонки. */
+.nvx-cw-col .nvx-field-row{ flex-direction:column; gap:0; }
+.nvx-cw-col .nvx-field-row .nvx-field{ min-width:0; width:100%; }
+.nvx-cw-col .nvx-field{ min-width:0; width:100%; }
+.nvx-cw-col .nvx-field input,
+.nvx-cw-col .nvx-field select,
+.nvx-cw-col .nvx-field textarea{ width:100%; }
+
+.nvx-cw-carrier-badge{
+	display:flex; align-items:center; gap:8px; border:1.5px solid var(--nvx-border, #e4e8f2);
+	border-radius:10px; padding:9px 12px; font-size:13.5px; font-weight:600; background:#fbfcff;
+	color:#1c2333; margin-bottom:14px;
+}
+.nvx-cw-carrier-badge .dot{ width:8px; height:8px; border-radius:50%; background:#ef4759; flex-shrink:0; }
+
+.nvx-cw-places{ display:flex; flex-direction:column; gap:12px; margin-bottom:12px; }
+.nvx-cw-place{
+	border:1.5px solid var(--nvx-border, #e4e8f2); border-radius:12px; padding:14px; background:#fbfcff;
+}
+.nvx-cw-place__head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.nvx-cw-place__head strong{ font-size:12.5px; color:#00c2a8; }
+.nvx-cw-place__grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.nvx-cw-place__grid label{ display:flex; flex-direction:column; gap:4px; font-size:11px; color:#697089; }
+.nvx-cw-place__grid input{ border:1.5px solid var(--nvx-border, #e4e8f2); border-radius:8px; padding:7px 8px; font-size:13px; }
+.nvx-cw-place__volume{ margin-top:8px; font-size:11.5px; color:#697089; }
+
+.nvx-cw-sender-card{
+	border:1.5px solid var(--nvx-border, #e4e8f2); border-radius:12px; padding:14px; margin-bottom:12px;
+	background:#fbfcff; display:flex; flex-direction:column; gap:3px;
+}
+.nvx-cw-sender-card__label{ font-size:11px; text-transform:uppercase; color:#00c2a8; font-weight:700; }
+.nvx-cw-sender-card strong{ font-size:14px; }
+.nvx-cw-sender-card__ref{ font-size:11.5px; color:#697089; word-break:break-all; }
+.nvx-cw-sender-card__contact{ font-size:11.5px; color:#1c2333; margin-top:4px; font-weight:600; }
+.nvx-cw-sender-card__empty{ font-size:12.5px; color:#ef4759; }
+
+.nvx-radio-inline{ display:flex; gap:14px; margin-bottom:14px; font-size:12.5px; flex-wrap:wrap; }
+.nvx-radio-inline label{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+
+.nvx-cw-footer{
+	position:sticky; bottom:0; margin-top:22px; padding:18px 26px; background:#fff;
+	border:1px solid var(--nvx-border, #e4e8f2); border-radius:16px; display:flex; align-items:center;
+	justify-content:space-between; gap:16px; box-shadow:0 -8px 28px rgba(29,33,60,.09); flex-wrap:wrap;
+}
+.nvx-cw-footer__info{ display:flex; flex-direction:column; gap:2px; }
+.nvx-cw-footer__order{ font-size:13px; font-weight:600; color:#1c2333; }
+
+.nvx-btn--large{
+	padding:14px 32px; font-size:14.5px; border-radius:12px;
+	background:linear-gradient(135deg, #7CB342 0%, #8BC34A 100%);
+	box-shadow:0 6px 18px rgba(91,77,251,.35); flex-shrink:0;
+}
+.nvx-btn--large:hover{ box-shadow:0 8px 22px rgba(91,77,251,.45); transform:translateY(-1px); }
+.nvx-btn--large .dashicons{ font-size:18px; width:18px; height:18px; }
+
+#nvx-cw-alert.nvx-alert--success{ background:#e7f8f0; color:#1aa96c; }
+#nvx-cw-alert.nvx-alert--error{ background:#feecee; color:#ef4759; }
+
+/* Кнопки в колонках не вилазять за межі картки */
+.nvx-cw-col,
+.nvx-cw-col * { box-sizing: border-box; }
+.nvx-cw-col .nvx-btn,
+.nvx-cw-col a.nvx-btn {
+	max-width: 100%;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	white-space: normal;
+	word-break: break-word;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding-left: 12px;
+	padding-right: 12px;
+}
+.nvx-cw-sender-card { max-width: 100%; overflow: hidden; }
+
+.nvx-cw-price-estimate{
+	margin-top:14px; padding:12px 14px; border-radius:12px;
+	background:linear-gradient(135deg, rgba(124,179,66,.12), rgba(124,179,66,.04));
+	border:1px solid rgba(124,179,66,.25);
+	display:flex; flex-direction:column; gap:4px;
+}
+.nvx-cw-price-estimate__label{ font-size:12px; color:#5a6a4a; text-transform:uppercase; letter-spacing:.03em; }
+.nvx-cw-price-estimate__value{ font-size:20px; font-weight:800; color:#3d6b1e; }
+.nvx-cw-price-estimate__hint{ font-size:11.5px; color:#697089; }
+
+.nvx-cw-success-ttn{
+	font-size:1.35em; font-weight:800; letter-spacing:.03em;
+}
+.nvx-cw-price-estimate__row{
+	display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.nvx-cw-price-estimate__row .nvx-btn{ width:auto; max-width:none; flex-shrink:0; }
+
+
+/* Підказки пошуку — строго під полем вводу */
+.nvx-cw-col .nvx-field{ position:relative; }
+.nvx-cw-col .nvx-suggest{
+	display:block;
+	position:relative !important;
+	z-index:40;
+	width:100%;
+	margin:0;
+}
+.nvx-cw-col .nvx-suggest:not(:empty){
+	position:relative !important;
+	top:auto !important;
+	left:auto !important;
+	margin-top:6px;
+	background:#fff;
+	border:1px solid var(--nvx-border, #e4e8f2);
+	border-radius:10px;
+	box-shadow:0 8px 24px rgba(29,33,60,.1);
+	max-height:220px;
+	overflow:auto;
+}
+.nvx-cw-col .nvx-suggest-item{
+	padding:9px 12px; cursor:pointer; font-size:13px;
+	border-bottom:1px solid rgba(0,0,0,.04);
+}
+.nvx-cw-col .nvx-suggest-item:last-child{ border-bottom:none; }
+.nvx-cw-col .nvx-suggest-item:hover{ background:#f0f7e8; }
+.nvx-cw-col .nvx-suggest-item--muted{ color:#888; cursor:default; }
