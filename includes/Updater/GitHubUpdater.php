@@ -28,6 +28,10 @@ class GitHubUpdater {
 		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_update' ) );
 		add_filter( 'plugins_api', array( $this, 'plugin_api_info' ), 20, 3 );
 		add_filter( 'upgrader_source_selection', array( $this, 'fix_source_folder' ), 10, 4 );
+
+		// Ручна перевірка та встановлення оновлення зі сторінки налаштувань.
+		add_action( 'wp_ajax_nvx_check_update', array( $this, 'ajax_check_update' ) );
+		add_action( 'wp_ajax_nvx_run_update', array( $this, 'ajax_run_update' ) );
 	}
 
 	/**
@@ -178,11 +182,14 @@ class GitHubUpdater {
 		return trailingslashit( $new_source );
 	}
 
-	private function get_latest_release(): ?array {
+	private function get_latest_release( bool $bypass_cache = false ): ?array {
 		$cache_key = 'nvx_github_latest_release';
-		$cached    = get_transient( $cache_key );
-		if ( false !== $cached && is_array( $cached ) ) {
-			return $cached;
+
+		if ( ! $bypass_cache ) {
+			$cached = get_transient( $cache_key );
+			if ( false !== $cached && is_array( $cached ) ) {
+				return $cached;
+			}
 		}
 
 		$url      = "https://api.github.com/repos/{$this->repo_owner}/{$this->repo_name}/releases/latest";
@@ -224,5 +231,94 @@ class GitHubUpdater {
 
 		// Якщо окремого асету немає — використовуємо zipball
 		return $release['zipball_url'] ?? '';
+	}
+
+	/**
+	 * AJAX: примусова перевірка оновлень (без кешів GitHub і WordPress).
+	 */
+	public function ajax_check_update(): void {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Недостатньо прав.', 'wc-nova-express' ) ), 403 );
+		}
+
+		check_ajax_referer( 'nvx_admin_nonce', 'nonce' );
+
+		// Скидаємо кеші: власний transient і transient оновлень WordPress.
+		delete_transient( 'nvx_github_latest_release' );
+		delete_site_transient( 'update_plugins' );
+
+		$release = $this->get_latest_release( true );
+
+		if ( ! $release || empty( $release['tag_name'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Не вдалося зв’язатися з GitHub. Спробуйте пізніше.', 'wc-nova-express' ) ) );
+		}
+
+		$latest_version = ltrim( (string) $release['tag_name'], 'v' );
+		$update_available = version_compare( $latest_version, $this->version, '>' );
+
+		wp_send_json_success(
+			array(
+				'current_version'  => $this->version,
+				'latest_version'   => $latest_version,
+				'update_available' => $update_available,
+				'changelog'        => (string) ( $release['body'] ?? '' ),
+				'html_url'         => (string) ( $release['html_url'] ?? '' ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: запуск стандартного механізму оновлення WordPress для цього плагіна.
+	 */
+	public function ajax_run_update(): void {
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Недостатньо прав.', 'wc-nova-express' ) ), 403 );
+		}
+
+		check_ajax_referer( 'nvx_admin_nonce', 'nonce' );
+
+		// Оновлюємо transient, щоб WordPress бачив свіжі дані про реліз.
+		delete_transient( 'nvx_github_latest_release' );
+		delete_site_transient( 'update_plugins' );
+		wp_update_plugins();
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+
+		$upgrader = new \Plugin_Upgrader( new \WP_Ajax_Upgrader_Skin() );
+		$result   = $upgrader->upgrade( $this->plugin_slug );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		if ( false === $result ) {
+			wp_send_json_error( array( 'message' => __( 'Оновлення не вдалося встановити. Перевірте права на запис теки плагінів.', 'wc-nova-express' ) ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'message'  => sprintf(
+					/* translators: %s: new version */
+					__( 'Плагін оновлено до версії %s. Сторінка буде перезавантажена.', 'wc-nova-express' ),
+					esc_html( $this->get_installed_version() )
+				),
+				'version' => $this->get_installed_version(),
+			)
+		);
+	}
+
+	/**
+	 * Поточна версія встановленого плагіна (з головного файлу, а не константи —
+	 * після оновлення константа в запиті вже стара).
+	 */
+	private function get_installed_version(): string {
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$data = get_plugin_data( $this->plugin_file, false, false );
+
+		return (string) ( $data['Version'] ?? $this->version );
 	}
 }

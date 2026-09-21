@@ -293,6 +293,25 @@ defined( 'ABSPATH' ) || exit;
 		</section>
 
 
+		<section class="nvx-card" id="nvx-update-card">
+			<h2><?php esc_html_e( '8. Оновлення плагіна', 'wc-nova-express' ); ?></h2>
+			<p class="nvx-card__hint">
+				<?php esc_html_e( 'Перевірка нових релізів напряму з репозиторію GitHub без затримок кешу WordPress.', 'wc-nova-express' ); ?>
+			</p>
+
+			<div class="nvx-sync-box" style="margin-bottom:12px;">
+				<div class="nvx-sync-box__stat">
+					<strong id="nvx-current-version">v<?php echo esc_html( NVX_VERSION ); ?></strong>
+					<span><?php esc_html_e( 'Поточна встановлена версія', 'wc-nova-express' ); ?></span>
+				</div>
+				<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-check-update-btn">
+					🔄 <?php esc_html_e( 'Перевірити оновлення', 'wc-nova-express' ); ?>
+				</button>
+			</div>
+
+			<div id="nvx-update-result" style="display:none;"></div>
+		</section>
+
 		<div class="nvx-actions">
 			<button type="submit" class="nvx-btn nvx-btn--primary"><?php esc_html_e( 'Зберегти налаштування', 'wc-nova-express' ); ?></button>
 			<a class="nvx-btn nvx-btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=nvx-express&tab=automation_ttn' ) ); ?>"><?php esc_html_e( 'Перейти до автоматизацій →', 'wc-nova-express' ); ?></a>

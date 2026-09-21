@@ -263,6 +263,92 @@ jQuery(function ($) {
 			$btn.prop('disabled', false);
 		});
 	});
+
+	// ---- Перевірка та встановлення оновлень плагіна ----
+	var $checkBtn = $('#nvx-check-update-btn');
+	var $updateBox = $('#nvx-update-result');
+
+	$checkBtn.on('click', function () {
+		$checkBtn.prop('disabled', true).text('Перевіряємо…');
+		$updateBox.show().html('<div class="nvx-sync-log__item nvx-sync-log__item--info">🔍 Перевіряємо релізи на GitHub…</div>');
+
+		NvxCore.post('nvx_check_update', {})
+			.done(function (res) {
+				if (!res || !res.success) {
+					var msg = (res && res.data && res.data.message) || 'Не вдалося перевірити оновлення.';
+					$updateBox.html('<div class="nvx-sync-log__item nvx-sync-log__item--error">' + msg + '</div>');
+					return;
+				}
+
+				var d = res.data;
+				if (d.update_available) {
+					var changelogHtml = '';
+					if (d.changelog) {
+						changelogHtml = '<div class="nvx-changelog-preview" style="margin-top:10px; max-height:180px; overflow-y:auto; font-size:12px; background:#f9fafb; padding:10px; border-radius:6px; border:1px solid #e5e7eb; white-space:pre-wrap;">' + $('<div>').text(d.changelog).html() + '</div>';
+					}
+
+					var $html = $(
+						'<div class="nvx-sync-log__item nvx-sync-log__item--info" style="border-left-color:var(--nvx-accent, #2271b1);">' +
+							'<div><strong>Доступна нова версія: v' + d.latest_version + '</strong> (поточна: v' + d.current_version + ')</div>' +
+							changelogHtml +
+							'<div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">' +
+								'<button type="button" class="nvx-btn nvx-btn--primary" id="nvx-run-update-btn">' +
+									'⬇️ Оновити зараз до v' + d.latest_version +
+								'</button>' +
+								(d.html_url ? '<a href="' + d.html_url + '" target="_blank" rel="noopener noreferrer" class="nvx-btn nvx-btn--ghost" style="text-decoration:none;">Переглянути реліз на GitHub ↗</a>' : '') +
+							'</div>' +
+							'<div id="nvx-update-process-msg" style="margin-top:10px; font-weight:600; display:none;"></div>' +
+						'</div>'
+					);
+					$updateBox.html($html);
+				} else {
+					$updateBox.html(
+						'<div class="nvx-sync-log__item nvx-sync-log__item--success">' +
+							'✓ У вас встановлена найновіша версія (v' + d.current_version + '). Оновлення не потрібні.' +
+						'</div>'
+					);
+				}
+			})
+			.fail(function (xhr) {
+				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || 'Помилка мережі при перевірці оновлень.';
+				$updateBox.html('<div class="nvx-sync-log__item nvx-sync-log__item--error">' + msg + '</div>');
+			})
+			.always(function () {
+				$checkBtn.prop('disabled', false).text('🔄 Перевірити оновлення');
+			});
+	});
+
+	$(document).on('click', '#nvx-run-update-btn', function () {
+		var $btn = $(this);
+		var $procMsg = $('#nvx-update-process-msg');
+
+		if (!confirm('Запустити автоматичне оновлення плагіна?')) {
+			return;
+		}
+
+		$btn.prop('disabled', true);
+		$procMsg.show().css('color', '#2271b1').text('Завантаження та встановлення оновлення… Будь ласка, зачекайте.');
+
+		NvxCore.post('nvx_run_update', {})
+			.done(function (res) {
+				if (res && res.success) {
+					$procMsg.css('color', '#46b450').text(res.data.message || 'Оновлення завершено! Перезавантаження…');
+					setTimeout(function () {
+						window.location.reload();
+					}, 1600);
+				} else {
+					var msg = (res && res.data && res.data.message) || 'Помилка встановлення оновлення.';
+					$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
+					$btn.prop('disabled', false);
+				}
+			})
+			.fail(function (xhr) {
+				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || 'Помилка під час встановлення оновлення.';
+				$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
+				$btn.prop('disabled', false);
+			});
+	});
+
 });
 
 
