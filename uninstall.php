@@ -34,5 +34,7 @@ if ( $wipe ) {
 	}
 
 	delete_option( 'nvx_settings' );
-	delete_option( 'nvx_db_version' );
+		delete_option( 'nvx_db_version' );
+	delete_option( 'nvx_warehouse_sync_last_page' );
+	delete_option( 'nvx_warehouse_sync_completed_at' );
 }

@@ -20,6 +20,7 @@ class WarehouseAjax {
 
 	public function register(): void {
 		add_action( 'wp_ajax_nvx_sync_warehouses_page', array( $this, 'sync_page' ) );
+		add_action( 'wp_ajax_nvx_reset_warehouses_sync', array( $this, 'reset_sync' ) );
 
 		// Локальний швидкий пошук — доступний і гостям (чекаут), і адмінці.
 		add_action( 'wp_ajax_nvx_local_search_cities', array( $this, 'search_cities' ) );
@@ -27,6 +28,18 @@ class WarehouseAjax {
 
 		add_action( 'wp_ajax_nvx_local_search_warehouses', array( $this, 'search_warehouses' ) );
 		add_action( 'wp_ajax_nopriv_nvx_local_search_warehouses', array( $this, 'search_warehouses' ) );
+	}
+
+	public function reset_sync(): void {
+		check_ajax_referer( 'nvx_admin_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Недостатньо прав.', 'wc-nova-express' ) ), 403 );
+			return;
+		}
+
+		$this->sync->reset_progress();
+		wp_send_json_success( array( 'saved_page' => 0 ) );
 	}
 
 	public function sync_page(): void {
@@ -45,15 +58,25 @@ class WarehouseAjax {
 			$this->sync->client()->set_api_key( $posted_api_key );
 		}
 
-		$page = isset( $_POST['page'] ) ? max( 1, (int) $_POST['page'] ) : 1;
+		$force_reset = ! empty( $_POST['reset'] );
+		if ( $force_reset ) {
+			$this->sync->reset_progress();
+			$page = 1;
+		} elseif ( isset( $_POST['page'] ) && '' !== $_POST['page'] && 'resume' !== $_POST['page'] ) {
+			$page = max( 1, (int) $_POST['page'] );
+		} else {
+			$page = $this->sync->get_resume_page();
+		}
 
 		try {
-			$result = $this->sync->sync_page( $page );
+			$result               = $this->sync->sync_page( $page );
+			$result['saved_page'] = $this->sync->get_saved_page();
 		} catch ( NovaPoshtaApiException $e ) {
 			wp_send_json_error(
 				array(
-					'message' => $e->getMessage(),
-					'errors'  => $e->api_errors(),
+					'message'    => $e->getMessage(),
+					'errors'     => $e->api_errors(),
+					'saved_page' => $this->sync->get_saved_page(),
 				),
 				400
 			);
@@ -67,6 +90,7 @@ class WarehouseAjax {
 						__( 'Неочікувана помилка під час синхронізації: %s', 'wc-nova-express' ),
 						$e->getMessage()
 					),
+					'saved_page' => $this->sync->get_saved_page(),
 				),
 				500
 			);

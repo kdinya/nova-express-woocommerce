@@ -12,6 +12,9 @@ defined( 'ABSPATH' ) || exit;
  */
 class WarehouseSync {
 
+	public const OPTION_LAST_PAGE    = 'nvx_warehouse_sync_last_page';
+	public const OPTION_COMPLETED_AT = 'nvx_warehouse_sync_completed_at';
+
 	// 500 — максимум, який приймає Address.getWarehouses (NovaPoshtaClient::get_warehouses_page
 	// сам обрізає Limit до 500). Було 150 — при ~54 000 відділень це втричі більше сторінок
 	// (і, відповідно, утричі більше окремих HTTP-запитів до API та AJAX-запитів з браузера),
@@ -28,6 +31,34 @@ class WarehouseSync {
 	public function __construct( NovaPoshtaClient $client, WarehouseRepository $repository ) {
 		$this->client     = $client;
 		$this->repository = $repository;
+	}
+
+	public function get_saved_page(): int {
+		return (int) get_option( self::OPTION_LAST_PAGE, 0 );
+	}
+
+	public function get_resume_page(): int {
+		$saved = $this->get_saved_page();
+		if ( $saved <= 1 ) {
+			return 1;
+		}
+		// Продовжуємо з попередньої сторінки — це запобігає пропускам
+		// при зміщенні списку у разі додавання нових відділень, а ON DUPLICATE KEY UPDATE
+		// гарантує повну ідемпотентність.
+		return max( 1, $saved - 1 );
+	}
+
+	public function save_progress( int $page, bool $has_more ): void {
+		if ( $has_more ) {
+			update_option( self::OPTION_LAST_PAGE, $page, false );
+		} else {
+			delete_option( self::OPTION_LAST_PAGE );
+			update_option( self::OPTION_COMPLETED_AT, current_time( 'mysql' ), false );
+		}
+	}
+
+	public function reset_progress(): void {
+		delete_option( self::OPTION_LAST_PAGE );
 	}
 
 	/**
@@ -47,10 +78,13 @@ class WarehouseSync {
 					$this->repository->upsert_batch( $rows );
 				}
 
+				$has_more = count( $rows ) === self::PAGE_SIZE;
+				$this->save_progress( $page, $has_more );
+
 				return array(
 					'page'        => $page,
 					'fetched'     => count( $rows ),
-					'has_more'    => count( $rows ) === self::PAGE_SIZE,
+					'has_more'    => $has_more,
 					'total_in_db' => $this->repository->count(),
 				);
 			} catch ( NovaPoshtaApiException $e ) {

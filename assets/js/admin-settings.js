@@ -134,16 +134,46 @@ jQuery(function ($) {
 		return $line;
 	}
 
+		var syncSavedPage = parseInt(NVX_ADMIN.syncSavedPage, 10) || 0;
+	var syncResumePage = parseInt(NVX_ADMIN.syncResumePage, 10) || 1;
+
+	if (syncSavedPage > 1) {
+		$('#nvx-sync-warehouses').text('Продовжити синхронізацію (зі стор. ' + syncResumePage + ')');
+	}
+
 	$('#nvx-sync-warehouses').on('click', function () {
 		var $btn = $(this);
 
 		$btn.prop('disabled', true);
 		$('#nvx-sync-log').empty();
 
-		logLine('info', '1/3 Завантаження списку областей…');
-		logLine('info', '2/3 Завантаження списку міст…');
-		var $loading = logLine('info', '3/3 Завантаження відділень… сторінка 1 (це може зайняти кілька хвилин)');
+		var startPage = syncResumePage > 1 ? syncResumePage : 1;
 		var retryCount = 0;
+		var $loading;
+
+		if (startPage > 1) {
+			logLine('info', 'Відновлення синхронізації зі сторінки ' + startPage + ' (раніше збережено сторінку ' + syncSavedPage + ')…');
+			var $resetLink = $('<a href="#" style="margin-left:8px; color:var(--nvx-primary, #b32d00); text-decoration:underline;">[Почати з 1 сторінки]</a>');
+			$resetLink.on('click', function (e) {
+				e.preventDefault();
+				syncSavedPage = 0;
+				syncResumePage = 1;
+				NVX_ADMIN.syncSavedPage = 0;
+				NVX_ADMIN.syncResumePage = 1;
+				NvxCore.post('nvx_reset_warehouses_sync', {});
+				$('#nvx-sync-log').empty();
+				logLine('info', '1/3 Завантаження списку областей…');
+				logLine('info', '2/3 Завантаження списку міст…');
+				$loading = logLine('info', '3/3 Завантаження відділень… сторінка 1 (це може зайняти кілька хвилин)');
+				syncPage(1);
+			});
+			$('#nvx-sync-log .nvx-sync-log__item').last().append($resetLink);
+			$loading = logLine('info', 'Завантаження відділень… сторінка ' + startPage + '…');
+		} else {
+			logLine('info', '1/3 Завантаження списку областей…');
+			logLine('info', '2/3 Завантаження списку міст…');
+			$loading = logLine('info', '3/3 Завантаження відділень… сторінка 1 (це може зайняти кілька хвилин)');
+		}
 
 		function syncPage(page) {
 			NvxCore.post('nvx_sync_warehouses_page', { page: page, api_key: $('#nvx_api_key').val() || '' })
@@ -160,27 +190,39 @@ jQuery(function ($) {
 							return;
 						}
 
+						syncResumePage = Math.max(1, page - 1);
+						syncSavedPage = page;
+						NVX_ADMIN.syncResumePage = syncResumePage;
+						NVX_ADMIN.syncSavedPage = syncSavedPage;
+
 						$loading.remove();
-						logLine('error', 'Помилка: ' + msg);
-						$btn.prop('disabled', false);
+						logLine('error', 'Синхронізацію призупинено: ' + msg);
+						logLine('info', 'Ви можете продовжити — наступний запит продовжить зі сторінки ' + syncResumePage + '.');
+						$btn.text('Продовжити синхронізацію (зі стор. ' + syncResumePage + ')').prop('disabled', false);
 						return;
 					}
 
 					retryCount = 0;
 					var d = res.data;
+					syncSavedPage = d.page;
+					syncResumePage = Math.max(1, d.page - 1);
+					NVX_ADMIN.syncSavedPage = syncSavedPage;
+					NVX_ADMIN.syncResumePage = syncResumePage;
+
 					$('#nvx-wh-count').text(d.total_in_db.toLocaleString('uk-UA'));
 					$loading.text('Завантаження відділень… сторінка ' + d.page + ' · у базі: ' + d.total_in_db.toLocaleString('uk-UA'));
 
 					if (d.has_more) {
-						// Пауза між сторінками — менше навантаження на API і менше timeout.
-						// 300мс (було 900мс) — разом зі збільшеним розміром сторінки (500 замість
-						// 150 записів) це суттєво скорочує загальний час синхронізації, лишаючись
-						// достатньо м'яким для API Нової Пошти при послідовних запитах.
-						setTimeout(function () { syncPage(page + 1); }, 300);
+						// Пауза між сторінками — м'яко для API Nova Poshta
+						setTimeout(function () { syncPage(d.page + 1); }, 300);
 					} else {
+						syncSavedPage = 0;
+						syncResumePage = 1;
+						NVX_ADMIN.syncSavedPage = 0;
+						NVX_ADMIN.syncResumePage = 1;
 						$loading.remove();
 						logLine('success', 'База даних відділень успішно оновлена (' + d.total_in_db.toLocaleString('uk-UA') + ' записів).');
-						$btn.prop('disabled', false);
+						$btn.text('Синхронізувати базу відділень').prop('disabled', false);
 					}
 				})
 				.fail(function (xhr) {
@@ -188,16 +230,22 @@ jQuery(function ($) {
 					if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
 						msg = xhr.responseJSON.data.message;
 					} else if (xhr && xhr.responseText) {
-						// Сервер міг повернути не-JSON (PHP-помилку) — покажемо початок тексту, щоб було видно причину.
 						msg += ' ' + xhr.responseText.replace(/<[^>]+>/g, ' ').trim().slice(0, 300);
 					}
+
+					syncResumePage = Math.max(1, page - 1);
+					syncSavedPage = page;
+					NVX_ADMIN.syncResumePage = syncResumePage;
+					NVX_ADMIN.syncSavedPage = syncSavedPage;
+
 					$loading.remove();
-					logLine('error', msg);
-					$btn.prop('disabled', false);
+					logLine('error', 'Синхронізацію призупинено: ' + msg);
+					logLine('info', 'Ви можете продовжити — наступний запит продовжить зі сторінки ' + syncResumePage + '.');
+					$btn.text('Продовжити синхронізацію (зі стор. ' + syncResumePage + ')').prop('disabled', false);
 				});
 		}
 
-		syncPage(1);
+		syncPage(startPage);
 	});
 
 	function renderTtnList(items) {

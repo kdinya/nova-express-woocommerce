@@ -35,10 +35,14 @@ class Assets {
 
 		wp_enqueue_script( 'nvx-admin-core', NVX_PLUGIN_URL . 'assets/js/admin-core.js', array( 'jquery' ), NVX_VERSION, true );
 
+		$saved_page = (int) get_option( 'nvx_warehouse_sync_last_page', 0 );
+
 		$config = array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'nvx_admin_nonce' ),
-			'i18n'    => array(
+			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+			'nonce'          => wp_create_nonce( 'nvx_admin_nonce' ),
+			'syncSavedPage'  => $saved_page,
+			'syncResumePage' => $saved_page > 1 ? max( 1, $saved_page - 1 ) : 1,
+			'i18n'           => array(
 				'confirmDelete' => __( 'Видалити це правило автоматизації?', 'wc-nova-express' ),
 				'saved'         => __( 'Збережено', 'wc-nova-express' ),
 				'error'         => __( 'Помилка', 'wc-nova-express' ),
