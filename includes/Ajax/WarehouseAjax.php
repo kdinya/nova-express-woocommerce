@@ -34,6 +34,15 @@ class WarehouseAjax {
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Недостатньо прав.', 'wc-nova-express' ) ), 403 );
+			return;
+		}
+
+		$posted_api_key = isset( $_REQUEST['api_key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['api_key'] ) ) : '';
+		if ( '' !== $posted_api_key ) {
+			$settings = \NovaExpress\Admin\Settings::get_all();
+			$settings['api_key'] = $posted_api_key;
+			update_option( 'nvx_settings', $settings );
+			$this->sync->client()->set_api_key( $posted_api_key );
 		}
 
 		$page = isset( $_POST['page'] ) ? max( 1, (int) $_POST['page'] ) : 1;

@@ -256,7 +256,7 @@ class TrackingRunner {
 	public static function looks_deleted( array $status ): bool {
 		$text = mb_strtolower( ( $status['Status'] ?? '' ) . ' ' . ( $status['StatusCode'] ?? '' ) );
 
-		foreach ( array( 'не знайдено', 'не існує', 'видален', 'not found', 'номер не знайдено' ) as $needle ) {
+		foreach ( array( 'не знайдено', 'не існує', 'not found', 'номер не знайдено' ) as $needle ) {
 			if ( false !== mb_strpos( $text, $needle ) ) {
 				return true;
 			}

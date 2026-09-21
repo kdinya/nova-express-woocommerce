@@ -21,6 +21,10 @@ class WarehouseSync {
 	private NovaPoshtaClient $client;
 	private WarehouseRepository $repository;
 
+	public function client(): NovaPoshtaClient {
+		return $this->client;
+	}
+
 	public function __construct( NovaPoshtaClient $client, WarehouseRepository $repository ) {
 		$this->client     = $client;
 		$this->repository = $repository;

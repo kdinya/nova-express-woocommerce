@@ -19,39 +19,7 @@ $create_url = add_query_arg(
 $has_active_ttn = ! empty( $waybills );
 ?>
 <div class="nvx-order-panel" data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
-	<div class="nvx-order-delivery-details" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; margin-bottom:14px;">
-		<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-			<span style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:#da291c;">
-				<?php esc_html_e( 'Дані доставки НП', 'wc-nova-express' ); ?>
-			</span>
-			<span style="font-size:11px; background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px;">
-				<?php
-				$is_doors = in_array( $service_type, array( 'doors_doors', 'warehouse_doors' ), true );
-				echo $is_doors ? esc_html__( 'Кур\'єр', 'wc-nova-express' ) : esc_html__( 'Відділення', 'wc-nova-express' );
-				?>
-			</span>
-		</div>
-		<div style="font-size:13px; line-height:1.4; color:#1e293b;">
-			<?php if ( ! empty( $city_name ) ) : ?>
-				<div><strong><?php esc_html_e( 'Місто:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $city_name ); ?></div>
-			<?php endif; ?>
-			<?php if ( ! empty( $warehouse ) ) : ?>
-				<div style="margin-top:2px;"><strong><?php esc_html_e( 'Відділення:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $warehouse ); ?></div>
-			<?php elseif ( $is_doors ) : ?>
-				<?php
-				$street = $order->get_meta( '_nvx_street_name' );
-				$bld    = $order->get_meta( '_nvx_building_number' );
-				$apt    = $order->get_meta( '_nvx_apartment' );
-				$addr   = trim( $street . ' ' . $bld . ( $apt ? ' кв./оф. ' . $apt : '' ) );
-				?>
-				<?php if ( ! empty( $addr ) ) : ?>
-					<div style="margin-top:2px;"><strong><?php esc_html_e( 'Адреса:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $addr ); ?></div>
-				<?php endif; ?>
-			<?php else : ?>
-				<div style="color:#e11d48; font-size:12px; margin-top:2px;">⚠️ <?php esc_html_e( 'Відділення не вказано або очікує вибору', 'wc-nova-express' ); ?></div>
-			<?php endif; ?>
-		</div>
-	</div>
+	
 
 
 	<?php if ( $has_active_ttn ) : ?>

@@ -16,6 +16,11 @@ $settings = get_option( 'nvx_settings', array() );
 // Nova Express → Налаштування → "Дані плагіна при видаленні".
 $wipe = isset( $settings['wipe_data_on_uninstall'] ) && 'yes' === $settings['wipe_data_on_uninstall'];
 
+// Завжди очищаємо cron-події незалежно від збереження таблиць
+wp_clear_scheduled_hook( 'nvx/tracking_cron_event' );
+wp_clear_scheduled_hook( 'nvx/prune_automation_log' );
+wp_clear_scheduled_hook( 'nvx_tracking_cron' );
+
 if ( $wipe ) {
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}nvx_waybills" );
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}nvx_automation_rules" );
@@ -24,15 +29,4 @@ if ( $wipe ) {
 
 	delete_option( 'nvx_settings' );
 	delete_option( 'nvx_db_version' );
-
-	// Заплановані cron-події лишаються неактуальними без таблиць/налаштувань —
-	// прибираємо, щоб не лишити "висячих" wp-cron записів.
-	$timestamp = wp_next_scheduled( 'nvx/tracking_cron_event' );
-	if ( $timestamp ) {
-		wp_unschedule_event( $timestamp, 'nvx/tracking_cron_event' );
-	}
-	$prune_timestamp = wp_next_scheduled( 'nvx/prune_automation_log' );
-	if ( $prune_timestamp ) {
-		wp_unschedule_event( $prune_timestamp, 'nvx/prune_automation_log' );
-	}
 }

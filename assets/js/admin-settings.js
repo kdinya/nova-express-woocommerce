@@ -94,7 +94,7 @@ jQuery(function ($) {
 		$btn.prop('disabled', true);
 		$status.text('Запитуємо дані…');
 
-		NvxCore.post('nvx_fetch_sender_counterparty', {})
+		NvxCore.post('nvx_fetch_sender_counterparty', { api_key: $('#nvx_api_key').val() || '' })
 			.done(function (res) {
 				if (res && res.success) {
 					$('input[name="sender_last_name"]').val(res.data.last_name);
@@ -137,7 +137,7 @@ jQuery(function ($) {
 		var retryCount = 0;
 
 		function syncPage(page) {
-			NvxCore.post('nvx_sync_warehouses_page', { page: page })
+			NvxCore.post('nvx_sync_warehouses_page', { page: page, api_key: $('#nvx_api_key').val() || '' })
 				.done(function (res) {
 					if (!res || !res.success) {
 						var msg = (res && res.data && res.data.message) || 'Невідома помилка синхронізації.';
@@ -193,24 +193,27 @@ jQuery(function ($) {
 
 	function renderTtnList(items) {
 		if (!items || !items.length) {
-			return '<p class="nvx-empty">Немає записів.</p>';
+			return $('<p class="nvx-empty">').text('Немає записів.');
 		}
-		var html = '<ul class="nvx-ttn-list">';
+		var $ul = $('<ul class="nvx-ttn-list">');
 		items.forEach(function (it) {
-			html += '<li class="nvx-ttn-list__item"><a class="nvx-ttn-list__link" href="' + (it.url || '#') + '">' +
-				'<span class="nvx-ttn-list__ttn">' + (it.waybill || '') + '</span>' +
-				'<span class="nvx-ttn-list__sep">→</span>' +
-				'<span class="nvx-ttn-list__order">№' + (it.order_num || '') + '</span>' +
-				'<span class="nvx-ttn-list__sep">—</span>' +
-				'<span class="nvx-ttn-list__name">' + (it.recipient || '—') + '</span>' +
-				'<span class="nvx-ttn-list__sep">—</span>' +
-				'<span class="nvx-ttn-list__total">(' + (it.total || '—') + ')</span>' +
-				'<span class="nvx-ttn-list__sep">→</span>' +
-				'<span class="nvx-ttn-list__status">' + (it.status || '—') + '</span>' +
-				'</a></li>';
+			var $li = $('<li class="nvx-ttn-list__item">');
+			var $a = $('<a class="nvx-ttn-list__link">').attr('href', it.url || '#');
+
+			$a.append($('<span class="nvx-ttn-list__ttn">').text(it.waybill || ''));
+			$a.append($('<span class="nvx-ttn-list__sep">').text('→'));
+			$a.append($('<span class="nvx-ttn-list__order">').text('№' + (it.order_num || '')));
+			$a.append($('<span class="nvx-ttn-list__sep">').text('—'));
+			$a.append($('<span class="nvx-ttn-list__name">').text(it.recipient || '—'));
+			$a.append($('<span class="nvx-ttn-list__sep">').text('—'));
+			$a.append($('<span class="nvx-ttn-list__total">').text('(' + (it.total || '—') + ')'));
+			$a.append($('<span class="nvx-ttn-list__sep">').text('→'));
+			$a.append($('<span class="nvx-ttn-list__status">').text(it.status || '—'));
+
+			$li.append($a);
+			$ul.append($li);
 		});
-		html += '</ul>';
-		return html;
+		return $ul;
 	}
 
 	$('#nvx-run-tracking-now').on('click', function () {
@@ -232,10 +235,10 @@ jQuery(function ($) {
 					var $active = $mon.find('[data-list="active"]');
 					var $done = $mon.find('[data-list="delivered"]');
 					if ($active.length) {
-						$active.html(renderTtnList(d.active_items || []));
+						$active.empty().append(renderTtnList(d.active_items || []));
 					}
 					if ($done.length) {
-						$done.html(renderTtnList(d.delivered_items || []));
+						$done.empty().append(renderTtnList(d.delivered_items || []));
 					}
 				}
 				if (d.last_poll_text) {

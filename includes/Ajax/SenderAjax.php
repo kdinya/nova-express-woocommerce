@@ -30,6 +30,12 @@ class SenderAjax {
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Недостатньо прав.', 'wc-nova-express' ) ), 403 );
+			return;
+		}
+
+		$posted_api_key = isset( $_REQUEST['api_key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['api_key'] ) ) : '';
+		if ( '' !== $posted_api_key ) {
+			$this->client->set_api_key( $posted_api_key );
 		}
 
 		try {
@@ -66,6 +72,7 @@ class SenderAjax {
 			if ( ! empty( $contact['Phones'] ) ) {
 				$settings['sender_phone'] = preg_replace( '/\D+/', '', $contact['Phones'] );
 			}
+			if ( '' !== $posted_api_key ) { $settings['api_key'] = $posted_api_key; }
 			update_option( 'nvx_settings', $settings );
 
 			wp_send_json_success(

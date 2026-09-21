@@ -193,7 +193,7 @@ class TtnManager {
 	private function looks_deleted( array $status ): bool {
 		$text = mb_strtolower( ( $status['Status'] ?? '' ) . ' ' . ( $status['StatusCode'] ?? '' ) );
 
-		foreach ( array( 'не знайдено', 'не існує', 'видален', 'not found', 'номер не знайдено' ) as $needle ) {
+		foreach ( array( 'не знайдено', 'не існує', 'not found', 'номер не знайдено' ) as $needle ) {
 			if ( false !== mb_strpos( $text, $needle ) ) {
 				return true;
 			}
@@ -330,6 +330,21 @@ class TtnManager {
 	 */
 	public function attach_existing( \WC_Order $order, string $waybill_number ): array {
 		$this->guard_single_active_ttn( $order );
+
+		$lock_key = 'nvx_ttn_creating_' . $order->get_id();
+		if ( false !== get_transient( $lock_key ) ) {
+			throw new NovaPoshtaApiException( __( 'Операція з ТТН для цього замовлення вже триває. Зачекайте хвилину.', 'wc-nova-express' ) );
+		}
+		set_transient( $lock_key, 1, 60 );
+
+		try {
+			return $this->do_attach_existing( $order, $waybill_number );
+		} finally {
+			delete_transient( $lock_key );
+		}
+	}
+
+	private function do_attach_existing( \WC_Order $order, string $waybill_number ): array {
 
 		$waybill_number = trim( $waybill_number );
 
@@ -516,7 +531,7 @@ class TtnManager {
 			'PayerType'      => $overrides['payer_type'] ?? 'Recipient',
 			'PaymentMethod'  => $overrides['payment_method'] ?? 'Cash',
 			'DateTime'       => $overrides['date'] ?? current_time( 'd.m.Y' ),
-			'CargoType'      => 'Parcel',
+			'CargoType'      => $overrides['cargo_type'] ?? 'Parcel',
 			'ServiceType'    => $this->map_service_type( $service_type ),
 			'SeatsAmount'    => (string) max( 1, count( $places ) ),
 			'Description'    => $overrides['description'] ?? Formatting::apply_order_template(

@@ -42,14 +42,9 @@ class Installer {
 	}
 
 	public static function deactivate(): void {
-		$timestamp = wp_next_scheduled( 'nvx/tracking_cron_event' );
-		if ( $timestamp ) {
-			wp_unschedule_event( $timestamp, 'nvx/tracking_cron_event' );
-		}
-		$prune_timestamp = wp_next_scheduled( 'nvx/prune_automation_log' );
-		if ( $prune_timestamp ) {
-			wp_unschedule_event( $prune_timestamp, 'nvx/prune_automation_log' );
-		}
+		wp_clear_scheduled_hook( 'nvx/tracking_cron_event' );
+		wp_clear_scheduled_hook( 'nvx/prune_automation_log' );
+		wp_clear_scheduled_hook( 'nvx_tracking_cron' );
 		flush_rewrite_rules();
 	}
 

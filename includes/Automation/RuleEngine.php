@@ -261,14 +261,18 @@ private function run_rules( array $rules, \WC_Order $order, array $waybill_row, 
 
 		$key = 'nvx_evt_' . $fingerprint;
 
+		if ( function_exists( 'wp_cache_add' ) && wp_using_ext_object_cache() ) {
+			$added = wp_cache_add( $key, 1, 'nvx_events', 60 );
+			if ( ! $added ) {
+				return true;
+			}
+		}
+
 		if ( false !== get_transient( $key ) ) {
 			return true;
 		}
 
-		// Коротке вікно — досить, щоб погасити гонку паралельних тригерів,
-		// але не заважає легітимним повторним переходам того самого коду
-		// статусу пізніше (наприклад, ручне "Оновити" через кілька хвилин).
-		set_transient( $key, 1, 30 );
+		set_transient( $key, 1, 60 );
 
 		return false;
 	}

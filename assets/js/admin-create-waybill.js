@@ -231,6 +231,7 @@ jQuery(function ($) {
 			order_id: orderId,
 			service_type: $('#nvx-cw-service-type').val(),
 			payer_type: $('#nvx-cw-payer-type').val(),
+			cargo_type: $('#nvx-cw-cargo-type').val() || 'Parcel',
 			payment_method: $('#nvx-cw-payment-method').val(),
 			date: formatDate($('#nvx-cw-date').val()),
 			places: JSON.stringify(collectPlaces()),
@@ -265,7 +266,7 @@ jQuery(function ($) {
 						'<div class="nvx-cw-print-actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">' +
 						'<a class="nvx-btn nvx-btn--primary" href="' + customUrl + '" target="_blank" rel="noopener">Друкувати</a>' +
 						'</div>';
-					showAlert('success', html);
+					showAlert('success', html, true);
 					$status.text('Готово ✓');
 					$btn.prop('disabled', true).text('Створено');
 					// До самого верху сторінки (кілька спроб — WP admin / sticky bar)

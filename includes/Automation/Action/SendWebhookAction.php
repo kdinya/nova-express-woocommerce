@@ -67,9 +67,9 @@ class SendWebhookAction implements ActionInterface {
 		// приймачів (Zapier/Make/n8n/власний сервер), оскільки не лишає
 		// персональні дані (ПІБ, телефон, email) в URL, який осідає в
 		// логах проксі/веб-серверів.
-		$delivery = sanitize_key( (string) ( $config['delivery_method'] ?? 'get' ) );
+		$delivery = sanitize_key( (string) ( $config['delivery_method'] ?? 'post' ) );
 		if ( ! in_array( $delivery, array( 'get', 'post' ), true ) ) {
-			$delivery = 'get';
+			$delivery = 'post';
 		}
 		// SMS-режим існує саме для MacroDroid-подібних тригерів на query
 		// string — це і є весь сенс режиму, тому лишається GET завжди.

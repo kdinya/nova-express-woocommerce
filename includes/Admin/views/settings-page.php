@@ -37,12 +37,35 @@ defined( 'ABSPATH' ) || exit;
 
 			<label class="nvx-field">
 				<span><?php esc_html_e( 'API-ключ', 'wc-nova-express' ); ?></span>
-				<input type="text" name="api_key" value="<?php echo esc_attr( $settings['api_key'] ); ?>" autocomplete="off" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+				<div style="display:flex; gap:8px; align-items:center;">
+					<input type="password" id="nvx_api_key" name="api_key" value="<?php echo esc_attr( $settings['api_key'] ); ?>" autocomplete="off" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="flex:1;" />
+					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-toggle-api-key" style="white-space:nowrap;">
+						👁️ <?php esc_html_e( 'Показати', 'wc-nova-express' ); ?>
+					</button>
+				</div>
+				<small class="nvx-field__hint"><?php esc_html_e( 'Можна ввести новий ключ та одразу натиснути «Синхронізувати базу відділень» або «Отримати дані відправника» без обов\'язкового попереднього збереження форми.', 'wc-nova-express' ); ?></small>
 			</label>
 		</section>
 
-		<section class="nvx-card">
-			<h2><?php esc_html_e( '2. Дані відправника', 'wc-nova-express' ); ?></h2>
+<section class="nvx-card">
+			<h2><?php esc_html_e( '2. База відділень Нової Пошти', 'wc-nova-express' ); ?></h2>
+			<p class="nvx-card__hint"><?php esc_html_e( 'Завантажте повну базу відділень/поштоматів локально — це прискорює вибір відділення на чекауті й на сторінці замовлення, без звернення до API при кожному запиті.', 'wc-nova-express' ); ?></p>
+
+			<div class="nvx-sync-box">
+				<div class="nvx-sync-box__stat">
+					<strong id="nvx-wh-count"><?php echo esc_html( number_format_i18n( $warehouses_count ) ); ?></strong>
+					<span><?php esc_html_e( 'відділень у локальній базі', 'wc-nova-express' ); ?></span>
+				</div>
+				<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-sync-warehouses">
+					<?php esc_html_e( 'Синхронізувати базу відділень', 'wc-nova-express' ); ?>
+				</button>
+			</div>
+
+			<div class="nvx-sync-log" id="nvx-sync-log"></div>
+		</section>
+
+<section class="nvx-card">
+			<h2><?php esc_html_e( '3. Дані відправника', 'wc-nova-express' ); ?></h2>
 
 			<div class="nvx-sync-box" style="margin-bottom:16px;">
 				<div>
@@ -179,43 +202,59 @@ defined( 'ABSPATH' ) || exit;
 		</section>
 
 		<section class="nvx-card">
-			<h2><?php esc_html_e( '3. База відділень Нової Пошти', 'wc-nova-express' ); ?></h2>
-			<p class="nvx-card__hint"><?php esc_html_e( 'Завантажте повну базу відділень/поштоматів локально — це прискорює вибір відділення на чекауті й на сторінці замовлення, без звернення до API при кожному запиті.', 'wc-nova-express' ); ?></p>
-
-			<div class="nvx-sync-box">
-				<div class="nvx-sync-box__stat">
-					<strong id="nvx-wh-count"><?php echo esc_html( number_format_i18n( $warehouses_count ) ); ?></strong>
-					<span><?php esc_html_e( 'відділень у локальній базі', 'wc-nova-express' ); ?></span>
-				</div>
-				<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-sync-warehouses">
-					<?php esc_html_e( 'Синхронізувати базу відділень', 'wc-nova-express' ); ?>
-				</button>
-			</div>
-
-			<div class="nvx-sync-log" id="nvx-sync-log"></div>
-		</section>
-
-		<section class="nvx-card">
-			<h2><?php esc_html_e( '4. Вартість доставки на чекауті', 'wc-nova-express' ); ?></h2>
-
+			<h2><?php esc_html_e( '4. Вартість доставки та параметри за замовчуванням', 'wc-nova-express' ); ?></h2>
 			<p class="nvx-card__hint">
-				<?php esc_html_e( 'На чекауті рядок доставки не показується і жодна сума за доставку до замовлення НЕ додається — реальну вагу й розміри посилки на момент оформлення ще не відомо, тож коректно порахувати вартість Нової Пошти на цьому етапі неможливо.', 'wc-nova-express' ); ?>
-				<?php esc_html_e( 'Реальну вартість Нової Пошти можна порахувати вручну на картці замовлення в адмінці — там уже відома фактична вага/розміри — під час створення ЕН (кнопка "Порахувати вартість").', 'wc-nova-express' ); ?>
+				<?php esc_html_e( 'Оберіть режим нарахування вартості доставки на чекауті та початкові значення для нових накладних.', 'wc-nova-express' ); ?>
 			</p>
 
 			<label class="nvx-field">
-				<span><?php esc_html_e( 'Варіант доставки за замовчуванням', 'wc-nova-express' ); ?></span>
-				<select name="default_service">
-					<option value="warehouse_warehouse" <?php selected( $settings['default_service'] ?? '', 'warehouse_warehouse' ); ?>><?php esc_html_e( 'Склад — Склад (відділення)', 'wc-nova-express' ); ?></option>
-					<option value="warehouse_doors" <?php selected( $settings['default_service'] ?? '', 'warehouse_doors' ); ?>><?php esc_html_e( 'Склад — Двері', 'wc-nova-express' ); ?></option>
-					<option value="doors_warehouse" <?php selected( $settings['default_service'] ?? '', 'doors_warehouse' ); ?>><?php esc_html_e( 'Двері — Склад', 'wc-nova-express' ); ?></option>
-					<option value="doors_doors" <?php selected( $settings['default_service'] ?? '', 'doors_doors' ); ?>><?php esc_html_e( "Двері — Двері (кур'єр)", 'wc-nova-express' ); ?></option>
+				<span><?php esc_html_e( 'Режим вартості доставки на чекауті', 'wc-nova-express' ); ?></span>
+				<select name="price_mode" id="nvx_price_mode">
+					<option value="free_receiver" <?php selected( $settings['price_mode'] ?? 'free_receiver', 'free_receiver' ); ?>>
+						<?php esc_html_e( 'За тарифами перевізника (оплата при отриманні — 0 грн у замовленні)', 'wc-nova-express' ); ?>
+					</option>
+					<option value="fixed" <?php selected( $settings['price_mode'] ?? '', 'fixed' ); ?>>
+						<?php esc_html_e( 'Фіксована вартість доставки', 'wc-nova-express' ); ?>
+					</option>
+					<option value="api" <?php selected( $settings['price_mode'] ?? '', 'api' ); ?>>
+						<?php esc_html_e( 'Розрахунок вартості онлайн через API Нової Пошти', 'wc-nova-express' ); ?>
+					</option>
 				</select>
-				<small><?php esc_html_e( 'Використовується як початковий тип сервісу при створенні ТТН. Покупець на чекауті все одно обирає тип сам (склад/двері) — це значення лише підказка за замовчуванням.', 'wc-nova-express' ); ?></small>
+				<small><?php esc_html_e( 'За замовчуванням рекомендовано "За тарифами перевізника": сума доставки не додається до чеку замовлення, а покупець сплачує доставку у відділенні за тарифами Нової Пошти.', 'wc-nova-express' ); ?></small>
 			</label>
+
+			<div id="nvx_fixed_price_wrap" style="<?php echo ( ($settings['price_mode'] ?? '') === 'fixed' ) ? '' : 'display:none;'; ?> margin-top:12px;">
+				<label class="nvx-field">
+					<span><?php esc_html_e( 'Фіксована сума доставки (грн)', 'wc-nova-express' ); ?></span>
+					<input type="number" step="0.01" min="0" name="fixed_price" value="<?php echo esc_attr( $settings['fixed_price'] ?? 0 ); ?>" />
+				</label>
+			</div>
+
+			<div class="nvx-field-row" style="margin-top:16px;">
+				<label class="nvx-field">
+					<span><?php esc_html_e( 'Платник доставки за замовчуванням', 'wc-nova-express' ); ?></span>
+					<select name="default_payer">
+						<option value="Recipient" <?php selected( $settings['default_payer'] ?? 'Recipient', 'Recipient' ); ?>><?php esc_html_e( 'Отримувач', 'wc-nova-express' ); ?></option>
+						<option value="Sender" <?php selected( $settings['default_payer'] ?? '', 'Sender' ); ?>><?php esc_html_e( 'Відправник', 'wc-nova-express' ); ?></option>
+						<option value="ThirdPerson" <?php selected( $settings['default_payer'] ?? '', 'ThirdPerson' ); ?>><?php esc_html_e( 'Третя особа', 'wc-nova-express' ); ?></option>
+					</select>
+					<small><?php esc_html_e( 'Підставляється при створенні ТТН. За замовчуванням: Отримувач.', 'wc-nova-express' ); ?></small>
+				</label>
+
+				<label class="nvx-field">
+					<span><?php esc_html_e( 'Варіант доставки за замовчуванням', 'wc-nova-express' ); ?></span>
+					<select name="default_service">
+						<option value="warehouse_warehouse" <?php selected( $settings['default_service'] ?? '', 'warehouse_warehouse' ); ?>><?php esc_html_e( 'Склад — Склад (відділення)', 'wc-nova-express' ); ?></option>
+						<option value="warehouse_doors" <?php selected( $settings['default_service'] ?? '', 'warehouse_doors' ); ?>><?php esc_html_e( 'Склад — Двері', 'wc-nova-express' ); ?></option>
+						<option value="doors_warehouse" <?php selected( $settings['default_service'] ?? '', 'doors_warehouse' ); ?>><?php esc_html_e( 'Двері — Склад', 'wc-nova-express' ); ?></option>
+						<option value="doors_doors" <?php selected( $settings['default_service'] ?? '', 'doors_doors' ); ?>><?php esc_html_e( "Двері — Двері (кур'єр)", 'wc-nova-express' ); ?></option>
+					</select>
+					<small><?php esc_html_e( 'Початковий тип сервісу при формуванні ТТН.', 'wc-nova-express' ); ?></small>
+				</label>
+			</div>
 		</section>
 
-		<section class="nvx-card">
+								<section class="nvx-card">
 			<h2><?php esc_html_e( '5. Опис та додаткова інформація відправлення', 'wc-nova-express' ); ?></h2>
 			<p class="nvx-card__hint">
 				<?php esc_html_e( 'Ці шаблони підставляються за замовчуванням у поля "Опис відправлення" та "Додаткова інформація" на сторінці створення ТТН — там їх ще можна відредагувати вручну перед відправкою. Стандартні плейсхолдери:', 'wc-nova-express' ); ?>

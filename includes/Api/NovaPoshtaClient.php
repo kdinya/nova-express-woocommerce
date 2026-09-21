@@ -22,6 +22,10 @@ class NovaPoshtaClient {
 		$this->api_key = $api_key;
 	}
 
+	public function set_api_key( string $api_key ): void {
+		$this->api_key = $api_key;
+	}
+
 	public function has_api_key(): bool {
 		return '' !== $this->api_key;
 	}
@@ -272,8 +276,11 @@ class NovaPoshtaClient {
 			'body'        => wp_json_encode( $body ),
 		);
 
-		$response = wp_remote_post( self::ENDPOINT, $args );
-		remove_action( 'http_api_curl', $curl_hook, 10 );
+		try {
+			$response = wp_remote_post( self::ENDPOINT, $args );
+		} finally {
+			remove_action( 'http_api_curl', $curl_hook, 10 );
+		}
 
 		if ( is_wp_error( $response ) ) {
 			throw new NovaPoshtaApiException(

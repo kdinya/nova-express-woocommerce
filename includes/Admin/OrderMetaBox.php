@@ -24,7 +24,7 @@ class OrderMetaBox {
 
 	public function register(): void {
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
-		add_action( 'woocommerce_admin_order_data_after_shipping_address', array( $this, 'render_admin_order_address' ) );
+		add_action( 'woocommerce_admin_order_data_after_billing_address', array( $this, 'render_admin_order_address' ) );
 	}
 
 	public function render_admin_order_address( \WC_Order $order ): void {
@@ -41,23 +41,22 @@ class OrderMetaBox {
 
 		$is_doors = ( TtnManager::SERVICE_DOORS_DOORS === $service_type || TtnManager::SERVICE_WAREHOUSE_DOORS === $service_type );
 		?>
-		<div class="nvx-admin-shipping-info" style="margin-top:12px; padding:10px 12px; background:#f0f4f9; border-left:4px solid #da291c; border-radius:3px;">
-			<div style="font-weight:600; color:#1d2327; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-				<span style="background:#da291c; color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:2px;">НП</span>
-				<?php echo $is_doors ? esc_html__( 'Нова Пошта: Адресна доставка', 'wc-nova-express' ) : esc_html__( 'Нова Пошта: Відділення / Поштомат', 'wc-nova-express' ); ?>
+		<div class="nvx-admin-billing-delivery" style="margin-top:10px; padding:8px 10px; background:#f8fafc; border-left:3px solid #da291c; border-radius:4px; font-size:13px; line-height:1.4;">
+			<div style="font-weight:600; color:#da291c; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+				<span>📦 <?php echo $is_doors ? esc_html__( 'Нова Пошта: Адресна доставка', 'wc-nova-express' ) : esc_html__( 'Нова Пошта: Відділення / Поштомат', 'wc-nova-express' ); ?></span>
 			</div>
 			<?php if ( ! empty( $city_name ) ) : ?>
-				<div style="font-size:13px; color:#3c434a; margin-bottom:2px;">
+				<div style="color:#1e293b;">
 					<strong><?php esc_html_e( 'Місто:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $city_name ); ?>
 				</div>
 			<?php endif; ?>
 			<?php if ( $is_doors ) : ?>
-				<div style="font-size:13px; color:#3c434a;">
+				<div style="color:#1e293b; margin-top:2px;">
 					<strong><?php esc_html_e( 'Адреса:', 'wc-nova-express' ); ?></strong>
 					<?php echo esc_html( trim( $street_name . ' ' . $building . ( $apartment ? ' кв./оф. ' . $apartment : '' ) ) ); ?>
 				</div>
 			<?php elseif ( ! empty( $warehouse_label ) ) : ?>
-				<div style="font-size:13px; color:#3c434a;">
+				<div style="color:#1e293b; margin-top:2px;">
 					<strong><?php esc_html_e( 'Відділення:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $warehouse_label ); ?>
 				</div>
 			<?php endif; ?>

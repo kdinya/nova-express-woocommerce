@@ -73,6 +73,7 @@ class OrderAjax {
 		$overrides = array(
 			'service_type'            => '' !== $service_type_raw ? $service_type_raw : null,
 			'payer_type'              => sanitize_text_field( wp_unslash( $_POST['payer_type'] ?? 'Recipient' ) ),
+			'cargo_type'              => sanitize_text_field( wp_unslash( $_POST['cargo_type'] ?? 'Parcel' ) ),
 			'payment_method'          => sanitize_text_field( wp_unslash( $_POST['payment_method'] ?? 'Cash' ) ),
 			'date'                    => sanitize_text_field( wp_unslash( $_POST['date'] ?? '' ) ) ?: null,
 			'places'                  => $places,
@@ -225,7 +226,7 @@ class OrderAjax {
 			'Weight'        => (string) round( $weight, 2 ),
 			'ServiceType'   => $service,
 			'Cost'          => (string) round( $cost, 2 ),
-			'CargoType'     => 'Parcel',
+			'CargoType'     => sanitize_text_field( wp_unslash( $_POST['cargo_type'] ?? 'Parcel' ) ),
 			'SeatsAmount'   => (string) max( 1, (int) ( $_POST['seats'] ?? 1 ) ),
 		);
 
