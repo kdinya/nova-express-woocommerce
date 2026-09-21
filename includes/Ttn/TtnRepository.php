@@ -185,7 +185,7 @@ class TtnRepository {
 				'SeatsAmount', 'PhoneRecipient', 'PhoneSender',
 				'RecipientAddress', 'SenderAddress',
 				'RefEW', 'RefCityRecipient', 'RefCitySender',
-				'ActualDeliveryDate', 'DateScan',
+				'ActualDeliveryDate', 'DateScan', 'TrackingUpdateDate',
 			);
 			$slim = array();
 			foreach ( $keep as $key ) {

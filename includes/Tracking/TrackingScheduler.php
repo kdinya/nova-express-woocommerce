@@ -95,7 +95,7 @@ class TrackingScheduler {
 				'order_num' => (string) $order_num,
 				'recipient' => $recipient,
 				'total'     => $total_str,
-				'status'    => (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: '—' ),
+				'status'    => Formatting::format_ttn_status_display( $row ),
 				'url'       => $order_url,
 			);
 		}

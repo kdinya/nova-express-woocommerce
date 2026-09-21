@@ -85,7 +85,7 @@ use NovaExpress\Helpers\Formatting;
 						);
 						$total_str = Formatting::clean_order_total( $order );
 					}
-					$status = (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: '—' );
+					$status = Formatting::format_ttn_status_display( $row );
 					$order_url = $order
 						? $order->get_edit_order_url()
 						: admin_url( 'admin.php?page=wc-orders&action=edit&id=' . (int) $row['order_id'] );
@@ -126,7 +126,7 @@ use NovaExpress\Helpers\Formatting;
 						);
 						$total_str = Formatting::clean_order_total( $order );
 					}
-					$status = (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: 'Отримано' );
+					$status = Formatting::format_ttn_status_display( $row );
 					$order_url = $order
 						? $order->get_edit_order_url()
 						: admin_url( 'admin.php?page=wc-orders&action=edit&id=' . (int) $row['order_id'] );

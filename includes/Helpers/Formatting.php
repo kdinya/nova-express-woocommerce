@@ -174,4 +174,74 @@ class Formatting {
 		$decoded = html_entity_decode( $stripped, ENT_QUOTES, "UTF-8" );
 		return trim( preg_replace( "/\x{00A0}|\s+/u", " ", $decoded ) );
 	}
+
+	/**
+	 * Отримує дату та час зміни статусу за даними Нової Пошти (DateScan, RecipientDateTime, TrackingUpdateDate)
+	 * або час останнього опитування/оновлення.
+	 */
+	public static function format_ttn_status_time( array $row ): string {
+		$time_str = '';
+		if ( ! empty( $row['tracking_details'] ) ) {
+			$details = is_array( $row['tracking_details'] )
+				? $row['tracking_details']
+				: json_decode( (string) $row['tracking_details'], true );
+			if ( is_array( $details ) ) {
+				// Якщо накладна отримана — найточніший час отримання в RecipientDateTime
+				if ( ! empty( $details['RecipientDateTime'] ) ) {
+					$time_str = (string) $details['RecipientDateTime'];
+				} elseif ( ! empty( $details['DateScan'] ) ) {
+					$time_str = (string) $details['DateScan'];
+				} elseif ( ! empty( $details['ActualDeliveryDate'] ) ) {
+					$time_str = (string) $details['ActualDeliveryDate'];
+				} elseif ( ! empty( $details['TrackingUpdateDate'] ) ) {
+					$time_str = (string) $details['TrackingUpdateDate'];
+				}
+			}
+		}
+
+		if ( '' === $time_str ) {
+			$time_str = ! empty( $row['last_polled_at'] ) ? (string) $row['last_polled_at'] : (string) ( $row['updated_at'] ?? '' );
+		}
+
+		if ( '' === $time_str ) {
+			return '';
+		}
+
+		$ts = strtotime( $time_str );
+		if ( false === $ts ) {
+			$dt = date_create_from_format( 'd.m.Y H:i:s', $time_str );
+			if ( ! $dt ) {
+				$dt = date_create_from_format( 'd.m.Y H:i', $time_str );
+			}
+			$ts = $dt ? $dt->getTimestamp() : false;
+		}
+
+		if ( false !== $ts && $ts > 0 ) {
+			return wp_date( 'd.m.Y H:i', $ts );
+		}
+
+		return $time_str;
+	}
+
+	/**
+	 * Форматує статус у вигляді: [Код] Назва статусу (час зміни)
+	 */
+	public static function format_ttn_status_display( array $row ): string {
+		$code = ! empty( $row['carrier_status_code'] ) ? (string) $row['carrier_status_code'] : '';
+		$text = ! empty( $row['carrier_status_text'] ) ? (string) $row['carrier_status_text'] : '';
+
+		if ( '' === $text && '' === $code ) {
+			return __( 'Очікує опитування', 'wc-nova-express' );
+		}
+
+		if ( '' === $text ) {
+			$text = $code;
+		}
+
+		$prefix = '' !== $code ? '[' . $code . '] ' : '';
+		$time   = self::format_ttn_status_time( $row );
+		$suffix = '' !== $time ? ' (' . $time . ')' : '';
+
+		return $prefix . $text . $suffix;
+	}
 }

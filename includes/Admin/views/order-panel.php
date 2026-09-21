@@ -34,19 +34,11 @@ $has_active_ttn = ! empty( $waybills );
 					</div>
 
 					<div class="nvx-waybill-simple__row">
-						<?php
-						$last_time_raw = ! empty( $w['last_polled_at'] ) ? $w['last_polled_at'] : ( $w['updated_at'] ?? '' );
-						$last_time_fmt = $last_time_raw ? mysql2date( 'd.m.Y H:i', $last_time_raw, false ) : '';
-						?>
 						<span class="nvx-waybill-simple__label">
 							<?php esc_html_e( 'Статус відстеження', 'wc-nova-express' ); ?>
-							<span class="nvx-waybill-card__updated-time" style="font-weight:normal;color:#64748b;"><?php echo $last_time_fmt ? '(' . esc_html( $last_time_fmt ) . ')' : ''; ?></span>
 						</span>
 						<span class="nvx-waybill-simple__value nvx-waybill-card__status">
-							<?php if ( ! empty( $w['carrier_status_code'] ) ) : ?>
-								[<?php echo esc_html( $w['carrier_status_code'] ); ?>]
-							<?php endif; ?>
-							<?php echo esc_html( $w['carrier_status_text'] ?: __( 'Очікує опитування', 'wc-nova-express' ) ); ?>
+							<?php echo esc_html( \NovaExpress\Helpers\Formatting::format_ttn_status_display( $w ) ); ?>
 						</span>
 					</div>
 				</div>

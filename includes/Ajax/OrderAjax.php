@@ -192,6 +192,7 @@ class OrderAjax {
 					'carrier_status_text'   => (string) ( $fresh['carrier_status_text'] ?? '' ),
 					'is_delivered'          => ! empty( $fresh['is_delivered'] ),
 					'last_updated_formatted'=> $time_fmt,
+					'status_display'         => \NovaExpress\Helpers\Formatting::format_ttn_status_display( $fresh ),
 				);
 			}
 		}
