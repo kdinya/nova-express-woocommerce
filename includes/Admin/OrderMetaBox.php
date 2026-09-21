@@ -24,44 +24,48 @@ class OrderMetaBox {
 
 	public function register(): void {
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
-		add_action( 'woocommerce_admin_order_data_after_billing_address', array( $this, 'render_admin_order_address' ) );
+
+		// Форматування адреси безпосередньо у стандартному блоці WooCommerce
+		// (без додаткових рамок, кольорів чи окремих блоків)
+		add_filter( 'woocommerce_order_formatted_billing_address', array( $this, 'format_order_address' ), 20, 2 );
+		add_filter( 'woocommerce_order_formatted_shipping_address', array( $this, 'format_order_address' ), 20, 2 );
 	}
 
-	public function render_admin_order_address( \WC_Order $order ): void {
-		$city_name       = $order->get_meta( '_nvx_city_name' );
-		$warehouse_label = $order->get_meta( '_nvx_warehouse_label' );
-		$service_type    = $order->get_meta( '_nvx_service_type' );
-		$building        = $order->get_meta( '_nvx_building_number' );
-		$apartment       = $order->get_meta( '_nvx_apartment' );
-		$street_name     = $order->get_meta( '_nvx_street_name' );
+	/**
+	 * Підставляє відділення або кур'єрську адресу Нової Пошти у стандартний рядок адреси WooCommerce.
+	 *
+	 * @param array<string,string> $address
+	 * @param \WC_Order            $order
+	 * @return array<string,string>
+	 */
+	public function format_order_address( array $address, \WC_Order $order ): array {
+		$city_name       = (string) $order->get_meta( '_nvx_city_name' );
+		$warehouse_label = (string) $order->get_meta( '_nvx_warehouse_label' );
+		$service_type    = (string) $order->get_meta( '_nvx_service_type' );
+		$street_name     = (string) $order->get_meta( '_nvx_street_name' );
+		$building        = (string) $order->get_meta( '_nvx_building_number' );
+		$apartment       = (string) $order->get_meta( '_nvx_apartment' );
 
-		if ( empty( $city_name ) && empty( $warehouse_label ) ) {
-			return;
+		if ( '' === $city_name && '' === $warehouse_label && '' === $street_name ) {
+			return $address;
 		}
 
 		$is_doors = ( TtnManager::SERVICE_DOORS_DOORS === $service_type || TtnManager::SERVICE_WAREHOUSE_DOORS === $service_type );
-		?>
-		<div class="nvx-admin-billing-delivery" style="margin-top:10px; padding:8px 10px; background:#f8fafc; border-left:3px solid #da291c; border-radius:4px; font-size:13px; line-height:1.4;">
-			<div style="font-weight:600; color:#da291c; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-				<span>📦 <?php echo $is_doors ? esc_html__( 'Нова Пошта: Адресна доставка', 'wc-nova-express' ) : esc_html__( 'Нова Пошта: Відділення / Поштомат', 'wc-nova-express' ); ?></span>
-			</div>
-			<?php if ( ! empty( $city_name ) ) : ?>
-				<div style="color:#1e293b;">
-					<strong><?php esc_html_e( 'Місто:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $city_name ); ?>
-				</div>
-			<?php endif; ?>
-			<?php if ( $is_doors ) : ?>
-				<div style="color:#1e293b; margin-top:2px;">
-					<strong><?php esc_html_e( 'Адреса:', 'wc-nova-express' ); ?></strong>
-					<?php echo esc_html( trim( $street_name . ' ' . $building . ( $apartment ? ' кв./оф. ' . $apartment : '' ) ) ); ?>
-				</div>
-			<?php elseif ( ! empty( $warehouse_label ) ) : ?>
-				<div style="color:#1e293b; margin-top:2px;">
-					<strong><?php esc_html_e( 'Відділення:', 'wc-nova-express' ); ?></strong> <?php echo esc_html( $warehouse_label ); ?>
-				</div>
-			<?php endif; ?>
-		</div>
-		<?php
+
+		if ( $is_doors && '' !== $street_name ) {
+			$address['address_1'] = trim( $street_name . ' ' . $building );
+			if ( '' !== $apartment ) {
+				$address['address_2'] = __( 'кв./офіс ', 'wc-nova-express' ) . $apartment;
+			}
+		} elseif ( '' !== $warehouse_label ) {
+			$address['address_1'] = $warehouse_label;
+		}
+
+		if ( '' !== $city_name ) {
+			$address['city'] = $city_name;
+		}
+
+		return $address;
 	}
 
 	public function add_meta_box(): void {

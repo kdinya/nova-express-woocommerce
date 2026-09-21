@@ -97,6 +97,17 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 			</label>
 
 			<label class="nvx-field">
+				<span><?php esc_html_e( 'Тип відправлення', 'wc-nova-express' ); ?></span>
+				<select id="nvx-cw-cargo-type">
+					<option value="Parcel"><?php esc_html_e( 'Посилка (до 30 кг)', 'wc-nova-express' ); ?></option>
+					<option value="Cargo"><?php esc_html_e( 'Вантаж (понад 30 кг)', 'wc-nova-express' ); ?></option>
+					<option value="Documents"><?php esc_html_e( 'Документи', 'wc-nova-express' ); ?></option>
+					<option value="TiresWheels"><?php esc_html_e( 'Шини та диски', 'wc-nova-express' ); ?></option>
+					<option value="Pallet"><?php esc_html_e( 'Палети', 'wc-nova-express' ); ?></option>
+				</select>
+			</label>
+
+			<label class="nvx-field">
 				<span><?php esc_html_e( 'Дата відправлення', 'wc-nova-express' ); ?></span>
 				<input type="date" id="nvx-cw-date" value="<?php echo esc_attr( current_time( 'Y-m-d' ) ); ?>" />
 			</label>

@@ -145,7 +145,7 @@ class AddressFields {
 		$rendered = true;
 
 		echo '<div id="nvx-checkout-fields" class="nvx-checkout-box" style="display:none;">';
-		echo '<h3 style="display:flex;align-items:center;margin:0 0 1em;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:8px;flex-shrink:0;"><rect width="24" height="24" rx="4" fill="#DA291C"/><path d="M12 4L5 12H10V20L19 12H14V4Z" fill="white"/></svg><span>' . esc_html__( 'Доставка Новою Поштою', 'wc-nova-express' ) . '</span></h3>';
+		echo '<h3 style="display:flex;align-items:center;margin:0 0 1em;"><svg width="22" height="22" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:8px;flex-shrink:0;"><path d="M120 20L165 65H135V95H165L120 140L75 95H105V65H75L120 20Z" fill="#DA291C" style="display:none;"/><rect width="240" height="240" rx="36" fill="#DA291C"/><path d="M120 38L156 74H134V102H162V80L198 116L162 152V130H134V158H156L120 194L84 158H106V130H78V152L42 116L78 80V102H106V74H84L120 38Z" fill="white"/></svg><span>' . esc_html__( 'Доставка Новою Поштою', 'wc-nova-express' ) . '</span></h3>';
 
 		echo '<div class="nvx-field-row">';
 		echo '<p class="form-row form-row-wide">

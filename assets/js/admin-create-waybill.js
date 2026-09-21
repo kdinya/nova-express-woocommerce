@@ -368,12 +368,14 @@ jQuery(function ($) {
 		$val.text('…');
 		$hint.text('Запит до Nova Poshta…');
 
+		var declaredCost = $('#nvx-cw-declared-cost').val() || $('#nvx-cw-declared-cost').attr('placeholder') || '200';
 		post('nvx_calculate_delivery_price', {
 			sender_id: $('#nvx-cw-sender-id').val() || 'primary',
 			recipient_city_ref: cityRef,
 			service_type: $('#nvx-cw-service-type').val() || 'warehouse_warehouse',
+			cargo_type: $('#nvx-cw-cargo-type').val() || 'Parcel',
 			weight: totalWeight(),
-			declared_cost: $('#nvx-cw-declared-cost').val() || '',
+			declared_cost: declaredCost,
 			seats: $('#nvx-cw-places .nvx-cw-place').length || 1
 		}).done(function (res) {
 			if (res && res.success) {
@@ -392,6 +394,9 @@ jQuery(function ($) {
 		});
 	}
 
+		$('#nvx-cw-cargo-type').on('change', function () {
+		updateDeliveryPrice();
+	});
 	$('#nvx-cw-calc-price').on('click', function (e) {
 		e.preventDefault();
 		updateDeliveryPrice();

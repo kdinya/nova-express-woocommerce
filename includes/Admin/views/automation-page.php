@@ -18,33 +18,42 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 
 <style id="nvx-auto-layout-css">
 #nvx-automation-app .nvx-auto-layout{
-	display:grid !important;
-	grid-template-columns:2fr 1fr !important;
-	grid-template-areas:
-		"rules side"
-		"log   side" !important;
-	gap:20px !important;
-	align-items:start !important;
+	display:flex !important;
+	gap:24px !important;
+	align-items:flex-start !important;
 	width:100% !important;
 }
-#nvx-automation-app .nvx-auto-layout__rules{ grid-area:rules !important; min-width:0; }
-#nvx-automation-app .nvx-auto-layout__side{ grid-area:side !important; min-width:0; position:sticky; top:46px; align-self:start; margin-top:0 !important; }
+#nvx-automation-app .nvx-auto-layout__main{
+	flex:1 1 65% !important;
+	min-width:0 !important;
+	display:flex !important;
+	flex-direction:column !important;
+	gap:20px !important;
+}
+#nvx-automation-app .nvx-auto-layout__side{
+	flex:0 0 340px !important;
+	min-width:280px !important;
+	position:sticky !important;
+	top:46px !important;
+	align-self:flex-start !important;
+}
 #nvx-automation-app .nvx-auto-layout__side .nvx-status-guide{ margin-top:0 !important; }
-#nvx-automation-app .nvx-auto-layout__log{ grid-area:log !important; min-width:0; }
 @media (max-width:960px){
 	#nvx-automation-app .nvx-auto-layout{
-		grid-template-columns:1fr !important;
-		grid-template-areas:
-			"rules"
-			"side"
-			"log" !important;
+		flex-direction:column !important;
 	}
-	#nvx-automation-app .nvx-auto-layout__side{ position:static !important; }
+	#nvx-automation-app .nvx-auto-layout__side{
+		width:100% !important;
+		flex:none !important;
+		position:static !important;
+	}
 }
 </style>
 
 	<div class="nvx-header">
-		<div class="nvx-header__logo">NE</div>
+		<div class="nvx-header__logo" style="background:none;padding:0;overflow:hidden;box-shadow:none;">
+			<img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" style="width:44px;height:44px;display:block;border-radius:8px;" />
+		</div>
 		<div>
 			<h1><?php echo 'order' === $rule_kind
 				? esc_html__( 'Автоматизації замовлень', 'wc-nova-express' )
@@ -56,11 +65,72 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 		<button type="button" class="nvx-btn nvx-btn--primary" id="nvx-new-rule"><?php esc_html_e( '+ Нове правило', 'wc-nova-express' ); ?></button>
 	</div>
 
-	
 	<div class="nvx-auto-layout">
-		<div class="nvx-auto-layout__rules">
-			<div id="nvx-rules-list" class="nvx-rules-list">
-				<p class="nvx-empty" id="nvx-rules-empty" style="display:none;"><?php esc_html_e( 'Правил ще немає. Створіть перше правило автоматизації.', 'wc-nova-express' ); ?></p>
+		<div class="nvx-auto-layout__main">
+			<div class="nvx-auto-layout__rules">
+				<div id="nvx-rules-list" class="nvx-rules-list">
+					<p class="nvx-empty" id="nvx-rules-empty" style="display:none;"><?php esc_html_e( 'Правил ще немає. Створіть перше правило автоматизації.', 'wc-nova-express' ); ?></p>
+				</div>
+			</div>
+
+			<div class="nvx-auto-layout__log">
+				<section class="nvx-card nvx-card--log">
+					<div class="nvx-log-head">
+						<h2><?php esc_html_e( 'Журнал останніх виконань', 'wc-nova-express' ); ?></h2>
+						<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--sm" id="nvx-clear-log"><?php esc_html_e( 'Очистити журнал', 'wc-nova-express' ); ?></button>
+					</div>
+					<div id="nvx-log-body">
+					<?php if ( empty( $recent_log ) ) : ?>
+						<p class="nvx-empty"><?php esc_html_e( 'Поки що немає записів.', 'wc-nova-express' ); ?></p>
+					<?php else : ?>
+						<table class="nvx-table">
+							<thead>
+								<tr>
+									<th><?php esc_html_e( 'Час', 'wc-nova-express' ); ?></th>
+									<th><?php esc_html_e( 'Замовлення', 'wc-nova-express' ); ?></th>
+									<th><?php esc_html_e( 'ТТН', 'wc-nova-express' ); ?></th>
+									<th><?php esc_html_e( 'Дія', 'wc-nova-express' ); ?></th>
+									<th><?php esc_html_e( 'Результат', 'wc-nova-express' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+							<?php
+							$nvx_action_type_labels = array(
+								'add_note'      => '📝 ' . __( 'Нотатка', 'wc-nova-express' ),
+								'change_status' => '🔄 ' . __( 'Статус замовлення', 'wc-nova-express' ),
+								'send_webhook'  => '🌐 ' . __( 'Вебхук', 'wc-nova-express' ),
+								'send_email'    => '✉️ ' . __( 'Email', 'wc-nova-express' ),
+							);
+							$nvx_result_labels = array(
+								'ok'    => __( 'Успішно', 'wc-nova-express' ),
+								'error' => __( 'Помилка', 'wc-nova-express' ),
+							);
+							?>
+							<?php foreach ( $recent_log as $entry ) : ?>
+								<tr>
+									<td><?php echo esc_html( $entry['created_at'] ); ?></td>
+									<td>
+										<a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-orders&action=edit&id=' . (int) $entry['order_id'] ) ); ?>">
+											#<?php echo esc_html( $entry['order_id'] ); ?>
+										</a>
+									</td>
+									<td><?php echo esc_html( $entry['waybill_number'] ); ?></td>
+									<td><?php echo esc_html( $nvx_action_type_labels[ $entry['action_type'] ] ?? $entry['action_type'] ); ?></td>
+									<td>
+										<span class="nvx-badge nvx-badge--<?php echo 'ok' === $entry['result'] ? 'success' : 'error'; ?>">
+											<?php echo esc_html( $nvx_result_labels[ $entry['result'] ] ?? $entry['result'] ); ?>
+										</span>
+										<?php if ( ! empty( $entry['message'] ) ) : ?>
+											<div class="nvx-log-message"><?php echo esc_html( $entry['message'] ); ?></div>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+							</tbody>
+						</table>
+					<?php endif; ?>
+					</div>
+				</section>
 			</div>
 		</div>
 
@@ -70,7 +140,7 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 					? esc_html__( 'Довідка: статуси замовлень WooCommerce', 'wc-nova-express' )
 					: esc_html__( 'Довідка: статуси ТТН Нової Пошти', 'wc-nova-express' ); ?></h2>
 				<p class="nvx-card__hint"><?php echo 'order' === $rule_kind
-					? esc_html__( 'Опис стандартних статусів WooCommerce та момент їх спрацювання:', 'wc-nova-express' )
+					? esc_html__( 'Усі зареєстровані статуси магазину з кодами та моментами їх спрацювання:', 'wc-nova-express' )
 					: esc_html__( 'Оберіть потрібний статус як тригер правила. Коротко, що означає кожен код:', 'wc-nova-express' ); ?></p>
 				<ul class="nvx-status-guide__list">
 					<?php foreach ( $status_help as $code => $item ) : ?>
@@ -85,66 +155,6 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 				</ul>
 			</section>
 		</aside>
-
-		<div class="nvx-auto-layout__log">
-			<section class="nvx-card nvx-card--log">
-				<div class="nvx-log-head">
-					<h2><?php esc_html_e( 'Журнал останніх виконань', 'wc-nova-express' ); ?></h2>
-					<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--sm" id="nvx-clear-log"><?php esc_html_e( 'Очистити журнал', 'wc-nova-express' ); ?></button>
-				</div>
-				<div id="nvx-log-body">
-				<?php if ( empty( $recent_log ) ) : ?>
-					<p class="nvx-empty"><?php esc_html_e( 'Поки що немає записів.', 'wc-nova-express' ); ?></p>
-				<?php else : ?>
-					<table class="nvx-table">
-						<thead>
-							<tr>
-								<th><?php esc_html_e( 'Час', 'wc-nova-express' ); ?></th>
-								<th><?php esc_html_e( 'Замовлення', 'wc-nova-express' ); ?></th>
-								<th><?php esc_html_e( 'ТТН', 'wc-nova-express' ); ?></th>
-								<th><?php esc_html_e( 'Дія', 'wc-nova-express' ); ?></th>
-								<th><?php esc_html_e( 'Результат', 'wc-nova-express' ); ?></th>
-							</tr>
-						</thead>
-						<tbody>
-						<?php
-						$nvx_action_type_labels = array(
-							'add_note'      => '📝 ' . __( 'Нотатка', 'wc-nova-express' ),
-							'change_status' => '🔄 ' . __( 'Статус замовлення', 'wc-nova-express' ),
-							'send_webhook'  => '🌐 ' . __( 'Вебхук', 'wc-nova-express' ),
-							'send_email'    => '✉️ ' . __( 'Email', 'wc-nova-express' ),
-						);
-						$nvx_result_labels = array(
-							'ok'    => __( 'Успішно', 'wc-nova-express' ),
-							'error' => __( 'Помилка', 'wc-nova-express' ),
-						);
-						?>
-						<?php foreach ( $recent_log as $entry ) : ?>
-							<tr>
-								<td><?php echo esc_html( $entry['created_at'] ); ?></td>
-								<td>
-									<a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-orders&action=edit&id=' . (int) $entry['order_id'] ) ); ?>">
-										#<?php echo esc_html( $entry['order_id'] ); ?>
-									</a>
-								</td>
-								<td><?php echo esc_html( $entry['waybill_number'] ); ?></td>
-								<td><?php echo esc_html( $nvx_action_type_labels[ $entry['action_type'] ] ?? $entry['action_type'] ); ?></td>
-								<td>
-									<span class="nvx-badge nvx-badge--<?php echo 'ok' === $entry['result'] ? 'success' : 'error'; ?>">
-										<?php echo esc_html( $nvx_result_labels[ $entry['result'] ] ?? $entry['result'] ); ?>
-									</span>
-									<?php if ( ! empty( $entry['message'] ) ) : ?>
-										<div class="nvx-log-message"><?php echo esc_html( $entry['message'] ); ?></div>
-									<?php endif; ?>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-						</tbody>
-					</table>
-				<?php endif; ?>
-				</div>
-			</section>
-		</div>
 	</div>
 
 	<template id="nvx-rule-template">
@@ -167,7 +177,6 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 						: esc_html__( 'Коли статус ТТН змінюється на (можна кілька)', 'wc-nova-express' ); ?></span>
 					<div class="nvx-trigger-checks">
 						<label class="nvx-trigger-any"><input type="checkbox" class="nvx-rule-trigger-any" value="any" /> <?php esc_html_e( 'Будь-яка зміна статусу', 'wc-nova-express' ); ?></label>
-						<!-- інші коди додає JS -->
 					</div>
 					<select class="nvx-rule-trigger-select" style="display:none;">
 						<option value=""><?php esc_html_e( '— оберіть статус —', 'wc-nova-express' ); ?></option>

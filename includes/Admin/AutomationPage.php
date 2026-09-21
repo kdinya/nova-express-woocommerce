@@ -73,7 +73,7 @@ class AutomationPage {
 	 * Скорочений довідник статусів Nova Poshta (StatusCode => назва) для випадаючого списку
 	 * тригера правила.
 	 */
-		public function carrier_statuses(): array {
+	public function carrier_statuses(): array {
 		return array(
 			'ttn_created' => __( 'ТТН створено або додано', 'wc-nova-express' ),
 			'1'           => __( '1 — Нова пошта очікує надходження від відправника', 'wc-nova-express' ),
@@ -200,40 +200,85 @@ class AutomationPage {
 
 	/**
 	 * Довідник статусів замовлень WooCommerce для бічної панелі на вкладці «Автоматизації замовлень».
+	 * Включає всі зареєстровані статуси магазину (в тому числі користувацькі від теми чи плагінів)
+	 * у форматі "Реальна назва (стандартна назва / код)".
 	 *
 	 * @return array<string,array{title:string,help:string}>
 	 */
 	public function order_status_help(): array {
-		return array(
+		$known_descriptions = array(
 			'pending'    => array(
-				'title' => __( 'Очікує оплати (Pending)', 'wc-nova-express' ),
-				'help'  => __( 'Замовлення створено клієнтом, очікується надходження коштів через онлайн-платіж.', 'wc-nova-express' ),
+				'standard' => 'wc-pending / Pending payment',
+				'help'     => __( 'Замовлення створено клієнтом, очікується надходження коштів через онлайн-платіж.', 'wc-nova-express' ),
 			),
 			'processing' => array(
-				'title' => __( 'В обробці (Processing)', 'wc-nova-express' ),
-				'help'  => __( 'Оплату успішно підтверджено або обрано післяплату. Товар готовий до комплектації та формування ТТН.', 'wc-nova-express' ),
+				'standard' => 'wc-processing / Processing',
+				'help'     => __( 'Оплату успішно підтверджено або обрано післяплату. Товар готовий до комплектації та формування ТТН.', 'wc-nova-express' ),
 			),
 			'on-hold'    => array(
-				'title' => __( 'На утриманні (On hold)', 'wc-nova-express' ),
-				'help'  => __( 'Очікується банківський переказ за IBAN або підтвердження деталей менеджером.', 'wc-nova-express' ),
+				'standard' => 'wc-on-hold / On hold',
+				'help'     => __( 'Очікується банківський переказ за IBAN або підтвердження деталей менеджером магазину.', 'wc-nova-express' ),
 			),
 			'completed'  => array(
-				'title' => __( 'Виконано (Completed)', 'wc-nova-express' ),
-				'help'  => __( 'Замовлення повністю виконано: посилку отримано клієнтом, кошти надійшли.', 'wc-nova-express' ),
+				'standard' => 'wc-completed / Completed',
+				'help'     => __( 'Замовлення повністю виконано: посилку отримано клієнтом, кошти надійшли продавцю.', 'wc-nova-express' ),
 			),
 			'cancelled'  => array(
-				'title' => __( 'Скасовано (Cancelled)', 'wc-nova-express' ),
-				'help'  => __( 'Замовлення скасовано покупцем або адміністратором магазина.', 'wc-nova-express' ),
+				'standard' => 'wc-cancelled / Cancelled',
+				'help'     => __( 'Замовлення скасовано покупцем або адміністратором магазину.', 'wc-nova-express' ),
 			),
 			'refunded'   => array(
-				'title' => __( 'Повернуто (Refunded)', 'wc-nova-express' ),
-				'help'  => __( 'Оформлено повернення коштів клієнту.', 'wc-nova-express' ),
+				'standard' => 'wc-refunded / Refunded',
+				'help'     => __( 'Оформлено повне або часткове повернення коштів клієнту.', 'wc-nova-express' ),
 			),
 			'failed'     => array(
-				'title' => __( 'Не вдалося (Failed)', 'wc-nova-express' ),
-				'help'  => __( 'Помилка платіжного шлюзу або відхилення транзакції банком.', 'wc-nova-express' ),
+				'standard' => 'wc-failed / Failed',
+				'help'     => __( 'Помилка платіжного шлюзу або відхилення транзакції банком покупця.', 'wc-nova-express' ),
+			),
+			'checkout-draft' => array(
+				'standard' => 'wc-checkout-draft / Draft',
+				'help'     => __( 'Чернетка замовлення під час незавершеного оформлення на чекауті.', 'wc-nova-express' ),
 			),
 		);
+
+		$all_statuses = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
+		if ( empty( $all_statuses ) ) {
+			// Резервний список, якщо WooCommerce ще не ініціалізував wc_get_order_statuses()
+			$all_statuses = array(
+				'wc-pending'    => __( 'Очікує оплати', 'wc-nova-express' ),
+				'wc-processing' => __( 'В обробці', 'wc-nova-express' ),
+				'wc-on-hold'    => __( 'На утриманні', 'wc-nova-express' ),
+				'wc-completed'  => __( 'Виконано', 'wc-nova-express' ),
+				'wc-cancelled'  => __( 'Скасовано', 'wc-nova-express' ),
+				'wc-refunded'   => __( 'Повернуто', 'wc-nova-express' ),
+				'wc-failed'     => __( 'Не вдалося', 'wc-nova-express' ),
+			);
+		}
+
+		$out = array();
+
+		foreach ( $all_statuses as $raw_key => $label ) {
+			$clean_key = 0 === strpos( $raw_key, 'wc-' ) ? substr( $raw_key, 3 ) : $raw_key;
+
+			if ( isset( $known_descriptions[ $clean_key ] ) ) {
+				$known = $known_descriptions[ $clean_key ];
+				$out[ $clean_key ] = array(
+					'title' => $label . ' (' . $known['standard'] . ')',
+					'help'  => $known['help'],
+				);
+			} else {
+				$out[ $clean_key ] = array(
+					'title' => $label . ' (' . $raw_key . ')',
+					'help'  => sprintf(
+						/* translators: %s: status slug */
+						__( 'Користувацький статус замовлення WooCommerce (%s).', 'wc-nova-express' ),
+						$raw_key
+					),
+				);
+			}
+		}
+
+		return $out;
 	}
 
 }
