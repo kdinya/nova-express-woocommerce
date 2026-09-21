@@ -56,9 +56,25 @@ defined( 'ABSPATH' ) || exit;
 					<strong id="nvx-wh-count"><?php echo esc_html( number_format_i18n( $warehouses_count ) ); ?></strong>
 					<span><?php esc_html_e( 'відділень у локальній базі', 'wc-nova-express' ); ?></span>
 				</div>
-				<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-sync-warehouses">
-					<?php esc_html_e( 'Синхронізувати базу відділень', 'wc-nova-express' ); ?>
-				</button>
+				<?php
+				$saved_sync_page  = (int) get_option( 'nvx_warehouse_sync_last_page', 0 );
+				$resume_sync_page = $saved_sync_page > 1 ? max( 1, $saved_sync_page - 1 ) : 1;
+				?>
+				<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-sync-warehouses">
+						<?php
+						if ( $saved_sync_page > 1 ) {
+							/* translators: %d: page number */
+							printf( esc_html__( 'Продовжити синхронізацію (зі стор. %d)', 'wc-nova-express' ), (int) $resume_sync_page );
+						} else {
+							esc_html_e( 'Синхронізувати базу відділень', 'wc-nova-express' );
+						}
+						?>
+					</button>
+					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-reset-sync-link" style="color:var(--nvx-primary, #b32d00); <?php echo $saved_sync_page > 1 ? '' : 'display:none;'; ?>">
+						<?php esc_html_e( 'Почати з 1 сторінки', 'wc-nova-express' ); ?>
+					</button>
+				</div>
 			</div>
 
 			<div class="nvx-sync-log" id="nvx-sync-log"></div>

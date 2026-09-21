@@ -31,9 +31,17 @@ class Assets {
 			return;
 		}
 
-		wp_enqueue_style( 'nvx-admin', NVX_PLUGIN_URL . 'assets/css/admin.css', array(), NVX_VERSION );
+		$css_file      = NVX_PLUGIN_DIR . 'assets/css/admin.css';
+		$core_file     = NVX_PLUGIN_DIR . 'assets/js/admin-core.js';
+		$settings_file = NVX_PLUGIN_DIR . 'assets/js/admin-settings.js';
 
-		wp_enqueue_script( 'nvx-admin-core', NVX_PLUGIN_URL . 'assets/js/admin-core.js', array( 'jquery' ), NVX_VERSION, true );
+		$css_ver      = file_exists( $css_file ) ? (string) filemtime( $css_file ) : NVX_VERSION;
+		$core_ver     = file_exists( $core_file ) ? (string) filemtime( $core_file ) : NVX_VERSION;
+		$settings_ver = file_exists( $settings_file ) ? (string) filemtime( $settings_file ) : NVX_VERSION;
+
+		wp_enqueue_style( 'nvx-admin', NVX_PLUGIN_URL . 'assets/css/admin.css', array(), $css_ver );
+
+		wp_enqueue_script( 'nvx-admin-core', NVX_PLUGIN_URL . 'assets/js/admin-core.js', array( 'jquery' ), $core_ver, true );
 
 		$saved_page = (int) get_option( 'nvx_warehouse_sync_last_page', 0 );
 
@@ -61,7 +69,7 @@ class Assets {
 		}
 
 		if ( $is_settings_page ) {
-			wp_enqueue_script( 'nvx-admin-settings', NVX_PLUGIN_URL . 'assets/js/admin-settings.js', array( 'nvx-admin-core' ), NVX_VERSION, true );
+			wp_enqueue_script( 'nvx-admin-settings', NVX_PLUGIN_URL . 'assets/js/admin-settings.js', array( 'nvx-admin-core' ), $settings_ver, true );
 		}
 	}
 }
