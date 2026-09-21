@@ -27,7 +27,7 @@ class GitHubUpdater {
 	public function register(): void {
 		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_update' ) );
 		add_filter( 'plugins_api', array( $this, 'plugin_api_info' ), 20, 3 );
-		add_filter( 'upgrader_post_install', array( $this, 'post_install' ), 10, 3 );
+		add_filter( 'upgrader_source_selection', array( $this, 'fix_source_folder' ), 10, 4 );
 	}
 
 	/**
@@ -103,37 +103,74 @@ class GitHubUpdater {
 	}
 
 	/**
-	 * Очищення каталогу плагіна після завантаження з GitHub: GitHub
-	 * пакує zipball з назвою теки на кшталт
-	 * "nova-express-woocommerce-2026.09.3", яку потрібно перейменувати
-	 * назад у теку вже встановленого плагіна.
+	 * Вирівнює назву теки розпакованого архіву з текою вже встановленого плагіна.
 	 *
-	 * Раніше тут була жорстко задана назва 'wc-nova-express' — якщо
-	 * плагін у конкретного користувача встановлений під іншим slug
-	 * (наприклад, 'nova-express-woocommerce', як у частини існуючих
-	 * установок), оновлення переносило файли в НОВУ теку 'wc-nova-express'
-	 * замість теки вже встановленого плагіна. WordPress після цього не
-	 * розпізнавав нову теку як оновлення того самого плагіна (slug у
-	 * transient response й фактична тека розходились) і показував два
-	 * окремі пункти в списку плагінів — стару копію та нову. Тепер
-	 * цільова тека завжди береться з фактичного шляху вже встановленого
-	 * плагіна, тож slug під час оновлення ніколи не змінюється.
+	 * Архіви з GitHub ("Source code (zip)" / zipball) розпаковуються в теку на
+	 * кшталт "nova-express-woocommerce-2026.09.5" (або "kdinya-…-<sha>" для
+	 * автооновлення). WordPress встановлює плагін у теку з такою самою назвою, тож
+	 * при ручному встановленні ZIP (Плагіни → Додати новий → Завантажити) кожна
+	 * версія потрапляла в окрему теку й у списку плагінів з'являвся дублікат.
+	 *
+	 * Тут ми ще до копіювання перейменовуємо розпаковану теку на теку поточного
+	 * (вже встановленого) плагіна. Тоді WordPress бачить, що така тека існує, і
+	 * пропонує «Замінити поточну завантаженою» (ручне встановлення) або просто
+	 * перезаписує її (автооновлення) — нова тека більше не створюється.
+	 *
+	 * Фільтр спрацьовує лише для пакета з файлом цього плагіна; інші плагіни, теми
+	 * та ядро не зачіпаються.
+	 *
+	 * @param string|\WP_Error $source        Розпакована тека з пакета (зі слешем в кінці).
+	 * @param string           $remote_source Робоча тека розпакування.
+	 * @param \WP_Upgrader     $upgrader      Екземпляр апгрейдера.
+	 * @param array            $hook_extra    Додаткові дані операції.
+	 * @return string|\WP_Error
 	 */
-	public function post_install( $response, $hook_extra, $result ) {
+	public function fix_source_folder( $source, $remote_source, $upgrader, $hook_extra = array() ) {
 		global $wp_filesystem;
 
-		$proper_folder_name = basename( dirname( $this->plugin_file ) );
-
-		// Якщо GitHub розпакував архів із суфіксом репозиторію/тегу у назві теки:
-		if ( isset( $result['destination'] ) && basename( $result['destination'] ) !== $proper_folder_name ) {
-			$correct_destination = trailingslashit( WP_PLUGIN_DIR ) . $proper_folder_name;
-			if ( $wp_filesystem && is_object( $wp_filesystem ) ) {
-				$wp_filesystem->move( $result['destination'], $correct_destination );
-			}
-			$result['destination'] = $correct_destination;
+		if ( is_wp_error( $source ) || ! ( $upgrader instanceof \Plugin_Upgrader ) || ! is_object( $wp_filesystem ) ) {
+			return $source;
 		}
 
-		return $result;
+		// Оновлюється інша копія/інший плагін — не чіпаємо.
+		if ( is_array( $hook_extra ) && ! empty( $hook_extra['plugin'] ) && $hook_extra['plugin'] !== $this->plugin_slug ) {
+			return $source;
+		}
+
+		$proper_folder = dirname( $this->plugin_slug );
+		if ( '.' === $proper_folder || '' === $proper_folder ) {
+			return $source;
+		}
+
+		$source_dir = untrailingslashit( $source );
+		if ( basename( $source_dir ) === $proper_folder || $source_dir === untrailingslashit( $remote_source ) ) {
+			return $source;
+		}
+
+		// Переконуємось, що в пакеті саме цей плагін (головний файл із тією ж назвою плагіна).
+		$main_file = trailingslashit( $source_dir ) . basename( $this->plugin_file );
+		if ( ! $wp_filesystem->exists( $main_file ) ) {
+			return $source;
+		}
+		$package_head = (string) $wp_filesystem->get_contents( $main_file );
+		$own          = get_file_data( $this->plugin_file, array( 'Name' => 'Plugin Name' ) );
+		if ( empty( $own['Name'] ) || ! preg_match( '/^[ \t\/*#@]*Plugin Name:\s*(.+)$/mi', substr( $package_head, 0, 8192 ), $m ) || trim( $m[1] ) !== $own['Name'] ) {
+			return $source;
+		}
+
+		$new_source = trailingslashit( $remote_source ) . $proper_folder;
+		if ( ! $wp_filesystem->move( $source_dir, $new_source, true ) ) {
+			return new \WP_Error(
+				'nvx_rename_failed',
+				sprintf(
+					/* translators: %s: plugin folder name */
+					__( 'Не вдалося перейменувати розпаковану теку плагіна в «%s». Оновлення скасовано, щоб не створювати дублікат плагіна.', 'wc-nova-express' ),
+					$proper_folder
+				)
+			);
+		}
+
+		return trailingslashit( $new_source );
 	}
 
 	private function get_latest_release(): ?array {
