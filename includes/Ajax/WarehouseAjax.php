@@ -117,7 +117,8 @@ class WarehouseAjax {
 			wp_send_json_success( array() );
 		}
 
-		$rows = $this->repository->search_in_city( $city_ref, $query );
+		$type = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : '';
+		$rows = $this->repository->search_in_city( $city_ref, $query, $type );
 
 		$mapped = array_map(
 			static function ( $row ) {

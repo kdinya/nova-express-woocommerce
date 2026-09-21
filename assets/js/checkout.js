@@ -137,15 +137,18 @@ jQuery(function ($) {
 		if (typeof NVX_CHECKOUT === 'undefined' || !NVX_CHECKOUT.ajaxUrl) {
 			return;
 		}
+		var pointType = $('#nvx_point_type').val() || 'warehouse';
 		$.get(NVX_CHECKOUT.ajaxUrl, {
 			action: 'nvx_local_search_warehouses',
 			nonce: NVX_CHECKOUT.nonce,
 			city_ref: cityRef,
+			type: pointType,
 			q: q || ''
 		}).done(function (res) {
 			var $box = $('#nvx_warehouse_suggest').empty();
 			if (!res || !res.success || !res.data.length) {
-				$box.append($('<div class="nvx-suggest-item">').text('Нічого не знайдено'));
+				var emptyMsg = pointType === 'postomat' ? 'Поштоматів не знайдено' : 'Відділень не знайдено';
+				$box.append($('<div class="nvx-suggest-item nvx-suggest-item--muted">').text(emptyMsg));
 				return;
 			}
 			res.data.forEach(function (w) {
@@ -159,6 +162,29 @@ jQuery(function ($) {
 
 	// Делеговані обробники подій — не зникають при перемальовуванні чекауту Woodmart чи WooCommerce
 	$(document).on('change', '#nvx_service_type', toggleServiceBlocks);
+
+	$(document).on('change', '#nvx_point_type', function () {
+		var pointType = $(this).val();
+		var $label = $('#nvx_warehouse_search_label');
+		var $input = $('#nvx_warehouse_search');
+
+		if (pointType === 'postomat') {
+			$label.html('Поштомат <abbr class="required">*</abbr>');
+			$input.attr('placeholder', 'Почніть вводити назву або номер поштомата…');
+		} else {
+			$label.html('Відділення <abbr class="required">*</abbr>');
+			$input.attr('placeholder', 'Почніть вводити назву або номер відділення…');
+		}
+
+		$('#nvx_warehouse_ref').val('');
+		$('#nvx_warehouse_label').val('');
+		$input.val('');
+		$('#nvx_warehouse_suggest').empty();
+
+		if ($('#nvx_city_ref').val()) {
+			fetchCheckoutWarehouses('');
+		}
+	});
 
 	$(document).on('input', '#nvx_city_search', function () {
 		var q = $(this).val();

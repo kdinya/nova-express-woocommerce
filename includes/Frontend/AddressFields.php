@@ -164,8 +164,15 @@ class AddressFields {
 			</p>';
 
 		echo '<div id="nvx_warehouse_block">
-				<p class="form-row form-row-wide">
-					<label>' . esc_html__( 'Відділення / поштомат', 'wc-nova-express' ) . ' <abbr class="required">*</abbr></label>
+				<p class="form-row form-row-wide" id="nvx_point_type_row">
+					<label for="nvx_point_type">' . esc_html__( 'Куди доставити', 'wc-nova-express' ) . '</label>
+					<select id="nvx_point_type" name="nvx_point_type">
+						<option value="warehouse">' . esc_html__( 'У відділення', 'wc-nova-express' ) . '</option>
+						<option value="postomat">' . esc_html__( 'У поштомат', 'wc-nova-express' ) . '</option>
+					</select>
+				</p>
+				<p class="form-row form-row-wide" id="nvx_warehouse_search_row">
+					<label id="nvx_warehouse_search_label">' . esc_html__( 'Відділення', 'wc-nova-express' ) . ' <abbr class="required">*</abbr></label>
 					<input type="text" id="nvx_warehouse_search" autocomplete="off" placeholder="' . esc_attr__( 'Почніть вводити назву або номер відділення…', 'wc-nova-express' ) . '" />
 					<input type="hidden" id="nvx_warehouse_ref" name="nvx_warehouse_ref" />
 					<input type="hidden" id="nvx_warehouse_label" name="nvx_warehouse_label" />
@@ -205,7 +212,12 @@ class AddressFields {
 		$service = sanitize_text_field( wp_unslash( $_POST['nvx_service_type'] ?? '' ) );
 
 		if ( TtnManager::SERVICE_WAREHOUSE_WAREHOUSE === $service && empty( $_POST['nvx_warehouse_ref'] ) ) {
-			wc_add_notice( __( 'Будь ласка, оберіть відділення або поштомат.', 'wc-nova-express' ), 'error' );
+			$point_type = sanitize_text_field( wp_unslash( $_POST['nvx_point_type'] ?? 'warehouse' ) );
+			if ( 'postomat' === $point_type ) {
+				wc_add_notice( __( 'Будь ласка, оберіть поштомат.', 'wc-nova-express' ), 'error' );
+			} else {
+				wc_add_notice( __( 'Будь ласка, оберіть відділення.', 'wc-nova-express' ), 'error' );
+			}
 		}
 
 		if ( TtnManager::SERVICE_DOORS_DOORS === $service ) {
@@ -233,6 +245,8 @@ class AddressFields {
 		$order->update_meta_data( '_nvx_service_type', $service_type );
 		$order->update_meta_data( '_nvx_city_ref', sanitize_text_field( wp_unslash( $_POST['nvx_city_ref'] ) ) );
 		$order->update_meta_data( '_nvx_city_name', $city_name );
+		$point_type = sanitize_text_field( wp_unslash( $_POST['nvx_point_type'] ?? 'warehouse' ) );
+		$order->update_meta_data( '_nvx_point_type', $point_type );
 		$order->update_meta_data( '_nvx_warehouse_ref', sanitize_text_field( wp_unslash( $_POST['nvx_warehouse_ref'] ?? '' ) ) );
 		$order->update_meta_data( '_nvx_warehouse_label', $warehouse_label );
 		$order->update_meta_data( '_nvx_street_ref', sanitize_text_field( wp_unslash( $_POST['nvx_street_ref'] ?? '' ) ) );

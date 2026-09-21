@@ -142,14 +142,24 @@ class WarehouseRepository {
 		);
 	}
 
-	public function search_in_city( string $city_ref, string $query = '', int $limit = 400 ): array {
+	public function search_in_city( string $city_ref, string $query = '', string $type = '', int $limit = 400 ): array {
 		global $wpdb;
+
+		// Фільтр типу пункту видачі: 'postomat' — лише поштомати, 'warehouse' — лише відділення.
+		// Поштомати в довіднику НП мають TypeOfWarehouse f9316480 (Поштомат) чи 95dc212d (Поштомат ПриватБанку);
+		// для надійності додатково звіряємо назву. %% — екранування відсотка для \$wpdb->prepare().
+		$type_sql = '';
+		if ( 'postomat' === $type ) {
+			$type_sql = " AND (warehouse_type IN ('f9316480-5f2d-425d-bc2c-ac7cd29decf0', '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc') OR description LIKE '%%Поштомат%%')";
+		} elseif ( 'warehouse' === $type ) {
+			$type_sql = " AND (warehouse_type NOT IN ('f9316480-5f2d-425d-bc2c-ac7cd29decf0', '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc') AND description NOT LIKE '%%Поштомат%%')";
+		}
 
 		if ( '' === $query ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			return $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT ref, description, warehouse_type FROM {$this->table} WHERE city_ref = %s AND is_active = 1 ORDER BY warehouse_index ASC, description ASC LIMIT %d",
+					"SELECT ref, description, warehouse_type FROM {$this->table} WHERE city_ref = %s AND is_active = 1{$type_sql} ORDER BY warehouse_index ASC, description ASC LIMIT %d",
 					$city_ref,
 					$limit
 				),
@@ -162,7 +172,7 @@ class WarehouseRepository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT ref, description, warehouse_type FROM {$this->table} WHERE city_ref = %s AND is_active = 1 AND description LIKE %s ORDER BY warehouse_index ASC LIMIT %d",
+				"SELECT ref, description, warehouse_type FROM {$this->table} WHERE city_ref = %s AND is_active = 1{$type_sql} AND description LIKE %s ORDER BY warehouse_index ASC LIMIT %d",
 				$city_ref,
 				$like,
 				$limit

@@ -74,6 +74,27 @@ class AddressAjax {
 			wp_send_json_error( array( 'message' => $e->getMessage() ), 400 );
 		}
 
+		$type_filter = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : '';
+		if ( 'postomat' === $type_filter ) {
+			$results = array_filter(
+				$results,
+				static function ( $item ) {
+					$desc = $item['Description'] ?? '';
+					$type = $item['TypeOfWarehouse'] ?? '';
+					return false !== mb_stripos( $desc, 'Поштомат' ) || in_array( $type, array( 'f9316480-5f2d-425d-bc2c-ac7cd29decf0', '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc' ), true );
+				}
+			);
+		} elseif ( 'warehouse' === $type_filter ) {
+			$results = array_filter(
+				$results,
+				static function ( $item ) {
+					$desc = $item['Description'] ?? '';
+					$type = $item['TypeOfWarehouse'] ?? '';
+					return false === mb_stripos( $desc, 'Поштомат' ) && ! in_array( $type, array( 'f9316480-5f2d-425d-bc2c-ac7cd29decf0', '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc' ), true );
+				}
+			);
+		}
+
 		$mapped = array_map(
 			static function ( $item ) {
 				return array(
