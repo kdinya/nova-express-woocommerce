@@ -27,6 +27,12 @@ if ( $wipe ) {
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}nvx_automation_log" );
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}nvx_warehouses" );
 
+	$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '_nvx_%'" );
+	$hpos_table = $wpdb->prefix . 'wc_orders_meta';
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $hpos_table ) ) === $hpos_table ) {
+		$wpdb->query( "DELETE FROM {$hpos_table} WHERE meta_key LIKE '_nvx_%'" );
+	}
+
 	delete_option( 'nvx_settings' );
 	delete_option( 'nvx_db_version' );
 }

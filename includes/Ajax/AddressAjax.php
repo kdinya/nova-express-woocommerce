@@ -39,6 +39,12 @@ class AddressAjax {
 			wp_send_json_success( array() );
 		}
 
+		$cache_key = 'nvx_c_' . md5( mb_strtolower( $query ) );
+		$cached    = get_transient( $cache_key );
+		if ( false !== $cached && is_array( $cached ) ) {
+			wp_send_json_success( $cached );
+		}
+
 		try {
 			$results = $this->client->search_settlements( $query );
 		} catch ( NovaPoshtaApiException $e ) {
@@ -55,6 +61,7 @@ class AddressAjax {
 			$results
 		);
 
+		set_transient( $cache_key, $mapped, 12 * HOUR_IN_SECONDS );
 		wp_send_json_success( $mapped );
 	}
 
@@ -68,10 +75,17 @@ class AddressAjax {
 			wp_send_json_success( array() );
 		}
 
-		try {
-			$results = $this->client->get_warehouses( $city_ref, $search );
-		} catch ( NovaPoshtaApiException $e ) {
-			wp_send_json_error( array( 'message' => $e->getMessage() ), 400 );
+		$cache_key = 'nvx_w_' . md5( $city_ref . '_' . mb_strtolower( $search ) );
+		$cached    = get_transient( $cache_key );
+		if ( false !== $cached && is_array( $cached ) ) {
+			$results = $cached;
+		} else {
+			try {
+				$results = $this->client->get_warehouses( $city_ref, $search );
+				set_transient( $cache_key, $results, 6 * HOUR_IN_SECONDS );
+			} catch ( NovaPoshtaApiException $e ) {
+				wp_send_json_error( array( 'message' => $e->getMessage() ), 400 );
+			}
 		}
 
 		$type_filter = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : '';
@@ -119,6 +133,12 @@ class AddressAjax {
 			wp_send_json_success( array() );
 		}
 
+		$cache_key = 'nvx_s_' . md5( $city_ref . '_' . mb_strtolower( $query ) );
+		$cached    = get_transient( $cache_key );
+		if ( false !== $cached && is_array( $cached ) ) {
+			wp_send_json_success( $cached );
+		}
+
 		try {
 			$results = $this->client->search_streets( $city_ref, $query );
 		} catch ( NovaPoshtaApiException $e ) {
@@ -135,6 +155,7 @@ class AddressAjax {
 			$results
 		);
 
+		set_transient( $cache_key, $mapped, 12 * HOUR_IN_SECONDS );
 		wp_send_json_success( $mapped );
 	}
 }
