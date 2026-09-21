@@ -34,7 +34,14 @@ $has_active_ttn = ! empty( $waybills );
 					</div>
 
 					<div class="nvx-waybill-simple__row">
-						<span class="nvx-waybill-simple__label"><?php esc_html_e( 'Статус відстеження', 'wc-nova-express' ); ?></span>
+						<?php
+						$last_time_raw = ! empty( $w['last_polled_at'] ) ? $w['last_polled_at'] : ( $w['updated_at'] ?? '' );
+						$last_time_fmt = $last_time_raw ? date_i18n( 'd.m.Y H:i', strtotime( $last_time_raw ) ) : '';
+						?>
+						<span class="nvx-waybill-simple__label">
+							<?php esc_html_e( 'Статус відстеження', 'wc-nova-express' ); ?>
+							<span class="nvx-waybill-card__updated-time" style="font-weight:normal;color:#64748b;"><?php echo $last_time_fmt ? '(' . esc_html( $last_time_fmt ) . ')' : ''; ?></span>
+						</span>
 						<span class="nvx-waybill-simple__value nvx-waybill-card__status">
 							<?php if ( ! empty( $w['carrier_status_code'] ) ) : ?>
 								[<?php echo esc_html( $w['carrier_status_code'] ); ?>]

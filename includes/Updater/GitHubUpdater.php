@@ -261,6 +261,7 @@ class GitHubUpdater {
 				'current_version'  => $this->version,
 				'latest_version'   => $latest_version,
 				'update_available' => $update_available,
+				'can_reinstall'    => true,
 				'changelog'        => (string) ( $release['body'] ?? '' ),
 				'html_url'         => (string) ( $release['html_url'] ?? '' ),
 			)

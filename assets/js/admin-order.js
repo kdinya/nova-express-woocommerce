@@ -78,6 +78,9 @@ jQuery(function ($) {
 						(w.carrier_status_text || 'Очікує опитування');
 					$card.find('.nvx-waybill-card__status').text(text);
 					$card.toggleClass('is-delivered', !!w.is_delivered);
+					if (w.last_updated_formatted) {
+						$card.find('.nvx-waybill-card__updated-time').text('(' + w.last_updated_formatted + ')');
+					}
 				}
 
 				$btn.prop('disabled', false).text('✓ Оновлено');

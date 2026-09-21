@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="nvx-wrap">
 	<div class="nvx-header">
-		<div class="nvx-header__logo" style="background:none;padding:0;overflow:hidden;box-shadow:none;"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" style="width:44px;height:44px;display:block;border-radius:8px;" /></div>
+		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" /></div>
 		<div>
 			<h1><?php esc_html_e( 'Nova Express', 'wc-nova-express' ); ?></h1>
 			<p><?php esc_html_e( 'Доставка Новою Поштою, ТТН та автоматизації для вашого магазину', 'wc-nova-express' ); ?></p>
@@ -37,9 +37,9 @@ defined( 'ABSPATH' ) || exit;
 
 			<label class="nvx-field">
 				<span><?php esc_html_e( 'API-ключ', 'wc-nova-express' ); ?></span>
-				<div class="nvx-api-key-row" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; max-width:100%;">
-					<input type="password" id="nvx_api_key" name="api_key" value="<?php echo esc_attr( $settings['api_key'] ); ?>" autocomplete="off" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="flex:1 1 220px; min-width:0; max-width:100%; box-sizing:border-box;" />
-					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-toggle-api-key" style="flex:0 0 auto; white-space:nowrap;">
+				<div class="nvx-api-key-row">
+					<input type="password" id="nvx_api_key" name="api_key" value="<?php echo esc_attr( $settings['api_key'] ); ?>" autocomplete="off" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-toggle-api-key">
 						👁️ <?php esc_html_e( 'Показати', 'wc-nova-express' ); ?>
 					</button>
 				</div>

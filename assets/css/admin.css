@@ -29,9 +29,13 @@
 	box-shadow:0 10px 28px rgba(124,179,66,.28);
 }
 .nvx-header__logo{
-	width:52px; height:52px; border-radius:14px; background:rgba(255,255,255,.18);
-	display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px;
-	letter-spacing:.5px; backdrop-filter: blur(4px);
+	width:48px; height:48px; border-radius:12px; background:#fff;
+	display:flex; align-items:center; justify-content:center;
+	flex-shrink:0 !important; padding:4px; box-sizing:border-box;
+	box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+.nvx-header__logo img{
+	width:100%; height:100%; object-fit:contain; display:block;
 }
 .nvx-header h1{ margin:0; font-size:22px; color:#fff; }
 .nvx-header p{ margin:4px 0 0; opacity:.9; font-size:13px; }
@@ -49,6 +53,7 @@
 .nvx-field{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; flex:1; }
 .nvx-field > span{ font-weight:600; font-size:12.5px; color:var(--nvx-text-soft); }
 .nvx-field input[type=text],
+.nvx-field input[type=password],
 .nvx-field input[type=number],
 .nvx-field input[type=url],
 .nvx-field select,
@@ -561,15 +566,36 @@
 }
 
 @media (max-width: 960px){
-	#nvx-automation-app .nvx-auto-layout{
-		grid-template-columns: 1fr !important;
-		grid-template-areas:
-			"rules"
-			"side"
-			"log" !important;
+	#nvx-automation-app.nvx-wrap{
+		margin-right: 0 !important;
+		padding-right: 0 !important;
+		width: 100% !important;
+		max-width: 100% !important;
 	}
+	#nvx-automation-app .nvx-auto-layout{
+		display: flex !important;
+		flex-direction: column !important;
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+	#nvx-automation-app .nvx-auto-layout__main,
+	#nvx-automation-app .nvx-auto-layout__side,
+	#nvx-automation-app .nvx-auto-layout__rules,
+	#nvx-automation-app .nvx-auto-layout__log,
+	#nvx-automation-app .nvx-card--log{
+		width: 100% !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
+	}
+	#nvx-automation-app .nvx-status-guide,
 	#nvx-automation-app .nvx-auto-layout__side{ position: static !important; }
 	.nvx-structured-help__list li{ grid-template-columns: 1fr; gap: 2px; }
+}
+#nvx-log-body{
+	width: 100%;
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
 
@@ -704,10 +730,33 @@ body.woocommerce_page_nvx-express .wrap {
 }
 
 /* API key field responsiveness */
-.nvx-api-key-row { max-width: 100%; }
-.nvx-api-key-row input { min-width: 0; }
-@media (max-width: 480px) {
-	.nvx-api-key-row { flex-direction: column; align-items: stretch !important; }
-	.nvx-api-key-row input { width: 100% !important; }
-	.nvx-api-key-row button { width: 100% !important; }
+.nvx-api-key-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	width: 100%;
+	max-width: 560px;
+}
+.nvx-api-key-row input {
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+}
+.nvx-api-key-row button {
+	flex: 0 0 auto;
+	white-space: nowrap;
+}
+@media (max-width: 600px) {
+	.nvx-api-key-row {
+		flex-direction: column;
+		align-items: stretch !important;
+		width: 100%;
+	}
+	.nvx-api-key-row input {
+		width: 100% !important;
+	}
+	.nvx-api-key-row button {
+		width: 100% !important;
+		justify-content: center;
+	}
 }

@@ -185,10 +185,13 @@ class OrderAjax {
 		if ( empty( $result['deleted'] ) ) {
 			$fresh = $this->manager->repository()->find_by_id( $ttn_id );
 			if ( $fresh ) {
+				$last_time = ! empty( $fresh['last_polled_at'] ) ? $fresh['last_polled_at'] : ( $fresh['updated_at'] ?? '' );
+				$time_fmt  = $last_time ? date_i18n( 'd.m.Y H:i', strtotime( $last_time ) ) : '';
 				$result['waybill'] = array(
-					'carrier_status_code' => (string) ( $fresh['carrier_status_code'] ?? '' ),
-					'carrier_status_text' => (string) ( $fresh['carrier_status_text'] ?? '' ),
-					'is_delivered'        => ! empty( $fresh['is_delivered'] ),
+					'carrier_status_code'   => (string) ( $fresh['carrier_status_code'] ?? '' ),
+					'carrier_status_text'   => (string) ( $fresh['carrier_status_text'] ?? '' ),
+					'is_delivered'          => ! empty( $fresh['is_delivered'] ),
+					'last_updated_formatted'=> $time_fmt,
 				);
 			}
 		}

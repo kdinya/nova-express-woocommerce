@@ -304,7 +304,15 @@ jQuery(function ($) {
 				} else {
 					$updateBox.html(
 						'<div class="nvx-sync-log__item nvx-sync-log__item--success">' +
-							'✓ У вас встановлена найновіша версія (v' + d.current_version + '). Оновлення не потрібні.' +
+							'<div>✓ У вас встановлена поточна версія (v' + d.current_version + '). Новіших релізів не виявлено.</div>' +
+							'<div style="margin-top:6px; font-size:12px; color:#475569;">Якщо реліз або код цієї версії було перезаписано на GitHub, ви можете оновити/перевстановити її зараз:</div>' +
+							'<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">' +
+								'<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-run-update-btn">' +
+									'🔄 Оновити / перевстановити v' + d.current_version +
+								'</button>' +
+								(d.html_url ? '<a href="' + d.html_url + '" target="_blank" rel="noopener noreferrer" class="nvx-btn nvx-btn--ghost" style="text-decoration:none;">Переглянути реліз на GitHub ↗</a>' : '') +
+							'</div>' +
+							'<div id="nvx-update-process-msg" style="margin-top:10px; font-weight:600; display:none;"></div>' +
 						'</div>'
 					);
 				}
