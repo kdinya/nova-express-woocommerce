@@ -12,7 +12,9 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="nvx-wrap" id="nvx-monitoring-app">
 	<div class="nvx-header">
-		<div class="nvx-header__logo">NE</div>
+		<div class="nvx-header__logo" style="background:none;padding:0;overflow:hidden;box-shadow:none;">
+			<img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" style="width:44px;height:44px;display:block;border-radius:8px;" />
+		</div>
 		<div>
 			<h1><?php esc_html_e( 'Моніторинг ТТН', 'wc-nova-express' ); ?></h1>
 			<p><?php esc_html_e( 'Активні накладні в базі плагіна та ручна перевірка статусів.', 'wc-nova-express' ); ?></p>
