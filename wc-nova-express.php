@@ -3,7 +3,7 @@
  * Plugin Name:       Nova Express for WooCommerce
  * Plugin URI:        https://github.com/kdinya/nova-express-woocommerce
  * Description:       Доставка Новою Поштою для WooCommerce: розрахунок вартості, ручне створення ТТН (ТТН) з картки замовлення, автоматичний моніторинг статусів ТТН та автоматизації (нотатки, зміна статусу, вебхуки).
- * Version:           2026.09.6
+ * Version:           2026.9.7
  * Author:            kdinya
  * Author URI:        https://github.com/kdinya
  * Text Domain:       wc-nova-express
@@ -27,8 +27,8 @@ if ( defined( 'NVX_VERSION' ) ) {
 define( 'NVX_PLUGIN_FILE', __FILE__ );
 define( 'NVX_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NVX_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'NVX_VERSION', '2026.09.6' );
-define( 'NVX_DB_VERSION', '1.8.0' );
+define( 'NVX_VERSION', '2026.9.7' );
+define( 'NVX_DB_VERSION', '1.8.1' );
 
 /**
  * Легкий PSR-4-подібний автозавантажувач без Composer,
@@ -107,12 +107,6 @@ add_filter(
 
 register_activation_hook( NVX_PLUGIN_FILE, array( '\NovaExpress\Install\Installer', 'activate' ) );
 register_deactivation_hook( NVX_PLUGIN_FILE, array( '\NovaExpress\Install\Installer', 'deactivate' ) );
-
-add_action( 'plugins_loaded', function () {
-	if ( is_admin() && class_exists( 'NovaExpress\\Install\\Installer' ) ) {
-		\NovaExpress\Install\Installer::maybe_upgrade_schema();
-	}
-}, 5 );
 
 add_action(
 	'plugins_loaded',

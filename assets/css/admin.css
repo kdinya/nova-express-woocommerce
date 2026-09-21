@@ -573,10 +573,10 @@
 }
 
 
-/* Automation page: use full admin content width */
+/* Automation page: contained readable width */
 #nvx-automation-app.nvx-wrap{
-	max-width: none;
-	width: auto;
+	max-width: 1040px;
+	width: 100%;
 	margin-right: 20px;
 }
 
@@ -701,4 +701,13 @@ body.woocommerce_page_nvx-express #wpbody-content {
 body.woocommerce_page_nvx-express .wrap {
 	margin-right: 0;
 	max-width: none;
+}
+
+/* API key field responsiveness */
+.nvx-api-key-row { max-width: 100%; }
+.nvx-api-key-row input { min-width: 0; }
+@media (max-width: 480px) {
+	.nvx-api-key-row { flex-direction: column; align-items: stretch !important; }
+	.nvx-api-key-row input { width: 100% !important; }
+	.nvx-api-key-row button { width: 100% !important; }
 }

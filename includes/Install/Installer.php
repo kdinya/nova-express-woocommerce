@@ -122,7 +122,7 @@ class Installer {
 			PRIMARY KEY  (id),
 			UNIQUE KEY waybill_number (waybill_number),
 			KEY order_id (order_id),
-			KEY is_delivered (is_delivered)
+			KEY is_delivered_polled (is_delivered, last_polled_at)
 		) {$charset_collate};";
 		dbDelta( $sql );
 
@@ -157,6 +157,14 @@ class Installer {
 			KEY created_at (created_at)
 		) {$charset_collate};";
 		dbDelta( $sql );
+
+		$ttn_table = $wpdb->prefix . 'nvx_waybills';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$idx = $wpdb->get_results( "SHOW INDEX FROM `{$ttn_table}` WHERE Key_name = 'is_delivered_polled'" );
+		if ( empty( $idx ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( "ALTER TABLE `{$ttn_table}` ADD KEY is_delivered_polled (is_delivered, last_polled_at)" );
+		}
 
 		$warehouses_table = $wpdb->prefix . 'nvx_warehouses';
 
@@ -228,6 +236,14 @@ class Installer {
 			// був порядком за замовчуванням і раніше).
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$wpdb->query( "UPDATE `{$table}` SET sort_order = id" );
+		}
+
+		$ttn_table = $wpdb->prefix . 'nvx_waybills';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$idx = $wpdb->get_results( "SHOW INDEX FROM `{$ttn_table}` WHERE Key_name = 'is_delivered_polled'" );
+		if ( empty( $idx ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( "ALTER TABLE `{$ttn_table}` ADD KEY is_delivered_polled (is_delivered, last_polled_at)" );
 		}
 
 		$warehouses_table = $wpdb->prefix . 'nvx_warehouses';

@@ -24,7 +24,8 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 	width:100% !important;
 }
 #nvx-automation-app .nvx-auto-layout__main{
-	flex:1 1 65% !important;
+	flex:1 1 62% !important;
+	max-width: 680px !important;
 	min-width:0 !important;
 	display:flex !important;
 	flex-direction:column !important;

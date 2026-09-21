@@ -37,9 +37,9 @@ defined( 'ABSPATH' ) || exit;
 
 			<label class="nvx-field">
 				<span><?php esc_html_e( 'API-ключ', 'wc-nova-express' ); ?></span>
-				<div style="display:flex; gap:8px; align-items:center;">
-					<input type="password" id="nvx_api_key" name="api_key" value="<?php echo esc_attr( $settings['api_key'] ); ?>" autocomplete="off" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="flex:1;" />
-					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-toggle-api-key" style="white-space:nowrap;">
+				<div class="nvx-api-key-row" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; max-width:100%;">
+					<input type="password" id="nvx_api_key" name="api_key" value="<?php echo esc_attr( $settings['api_key'] ); ?>" autocomplete="off" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="flex:1 1 220px; min-width:0; max-width:100%; box-sizing:border-box;" />
+					<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-toggle-api-key" style="flex:0 0 auto; white-space:nowrap;">
 						👁️ <?php esc_html_e( 'Показати', 'wc-nova-express' ); ?>
 					</button>
 				</div>

@@ -36,6 +36,8 @@ class OrderListColumn {
 		add_filter( 'the_posts', array( $this, 'preload_for_classic_list' ), 10, 2 );
 
 		// HPOS.
+		// HPOS batch preloading hook.
+		add_filter( 'woocommerce_order_list_table_orders', array( $this, 'preload_for_hpos_list' ), 10, 1 );
 		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_column' ), 20 );
 		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( $this, 'render_hpos_column' ), 20, 2 );
 	}
@@ -54,6 +56,30 @@ class OrderListColumn {
 	 * @param \WP_Query  $query
 	 * @return \WP_Post[]
 	 */
+	/**
+	 * Попереднє завантаження ТТН для HPOS-списку замовлень одним запитом.
+	 *
+	 * @param mixed $orders Список замовлень з WC_Order_List_Table.
+	 * @return mixed
+	 */
+	public function preload_for_hpos_list( $orders ) {
+		if ( is_array( $orders ) && ! empty( $orders ) ) {
+			$order_ids = array();
+			foreach ( $orders as $order ) {
+				if ( $order instanceof \WC_Order ) {
+					$order_ids[] = $order->get_id();
+				} elseif ( is_numeric( $order ) ) {
+					$order_ids[] = (int) $order;
+				}
+			}
+			if ( ! empty( $order_ids ) ) {
+				$this->cache = $this->cache + $this->repository->find_latest_for_orders( $order_ids );
+			}
+		}
+
+		return $orders;
+	}
+
 	public function preload_for_classic_list( array $posts, \WP_Query $query ): array {
 		if ( is_admin() && $query->is_main_query() && 'shop_order' === $query->get( 'post_type' ) && ! empty( $posts ) ) {
 			$order_ids   = wp_list_pluck( $posts, 'ID' );
