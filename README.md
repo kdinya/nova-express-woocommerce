@@ -19,7 +19,7 @@
 
 ## 📥 Встановлення та оновлення
 
-1. Завантажте архів останнього релізу [`v2026.09.5`](https://github.com/kdinya/nova-express-woocommerce/releases/latest).
+1. Завантажте з [останнього релізу `v2026.09.5`](https://github.com/kdinya/nova-express-woocommerce/releases/latest) архів **`wc-nova-express.zip`** (розділ Assets), а не «Source code».
 2. В адмінці WordPress перейдіть: **Плагіни → Додати новий → Завантажити плагін**.
 3. Оберіть завантажений ZIP та підтвердіть заміну поточної версії.
 
