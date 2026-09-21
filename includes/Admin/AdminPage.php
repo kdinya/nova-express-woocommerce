@@ -29,8 +29,8 @@ class AdminPage {
 	public function add_menu(): void {
 		add_submenu_page(
 			'woocommerce',
-			__( 'Nova Express', 'wc-nova-express' ),
-			__( 'Nova Express', 'wc-nova-express' ),
+			__( 'Nova Express Woo', 'wc-nova-express' ),
+			__( 'Nova Express Woo', 'wc-nova-express' ),
 			'manage_woocommerce',
 			'nvx-express',
 			array( $this, 'render' )

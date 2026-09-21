@@ -213,7 +213,7 @@ class TrackingRunner {
 			$order->add_order_note(
 				sprintf(
 					/* translators: %s: waybill number */
-					__( 'Nova Express: ТТН №%s не знайдено в Новій Пошті (підтверджено відповіддю API) — прибрано з картки замовлення.', 'wc-nova-express' ),
+					__( 'Nova Express Woo: ТТН №%s не знайдено в Новій Пошті (підтверджено відповіддю API) — прибрано з картки замовлення.', 'wc-nova-express' ),
 					$row['waybill_number']
 				)
 			);

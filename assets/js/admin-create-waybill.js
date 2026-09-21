@@ -18,6 +18,99 @@ jQuery(function ($) {
 	}
 
 	// ---- Місця (вага/габарити) ----
+	var currentWarehouseIsPostomat = parseInt($app.data('is-postomat'), 10) === 1 ||
+		($('#nvx-cw-warehouse-search').val() && $('#nvx-cw-warehouse-search').val().toLowerCase().indexOf('поштомат') !== -1);
+	var warehouseLimits = null;
+
+	function checkIsPostomat() {
+		var searchVal = ($('#nvx-cw-warehouse-search').val() || '').toLowerCase();
+		var labelVal  = ($('#nvx-cw-warehouse-label').val() || '').toLowerCase();
+		return currentWarehouseIsPostomat || searchVal.indexOf('поштомат') !== -1 || labelVal.indexOf('поштомат') !== -1;
+	}
+
+	function validatePostomatLimits() {
+		var isPostomat = checkIsPostomat();
+		var $alert = $('#nvx-cw-postomat-alert');
+		var errors = [];
+
+		// Очищаємо підсвічування помилок
+		$('#nvx-cw-places input').css({ 'border-color': '', 'background': '' });
+		$('#nvx-cw-declared-cost').css({ 'border-color': '', 'background': '' });
+
+		if (!isPostomat) {
+			$alert.hide().empty();
+			$('#nvx-cw-submit').prop('disabled', false).removeClass('nvx-btn--disabled');
+			return true;
+		}
+
+		var $places = $('#nvx-cw-places .nvx-cw-place');
+		if ($places.length > 1) {
+			errors.push('⚠ <strong>Увага (поштомат):</strong> у комірку поштомата можна помістити лише <strong>1 місце</strong> (зараз додано ' + $places.length + '). Об’єднайте вантаж або оберіть вантажне відділення.');
+		}
+
+		$places.each(function (idx) {
+			var $p = $(this);
+			var num = idx + 1;
+			var $w = $p.find('.nvx-p-weight');
+			var $width = $p.find('.nvx-p-width');
+			var $height = $p.find('.nvx-p-height');
+			var $length = $p.find('.nvx-p-length');
+
+			var weight = parseFloat($w.val()) || 0;
+			var w = parseFloat($width.val()) || 0;
+			var h = parseFloat($height.val()) || 0;
+			var l = parseFloat($length.val()) || 0;
+
+			// Вага до 20 кг для поштомата
+			if (weight > 20) {
+				$w.css({ 'border-color': '#dc2626', 'background': '#fef2f2' });
+				errors.push('⚠ <strong>Місце №' + num + ':</strong> вага ' + weight + ' кг перевищує ліміт поштомата (максимум <strong>20 кг</strong>).');
+			}
+
+			// Габарити комірки: довжина до 60 см, ширина до 40 см, висота до 30 см (або в будь-якій орієнтації)
+			var dims = [l, w, h].sort(function(a, b) { return b - a; }); // спадання
+			var maxLimit1 = 60, maxLimit2 = 40, maxLimit3 = 30;
+
+			if (warehouseLimits) {
+				var custom = [
+					warehouseLimits.length || 60,
+					warehouseLimits.width || 40,
+					warehouseLimits.height || 30
+				].sort(function(a, b) { return b - a; });
+				maxLimit1 = custom[0];
+				maxLimit2 = custom[1];
+				maxLimit3 = custom[2];
+			}
+
+			if (dims[0] > maxLimit1 || dims[1] > maxLimit2 || dims[2] > maxLimit3) {
+				[$width, $height, $length].forEach(function ($f) {
+					var val = parseFloat($f.val()) || 0;
+					if (val > 60 || (val > 40 && dims[1] > 40) || (val > 30 && dims[2] > 30)) {
+						$f.css({ 'border-color': '#dc2626', 'background': '#fef2f2' });
+					}
+				});
+				errors.push('⚠ <strong>Місце №' + num + ':</strong> габарити (' + l + '×' + w + '×' + h + ' см) перевищують розмір комірки поштомата (максимум <strong>40×60×30 см</strong>).');
+			}
+		});
+
+		// Оголошена вартість у поштоматах до 29 000 грн
+		var declaredCost = parseFloat($('#nvx-cw-declared-cost').val()) || 0;
+		if (declaredCost > 29000) {
+			$('#nvx-cw-declared-cost').css({ 'border-color': '#dc2626', 'background': '#fef2f2' });
+			errors.push('⚠ <strong>Оголошена вартість:</strong> ' + declaredCost + ' грн перевищує ліміт для поштоматів (максимум <strong>29 000 грн</strong>).');
+		}
+
+		if (errors.length > 0) {
+			$alert.html(errors.join('<br>')).show();
+			$('#nvx-cw-submit').prop('disabled', true).addClass('nvx-btn--disabled');
+			return false;
+		} else {
+			$alert.hide().empty();
+			$('#nvx-cw-submit').prop('disabled', false).removeClass('nvx-btn--disabled');
+			return true;
+		}
+	}
+
 	function addPlace(prefill) {
 		placeSeq++;
 		var id = 'nvx-place-' + placeSeq;
@@ -49,6 +142,8 @@ jQuery(function ($) {
 		recalcVolume($place);
 	}
 
+	setTimeout(validatePostomatLimits, 200);
+
 	function recalcVolume($place) {
 		var w = parseFloat($place.find('.nvx-p-width').val()) || 0;
 		var h = parseFloat($place.find('.nvx-p-height').val()) || 0;
@@ -74,6 +169,7 @@ jQuery(function ($) {
 	addPlace();
 	$('#nvx-cw-add-place').on('click', function () {
 		addPlace();
+		validatePostomatLimits();
 	});
 
 	// ---- Тип доставки: відділення / адреса ----
@@ -142,6 +238,13 @@ jQuery(function ($) {
 					$('#nvx-cw-warehouse-label').val(w.label);
 					$('#nvx-cw-warehouse-search').val(w.label);
 					$box.empty();
+					currentWarehouseIsPostomat = !!w.is_postomat || (w.label && w.label.toLowerCase().indexOf('поштомат') !== -1);
+					warehouseLimits = (w.max_dim_width || w.max_dim_height || w.max_dim_length) ? {
+						width: w.max_dim_width,
+						height: w.max_dim_height,
+						length: w.max_dim_length
+					} : null;
+					validatePostomatLimits();
 				});
 				$box.append($item);
 			});
@@ -150,7 +253,13 @@ jQuery(function ($) {
 	$('#nvx-cw-warehouse-search').on('focus click', function () {
 		fetchWarehousesSuggest('');
 	});
+	
+	$('#nvx-cw-declared-cost').on('input', function () {
+		validatePostomatLimits();
+	});
 	$('#nvx-cw-warehouse-search').on('input', function () {
+		currentWarehouseIsPostomat = ($(this).val() || '').toLowerCase().indexOf('поштомат') !== -1;
+		validatePostomatLimits();
 		var q = $(this).val();
 		clearTimeout(warehouseTimer);
 		$('#nvx-cw-warehouse-ref').val('');

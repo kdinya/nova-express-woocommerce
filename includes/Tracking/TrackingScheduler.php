@@ -50,8 +50,8 @@ class TrackingScheduler {
 			$stats['last_poll_text'] = sprintf(
 				/* translators: 1: formatted date, 2: human-readable "X ago" */
 				__( 'Останнє оновлення статусів: %1$s (%2$s тому)', 'wc-nova-express' ),
-				date_i18n( 'd.m.Y H:i', $ts_local, true ),
-				human_time_diff( $ts_local, current_time( 'timestamp', true ) )
+				wp_date( 'd.m.Y H:i', $ts_local ),
+				human_time_diff( $ts_local, time() )
 			);
 		}
 

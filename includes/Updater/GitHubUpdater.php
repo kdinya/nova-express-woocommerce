@@ -87,7 +87,7 @@ class GitHubUpdater {
 		$latest_version = ltrim( $release['tag_name'] ?? '', 'v' );
 
 		$res                = new \stdClass();
-		$res->name          = 'Nova Express for WooCommerce';
+		$res->name          = 'Nova Express Woo for WooCommerce';
 		$res->slug          = $slug;
 		$res->version       = $latest_version;
 		$res->author        = '<a href="https://github.com/' . esc_url( 'https://github.com/' . $this->repo_owner ) . '">Nova Express</a>';
@@ -278,15 +278,47 @@ class GitHubUpdater {
 
 		check_ajax_referer( 'nvx_admin_nonce', 'nonce' );
 
-		// Оновлюємо transient, щоб WordPress бачив свіжі дані про реліз.
+		// Отримуємо найсвіжіший реліз з GitHub напряму без кешу.
 		delete_transient( 'nvx_github_latest_release' );
 		delete_site_transient( 'update_plugins' );
-		wp_update_plugins();
+
+		$release = $this->get_latest_release( true );
+		if ( ! $release || empty( $release['tag_name'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Не вдалося отримати дані релізу з GitHub. Спробуйте пізніше.', 'wc-nova-express' ) ) );
+		}
+
+		$package = $this->get_download_package( $release );
+		if ( empty( $package ) ) {
+			wp_send_json_error( array( 'message' => __( 'Не знайдено ZIP-архів релізу на GitHub.', 'wc-nova-express' ) ) );
+		}
+
+		// Примусово прописуємо пакет у transient 'update_plugins', щоб WordPress
+		// міг встановити/перевстановити його, навіть якщо номер версії збігається
+		// з поточною встановленою версією (коли версію перезаписано на GitHub).
+		$latest_version = ltrim( (string) $release['tag_name'], 'v' );
+		$transient      = get_site_transient( 'update_plugins' );
+		if ( ! is_object( $transient ) ) {
+			$transient = new \stdClass();
+		}
+		if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+			$transient->response = array();
+		}
+
+		$obj              = new \stdClass();
+		$obj->slug        = dirname( $this->plugin_slug );
+		$obj->new_version = $latest_version;
+		$obj->url         = "https://github.com/{$this->repo_owner}/{$this->repo_name}";
+		$obj->package     = $package;
+		$obj->plugin      = $this->plugin_slug;
+
+		$transient->response[ $this->plugin_slug ] = $obj;
+		set_site_transient( 'update_plugins', $transient );
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 
-		$upgrader = new \Plugin_Upgrader( new \WP_Ajax_Upgrader_Skin() );
+		$skin     = new \WP_Ajax_Upgrader_Skin();
+		$upgrader = new \Plugin_Upgrader( $skin );
 		$result   = $upgrader->upgrade( $this->plugin_slug );
 
 		if ( is_wp_error( $result ) ) {
@@ -294,7 +326,11 @@ class GitHubUpdater {
 		}
 
 		if ( false === $result ) {
-			wp_send_json_error( array( 'message' => __( 'Оновлення не вдалося встановити. Перевірте права на запис теки плагінів.', 'wc-nova-express' ) ) );
+			$skin_errors = $skin->get_errors();
+			$err_msg     = ( is_wp_error( $skin_errors ) && $skin_errors->has_errors() )
+				? $skin_errors->get_error_message()
+				: __( 'Оновлення не вдалося встановити. Перевірте з’єднання з GitHub або права на запис у теку wp-content/plugins.', 'wc-nova-express' );
+			wp_send_json_error( array( 'message' => $err_msg ) );
 		}
 
 		wp_send_json_success(

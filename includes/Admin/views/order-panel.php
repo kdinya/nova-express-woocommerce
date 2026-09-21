@@ -36,7 +36,7 @@ $has_active_ttn = ! empty( $waybills );
 					<div class="nvx-waybill-simple__row">
 						<?php
 						$last_time_raw = ! empty( $w['last_polled_at'] ) ? $w['last_polled_at'] : ( $w['updated_at'] ?? '' );
-						$last_time_fmt = $last_time_raw ? date_i18n( 'd.m.Y H:i', strtotime( $last_time_raw ) ) : '';
+						$last_time_fmt = $last_time_raw ? mysql2date( 'd.m.Y H:i', $last_time_raw, false ) : '';
 						?>
 						<span class="nvx-waybill-simple__label">
 							<?php esc_html_e( 'Статус відстеження', 'wc-nova-express' ); ?>

@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="nvx-wrap">
 	<div class="nvx-header">
-		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" /></div>
+		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express Woo" /></div>
 		<div>
 			<h1><?php esc_html_e( 'Nova Express', 'wc-nova-express' ); ?></h1>
 			<p><?php esc_html_e( 'Доставка Новою Поштою, ТТН та автоматизації для вашого магазину', 'wc-nova-express' ); ?></p>
@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 	<?php elseif ( 'unknown' === $checkout_type ) : ?>
 		<div class="nvx-alert" style="background:#fff7e6; color:#8a6414;">
-			<?php esc_html_e( 'Не вдалося автоматично визначити тип сторінки оформлення замовлення. Якщо поля доставки Nova Express не з’являються на чекауті — перевірте, чи не використовує сторінка блоковий чекаут WooCommerce.', 'wc-nova-express' ); ?>
+			<?php esc_html_e( 'Не вдалося автоматично визначити тип сторінки оформлення замовлення. Якщо поля доставки Nova Express Woo не з’являються на чекауті — перевірте, чи не використовує сторінка блоковий чекаут WooCommerce.', 'wc-nova-express' ); ?>
 		</div>
 	<?php endif; ?>
 

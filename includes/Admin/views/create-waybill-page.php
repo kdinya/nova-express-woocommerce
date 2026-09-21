@@ -21,6 +21,12 @@ $default_additional_info = \NovaExpress\Helpers\Formatting::resolve_additional_i
 	$order,
 	(string) ( $settings['additional_info_contains'] ?? '' )
 );
+$is_postomat = false;
+$point_type = (string) $order->get_meta( '_nvx_point_type' );
+if ( 'postomat' === $point_type || false !== mb_stripos( (string) $default_warehouse_label, 'поштомат' ) ) {
+	$is_postomat = true;
+}
+
 $order_weight = 0;
 foreach ( $order->get_items() as $item ) {
 	$product = $item->get_product();
@@ -51,10 +57,11 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 	data-default-city-ref="<?php echo esc_attr( $default_city_ref ); ?>"
 	data-default-city-name="<?php echo esc_attr( $default_city_name ); ?>"
 	data-default-warehouse-ref="<?php echo esc_attr( $default_warehouse_ref ); ?>"
-	data-default-warehouse-label="<?php echo esc_attr( $default_warehouse_label ); ?>">
+	data-default-warehouse-label="<?php echo esc_attr( $default_warehouse_label ); ?>"
+		data-is-postomat="<?php echo $is_postomat ? '1' : '0'; ?>">
 
 	<header class="nvx-cw-header">
-		<div class="nvx-cw-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" /></div>
+		<div class="nvx-cw-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express Woo" /></div>
 		<div class="nvx-cw-header__title">
 			<h1><?php esc_html_e( 'Створення ТТН', 'wc-nova-express' ); ?></h1>
 			<p>
@@ -112,7 +119,8 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 				<input type="date" id="nvx-cw-date" value="<?php echo esc_attr( current_time( 'Y-m-d' ) ); ?>" />
 			</label>
 
-			<div class="nvx-cw-places" id="nvx-cw-places">
+			<div id="nvx-cw-postomat-alert" class="nvx-alert nvx-alert--warning" style="display:none;margin:0 0 14px;background:#fff7ed;border-left:4px solid #f97316;color:#9a3412;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.45;"></div>
+				<div class="nvx-cw-places" id="nvx-cw-places">
 				<!-- місця рендеряться JS -->
 			</div>
 			<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--block" id="nvx-cw-add-place">

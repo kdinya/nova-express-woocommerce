@@ -76,7 +76,7 @@ class OrderMetaBox {
 		add_meta_box(
 			'nvx_order_panel',
 			'<img src="' . esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ) . '" alt="" width="20" height="20" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;border-radius:4px;" />'
-				. esc_html__( 'Nova Express: доставка', 'wc-nova-express' ),
+				. esc_html__( 'Nova Express Woo: доставка', 'wc-nova-express' ),
 			array( $this, 'render' ),
 			$screen,
 			'side',

@@ -159,7 +159,7 @@ class WarehouseRepository {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			return $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT ref, description, warehouse_type FROM {$this->table} WHERE city_ref = %s AND is_active = 1{$type_sql} ORDER BY warehouse_index ASC, description ASC LIMIT %d",
+					"SELECT ref, description, warehouse_type, max_dim_width, max_dim_height, max_dim_length FROM {$this->table} WHERE city_ref = %s AND is_active = 1{$type_sql} ORDER BY warehouse_index ASC, description ASC LIMIT %d",
 					$city_ref,
 					$limit
 				),
@@ -172,7 +172,7 @@ class WarehouseRepository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT ref, description, warehouse_type FROM {$this->table} WHERE city_ref = %s AND is_active = 1{$type_sql} AND description LIKE %s ORDER BY warehouse_index ASC LIMIT %d",
+				"SELECT ref, description, warehouse_type, max_dim_width, max_dim_height, max_dim_length FROM {$this->table} WHERE city_ref = %s AND is_active = 1{$type_sql} AND description LIKE %s ORDER BY warehouse_index ASC LIMIT %d",
 				$city_ref,
 				$like,
 				$limit

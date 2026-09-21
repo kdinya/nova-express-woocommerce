@@ -62,7 +62,7 @@ class ChangeStatusAction implements ActionInterface {
 			$target_status,
 			sprintf(
 				/* translators: %s: waybill carrier status */
-				__( 'Nova Express: автоматична зміна статусу за подією перевізника «%s».', 'wc-nova-express' ),
+				__( 'Nova Express Woo: автоматична зміна статусу за подією перевізника «%s».', 'wc-nova-express' ),
 				$status_event['status_text'] ?? ''
 			)
 		);

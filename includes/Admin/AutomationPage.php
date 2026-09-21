@@ -44,7 +44,7 @@ class AutomationPage {
 			include NVX_PLUGIN_DIR . 'includes/Admin/views/automation-page.php';
 		} catch ( \Throwable $e ) {
 			printf(
-				'<div class="notice notice-error"><p><strong>Nova Express:</strong> %s</p><p><code>%s:%d</code></p></div>',
+				'<div class="notice notice-error"><p><strong>Nova Express Woo:</strong> %s</p><p><code>%s:%d</code></p></div>',
 				esc_html( $e->getMessage() ),
 				esc_html( $e->getFile() ),
 				(int) $e->getLine()

@@ -30,7 +30,7 @@ class NovaExpressShippingMethod extends \WC_Shipping_Method {
 	public function __construct( $instance_id = 0 ) {
 		$this->id                 = 'nova_express';
 		$this->instance_id        = absint( $instance_id );
-		$this->method_title       = __( 'Нова Пошта (Nova Express)', 'wc-nova-express' );
+		$this->method_title       = __( 'Нова Пошта (Nova Express Woo)', 'wc-nova-express' );
 		$this->method_description = __( 'Доставка Новою Поштою. Вартість на чекауті не показується й не додається до замовлення — рахується вручну в адмінці, коли відома фактична вага посилки.', 'wc-nova-express' );
 		$this->supports           = array( 'shipping-zones', 'instance-settings', 'instance-settings-modal' );
 
@@ -52,7 +52,7 @@ class NovaExpressShippingMethod extends \WC_Shipping_Method {
 				'title'       => __( 'Назва методу', 'wc-nova-express' ),
 				'type'        => 'text',
 				'default'     => __( 'Нова Пошта', 'wc-nova-express' ),
-				'description' => __( 'Показується покупцю на оформленні (рядок доставки при цьому прихований — див. Nova Express → Налаштування). Вартість не рахується й не додається на чекауті; лише вручну в адмінці, де відома фактична вага.', 'wc-nova-express' ),
+				'description' => __( 'Показується покупцю на оформленні (рядок доставки при цьому прихований — див. Nova Express Woo → Налаштування). Вартість не рахується й не додається на чекауті; лише вручну в адмінці, де відома фактична вага.', 'wc-nova-express' ),
 			),
 		);
 	}

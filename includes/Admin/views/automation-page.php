@@ -52,7 +52,7 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 </style>
 
 	<div class="nvx-header">
-		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" /></div>
+		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express Woo" /></div>
 		<div>
 			<h1><?php echo 'order' === $rule_kind
 				? esc_html__( 'Автоматизації замовлень', 'wc-nova-express' )

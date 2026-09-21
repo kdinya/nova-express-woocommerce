@@ -301,18 +301,18 @@ class TtnManager {
 			}
 			if ( $np_deleted ) {
 				$note = sprintf(
-					__( 'Nova Express: ТТН №%s видалено локально та в кабінеті Нової Пошти.', 'wc-nova-express' ),
+					__( 'Nova Express Woo: ТТН №%s видалено локально та в кабінеті Нової Пошти.', 'wc-nova-express' ),
 					$row['waybill_number']
 				);
 			} elseif ( $force_local ) {
 				$note = sprintf(
-					__( 'Nova Express: ТТН №%1$s видалено лише локально (примусово). У НП: %2$s', 'wc-nova-express' ),
+					__( 'Nova Express Woo: ТТН №%1$s видалено лише локально (примусово). У НП: %2$s', 'wc-nova-express' ),
 					$row['waybill_number'],
 					$np_message ?: __( 'не змінювалось', 'wc-nova-express' )
 				);
 			} else {
 				$note = sprintf(
-					__( 'Nova Express: ТТН №%s видалено локально (у кабінеті НП запис не знайдено).', 'wc-nova-express' ),
+					__( 'Nova Express Woo: ТТН №%s видалено локально (у кабінеті НП запис не знайдено).', 'wc-nova-express' ),
 					$row['waybill_number']
 				);
 			}

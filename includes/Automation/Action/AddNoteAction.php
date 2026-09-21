@@ -11,7 +11,7 @@ class AddNoteAction implements ActionInterface {
 	public function run( \WC_Order $order, array $config, array $status_event ): array {
 		$template = ! empty( $config['note_template'] )
 			? $config['note_template']
-			: __( 'Nova Express: статус ТТН №{waybill} змінено на «{status}».', 'wc-nova-express' );
+			: __( 'Nova Express Woo: статус ТТН №{waybill} змінено на «{status}».', 'wc-nova-express' );
 
 		$note = Formatting::apply_order_template(
 			$template,

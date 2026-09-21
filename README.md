@@ -1,4 +1,4 @@
-# Nova Express for WooCommerce
+# Nova Express Woo for WooCommerce
 
 Сучасний, швидкий та автономний плагін інтеграції доставки **Нова Пошта** для інтернет-магазинів на **WooCommerce / WordPress**.
 

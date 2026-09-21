@@ -22,7 +22,7 @@ class LabelPrint {
 	public function register_page(): void {
 		add_submenu_page(
 			null,
-			__( 'Друк етикетки Nova Express', 'wc-nova-express' ),
+			__( 'Друк етикетки Nova Express Woo', 'wc-nova-express' ),
 			__( 'Друк етикетки', 'wc-nova-express' ),
 			'manage_woocommerce',
 			'nvx-print-label',

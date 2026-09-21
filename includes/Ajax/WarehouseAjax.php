@@ -90,11 +90,25 @@ class WarehouseAjax {
 
 		$rows = $this->repository->search_cities( $query );
 
+		$postomat_types = array(
+			'f9316480-5f2d-425d-bc2c-ac7cd29decf0',
+			'95dc212d-479c-4ffb-a8ab-8c1b9073d0bc',
+		);
+
 		$mapped = array_map(
-			static function ( $row ) {
+			static function ( $row ) use ( $postomat_types ) {
+				$desc        = (string) ( $row['description'] ?? '' );
+				$type        = (string) ( $row['warehouse_type'] ?? '' );
+				$is_postomat = in_array( $type, $postomat_types, true ) || ( false !== mb_stripos( $desc, 'поштомат' ) );
+
 				return array(
-					'ref'   => $row['ref'],
-					'label' => trim( $row['city_name'] . ( $row['area_name'] ? ', ' . $row['area_name'] : '' ) ),
+					'ref'            => $row['ref'],
+					'label'          => $desc,
+					'type'           => $type,
+					'is_postomat'    => $is_postomat,
+					'max_dim_width'  => isset( $row['max_dim_width'] ) && null !== $row['max_dim_width'] ? (float) $row['max_dim_width'] : null,
+					'max_dim_height' => isset( $row['max_dim_height'] ) && null !== $row['max_dim_height'] ? (float) $row['max_dim_height'] : null,
+					'max_dim_length' => isset( $row['max_dim_length'] ) && null !== $row['max_dim_length'] ? (float) $row['max_dim_length'] : null,
 				);
 			},
 			$rows

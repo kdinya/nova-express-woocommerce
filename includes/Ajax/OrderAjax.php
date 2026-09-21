@@ -186,7 +186,7 @@ class OrderAjax {
 			$fresh = $this->manager->repository()->find_by_id( $ttn_id );
 			if ( $fresh ) {
 				$last_time = ! empty( $fresh['last_polled_at'] ) ? $fresh['last_polled_at'] : ( $fresh['updated_at'] ?? '' );
-				$time_fmt  = $last_time ? date_i18n( 'd.m.Y H:i', strtotime( $last_time ) ) : '';
+				$time_fmt  = $last_time ? mysql2date( 'd.m.Y H:i', $last_time, false ) : '';
 				$result['waybill'] = array(
 					'carrier_status_code'   => (string) ( $fresh['carrier_status_code'] ?? '' ),
 					'carrier_status_text'   => (string) ( $fresh['carrier_status_text'] ?? '' ),

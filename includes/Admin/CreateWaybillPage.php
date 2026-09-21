@@ -30,7 +30,7 @@ class CreateWaybillPage {
 	public function add_hidden_page(): void {
 		add_submenu_page(
 			'woocommerce',
-			__( 'Nova Express: створення ТТН', 'wc-nova-express' ),
+			__( 'Nova Express Woo: створення ТТН', 'wc-nova-express' ),
 			__( 'Створення ТТН', 'wc-nova-express' ),
 			'manage_woocommerce',
 			'nvx-create-waybill',

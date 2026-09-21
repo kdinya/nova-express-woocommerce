@@ -27,6 +27,17 @@
 	background:linear-gradient(135deg, #7CB342 0%, #8BC34A 50%, #689f38 100%);
 	color:#fff; padding:26px 28px; border-radius:20px; margin-bottom:24px;
 	box-shadow:0 10px 28px rgba(124,179,66,.28);
+	flex-wrap:wrap; box-sizing:border-box; max-width:100%;
+}
+.nvx-header > div:nth-child(2){
+	flex:1 1 240px; min-width:0;
+}
+.nvx-header .nvx-btn{
+	margin-left:auto; flex-shrink:0;
+}
+@media (max-width:782px){
+	.nvx-header{ padding:18px 16px; gap:14px; }
+	.nvx-header .nvx-btn{ margin-left:0; width:100%; justify-content:center; }
 }
 .nvx-header__logo{
 	width:48px; height:48px; border-radius:12px; background:#fff;

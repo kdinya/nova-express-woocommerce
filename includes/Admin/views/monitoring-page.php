@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="nvx-wrap" id="nvx-monitoring-app">
 	<div class="nvx-header">
-		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" /></div>
+		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express Woo" /></div>
 		<div>
 			<h1><?php esc_html_e( 'Моніторинг ТТН', 'wc-nova-express' ); ?></h1>
 			<p><?php esc_html_e( 'Активні накладні в базі плагіна та ручна перевірка статусів.', 'wc-nova-express' ); ?></p>
@@ -32,13 +32,13 @@ defined( 'ABSPATH' ) || exit;
 			// Unix-час для порівняння з current_time('timestamp', true) (реальний UTC).
 			$dt       = date_create( $last_polled_at, wp_timezone() );
 			$ts_local = $dt ? $dt->getTimestamp() : strtotime( $last_polled_at );
-			$ago      = human_time_diff( $ts_local, current_time( 'timestamp', true ) );
+			$ago      = human_time_diff( $ts_local, time() );
 			?>
 			<?php
 			printf(
 				/* translators: 1: formatted date, 2: human-readable "X ago" */
 				esc_html__( 'Останнє оновлення статусів: %1$s (%2$s тому)', 'wc-nova-express' ),
-				esc_html( date_i18n( 'd.m.Y H:i', $ts_local, true ) ),
+				esc_html( wp_date( 'd.m.Y H:i', $ts_local ) ),
 				esc_html( $ago )
 			);
 			?>
@@ -50,7 +50,7 @@ defined( 'ABSPATH' ) || exit;
 			printf(
 				/* translators: %s: formatted date/time */
 				esc_html__( 'наступна планова перевірка: %s', 'wc-nova-express' ),
-				esc_html( date_i18n( 'd.m.Y H:i', $next_cron_at, true ) )
+				esc_html( wp_date( 'd.m.Y H:i', $next_cron_at ) )
 			);
 			?>
 		<?php endif; ?>
