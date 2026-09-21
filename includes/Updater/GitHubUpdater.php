@@ -108,7 +108,7 @@ class GitHubUpdater {
 	public function post_install( $response, $hook_extra, $result ) {
 		global $wp_filesystem;
 
-		$proper_folder_name = dirname( $this->plugin_slug );
+		$proper_folder_name = 'wc-nova-express';
 
 		// Якщо GitHub розпакував архів із суфіксом репозиторію/тегу у назві теки:
 		if ( isset( $result['destination'] ) && basename( $result['destination'] ) !== $proper_folder_name ) {

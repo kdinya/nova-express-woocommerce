@@ -37,7 +37,7 @@ class AutomationPage {
 			$rules          = $this->repository->all_by_kind( $kind );
 			$recent_log     = $this->repository->recent_log( 30 );
 			$statuses       = ( 'order' === $kind ) ? $this->order_status_triggers() : $this->carrier_statuses();
-			$status_help    = ( 'order' === $kind ) ? array() : $this->carrier_status_help();
+			$status_help    = ( 'order' === $kind ) ? $this->order_status_help() : $this->carrier_status_help();
 			$order_statuses = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
 			$rule_kind      = $kind;
 
@@ -197,4 +197,43 @@ class AutomationPage {
 			),
 		);
 	}
+
+	/**
+	 * Довідник статусів замовлень WooCommerce для бічної панелі на вкладці «Автоматизації замовлень».
+	 *
+	 * @return array<string,array{title:string,help:string}>
+	 */
+	public function order_status_help(): array {
+		return array(
+			'pending'    => array(
+				'title' => __( 'Очікує оплати (Pending)', 'wc-nova-express' ),
+				'help'  => __( 'Замовлення створено клієнтом, очікується надходження коштів через онлайн-платіж.', 'wc-nova-express' ),
+			),
+			'processing' => array(
+				'title' => __( 'В обробці (Processing)', 'wc-nova-express' ),
+				'help'  => __( 'Оплату успішно підтверджено або обрано післяплату. Товар готовий до комплектації та формування ТТН.', 'wc-nova-express' ),
+			),
+			'on-hold'    => array(
+				'title' => __( 'На утриманні (On hold)', 'wc-nova-express' ),
+				'help'  => __( 'Очікується банківський переказ за IBAN або підтвердження деталей менеджером.', 'wc-nova-express' ),
+			),
+			'completed'  => array(
+				'title' => __( 'Виконано (Completed)', 'wc-nova-express' ),
+				'help'  => __( 'Замовлення повністю виконано: посилку отримано клієнтом, кошти надійшли.', 'wc-nova-express' ),
+			),
+			'cancelled'  => array(
+				'title' => __( 'Скасовано (Cancelled)', 'wc-nova-express' ),
+				'help'  => __( 'Замовлення скасовано покупцем або адміністратором магазина.', 'wc-nova-express' ),
+			),
+			'refunded'   => array(
+				'title' => __( 'Повернуто (Refunded)', 'wc-nova-express' ),
+				'help'  => __( 'Оформлено повернення коштів клієнту.', 'wc-nova-express' ),
+			),
+			'failed'     => array(
+				'title' => __( 'Не вдалося (Failed)', 'wc-nova-express' ),
+				'help'  => __( 'Помилка платіжного шлюзу або відхилення транзакції банком.', 'wc-nova-express' ),
+			),
+		);
+	}
+
 }

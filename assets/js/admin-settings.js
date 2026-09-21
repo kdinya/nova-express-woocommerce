@@ -1,6 +1,15 @@
 /* Nova Express — сторінка налаштувань: пошук міста/відділення відправника, ручний запуск трекінгу. */
 jQuery(function ($) {
 	'use strict';
+	// Показати / приховати API ключ
+	$(document).on('click', '#nvx-toggle-api-key', function (e) {
+		e.preventDefault();
+		var $input = $('#nvx_api_key');
+		var isPass = $input.attr('type') === 'password';
+		$input.attr('type', isPass ? 'text' : 'password');
+		$(this).html(isPass ? '🔒 Приховати' : '👁️ Показати');
+	});
+
 
 	var $citySearch = $('#nvx-sender-city-search');
 	if (!$citySearch.length) {

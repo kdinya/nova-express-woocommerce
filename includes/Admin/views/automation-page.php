@@ -23,12 +23,13 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 	grid-template-areas:
 		"rules side"
 		"log   side" !important;
-	gap:18px !important;
+	gap:20px !important;
 	align-items:start !important;
 	width:100% !important;
 }
 #nvx-automation-app .nvx-auto-layout__rules{ grid-area:rules !important; min-width:0; }
-#nvx-automation-app .nvx-auto-layout__side{ grid-area:side !important; min-width:0; position:sticky; top:46px; }
+#nvx-automation-app .nvx-auto-layout__side{ grid-area:side !important; min-width:0; position:sticky; top:46px; align-self:start; margin-top:0 !important; }
+#nvx-automation-app .nvx-auto-layout__side .nvx-status-guide{ margin-top:0 !important; }
 #nvx-automation-app .nvx-auto-layout__log{ grid-area:log !important; min-width:0; }
 @media (max-width:960px){
 	#nvx-automation-app .nvx-auto-layout{
@@ -64,9 +65,13 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 		</div>
 
 		<aside class="nvx-auto-layout__side">
-			<section class="nvx-card nvx-status-guide">
-				<h2><?php esc_html_e( 'Довідка: статуси ТТН Нової Пошти', 'wc-nova-express' ); ?></h2>
-				<p class="nvx-card__hint"><?php esc_html_e( 'Оберіть потрібний статус як тригер правила. Коротко, що означає кожен код:', 'wc-nova-express' ); ?></p>
+			<section class="nvx-card nvx-status-guide" style="margin-top:0 !important;">
+				<h2><?php echo 'order' === $rule_kind
+					? esc_html__( 'Довідка: статуси замовлень WooCommerce', 'wc-nova-express' )
+					: esc_html__( 'Довідка: статуси ТТН Нової Пошти', 'wc-nova-express' ); ?></h2>
+				<p class="nvx-card__hint"><?php echo 'order' === $rule_kind
+					? esc_html__( 'Опис стандартних статусів WooCommerce та момент їх спрацювання:', 'wc-nova-express' )
+					: esc_html__( 'Оберіть потрібний статус як тригер правила. Коротко, що означає кожен код:', 'wc-nova-express' ); ?></p>
 				<ul class="nvx-status-guide__list">
 					<?php foreach ( $status_help as $code => $item ) : ?>
 						<li>

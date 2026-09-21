@@ -145,7 +145,7 @@ class AddressFields {
 		$rendered = true;
 
 		echo '<div id="nvx-checkout-fields" class="nvx-checkout-box" style="display:none;">';
-		echo '<h3>' . esc_html__( 'Доставка Новою Поштою', 'wc-nova-express' ) . '</h3>';
+		echo '<h3 style="display:flex;align-items:center;margin:0 0 1em;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:8px;flex-shrink:0;"><rect width="24" height="24" rx="4" fill="#DA291C"/><path d="M12 4L5 12H10V20L19 12H14V4Z" fill="white"/></svg><span>' . esc_html__( 'Доставка Новою Поштою', 'wc-nova-express' ) . '</span></h3>';
 
 		echo '<div class="nvx-field-row">';
 		echo '<p class="form-row form-row-wide">

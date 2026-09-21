@@ -10,12 +10,14 @@
 
 #nvx-checkout-fields.nvx-checkout-box,
 .nvx-checkout-box {
-	margin: 1.25em 0 1.5em;
-	padding: 1.25em 1.35em;
-	border: 1px solid rgba(0, 0, 0, 0.08);
-	border-radius: 8px;
-	background: #fff;
-	box-sizing: border-box;
+	margin: 1.25em 0 1.5em !important;
+	padding: 0 !important;
+	border: none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+	box-sizing: border-box !important;
 }
 
 .nvx-checkout-box h3,
