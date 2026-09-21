@@ -205,22 +205,25 @@ jQuery(function ($) {
 		cityTimer = setTimeout(function () {
 			$.get(NVX_CHECKOUT.ajaxUrl, { action: 'nvx_local_search_cities', nonce: NVX_CHECKOUT.nonce, q: q }).done(function (res) {
 				var $box = $('#nvx_city_suggest').empty();
-				if (!res || !res.success) {
+				if (!res || !res.success || !res.data || !res.data.length) {
+					$box.append($('<div class="nvx-suggest-item nvx-suggest-item--muted">').text((NVX_CHECKOUT.i18n && NVX_CHECKOUT.i18n.noResults) || 'Нічого не знайдено'));
 					return;
 				}
 				res.data.forEach(function (item) {
 					var $item = $('<div class="nvx-suggest-item">').text(item.label);
+					$item.attr('data-ref', item.ref);
+					$item.attr('data-label', item.label);
 					$item.data('item-ref', item.ref);
 					$item.data('item-label', item.label);
 					$box.append($item);
 				});
 			});
-		}, 300);
+		}, 200);
 	});
 
-	$(document).on('click', '#nvx_city_suggest .nvx-suggest-item', function () {
-		var ref = $(this).data('item-ref');
-		var label = $(this).data('item-label');
+	function selectCheckoutCity($item) {
+		var ref = $item.data('item-ref') || $item.attr('data-ref');
+		var label = $item.data('item-label') || $item.attr('data-label') || $item.text();
 		if (!ref) {
 			return;
 		}
@@ -233,6 +236,20 @@ jQuery(function ($) {
 		$('#nvx_warehouse_label').val('');
 		$('#nvx_warehouse_search').val('');
 		$('#nvx_warehouse_suggest').empty();
+
+		var pointType = $('#nvx_point_type').val() || 'warehouse';
+		if ($('#nvx_delivery_type').val() !== 'courier') {
+			fetchCheckoutWarehouses('');
+		}
+	}
+
+	$(document).on('mousedown', '#nvx_city_suggest .nvx-suggest-item', function (e) {
+		e.preventDefault();
+		selectCheckoutCity($(this));
+	});
+
+	$(document).on('click', '#nvx_city_suggest .nvx-suggest-item', function () {
+		selectCheckoutCity($(this));
 	});
 
 	$(document).on('focus', '#nvx_warehouse_search', function () {

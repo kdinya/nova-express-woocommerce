@@ -9,6 +9,8 @@
  * @var int|false   $next_cron_at   Unix timestamp наступного запланованого опитування (wp_next_scheduled).
  */
 defined( 'ABSPATH' ) || exit;
+
+use NovaExpress\Helpers\Formatting;
 ?>
 <div class="nvx-wrap" id="nvx-monitoring-app">
 	<div class="nvx-header">
@@ -81,7 +83,7 @@ defined( 'ABSPATH' ) || exit;
 							( $order->get_shipping_last_name() ?: $order->get_billing_last_name() ) . ' ' .
 							( $order->get_shipping_first_name() ?: $order->get_billing_first_name() )
 						);
-						$total_str = wp_strip_all_tags( $order->get_formatted_order_total() );
+						$total_str = Formatting::clean_order_total( $order );
 					}
 					$status = (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: '—' );
 					$order_url = $order
@@ -122,7 +124,7 @@ defined( 'ABSPATH' ) || exit;
 							( $order->get_shipping_last_name() ?: $order->get_billing_last_name() ) . ' ' .
 							( $order->get_shipping_first_name() ?: $order->get_billing_first_name() )
 						);
-						$total_str = wp_strip_all_tags( $order->get_formatted_order_total() );
+						$total_str = Formatting::clean_order_total( $order );
 					}
 					$status = (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: 'Отримано' );
 					$order_url = $order

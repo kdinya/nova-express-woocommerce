@@ -164,4 +164,14 @@ class Formatting {
 
 		return $text;
 	}
+
+	/**
+	 * Повертає очищену від HTML та HTML-сутностей (наприклад, &nbsp;) суму замовлення.
+	 */
+	public static function clean_order_total( \WC_Order $order ): string {
+		$raw = (string) $order->get_formatted_order_total();
+		$stripped = wp_strip_all_tags( $raw );
+		$decoded = html_entity_decode( $stripped, ENT_QUOTES, "UTF-8" );
+		return trim( preg_replace( "/\x{00A0}|\s+/u", " ", $decoded ) );
+	}
 }

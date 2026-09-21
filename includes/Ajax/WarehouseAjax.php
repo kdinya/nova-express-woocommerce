@@ -90,29 +90,46 @@ class WarehouseAjax {
 
 		$rows = $this->repository->search_cities( $query );
 
-		$postomat_types = array(
-			'f9316480-5f2d-425d-bc2c-ac7cd29decf0',
-			'95dc212d-479c-4ffb-a8ab-8c1b9073d0bc',
-		);
-
-		$mapped = array_map(
-			static function ( $row ) use ( $postomat_types ) {
-				$desc        = (string) ( $row['description'] ?? '' );
-				$type        = (string) ( $row['warehouse_type'] ?? '' );
-				$is_postomat = in_array( $type, $postomat_types, true ) || ( false !== mb_stripos( $desc, 'поштомат' ) );
-
-				return array(
-					'ref'            => $row['ref'],
-					'label'          => $desc,
-					'type'           => $type,
-					'is_postomat'    => $is_postomat,
-					'max_dim_width'  => isset( $row['max_dim_width'] ) && null !== $row['max_dim_width'] ? (float) $row['max_dim_width'] : null,
-					'max_dim_height' => isset( $row['max_dim_height'] ) && null !== $row['max_dim_height'] ? (float) $row['max_dim_height'] : null,
-					'max_dim_length' => isset( $row['max_dim_length'] ) && null !== $row['max_dim_length'] ? (float) $row['max_dim_length'] : null,
+		$mapped = array();
+		if ( ! empty( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$city = trim( (string) ( $row['city_name'] ?? '' ) );
+				if ( '' === $city ) {
+					continue;
+				}
+				$area = trim( (string) ( $row['area_name'] ?? '' ) );
+				$label = $city . ( '' !== $area ? ', ' . $area . ( false === mb_stripos( $area, 'обл' ) ? ' обл.' : '' ) : '' );
+				$mapped[] = array(
+					'ref'   => (string) ( $row['ref'] ?? '' ),
+					'label' => $label,
 				);
-			},
-			$rows
-		);
+			}
+		}
+
+		// Якщо в локальній базі записів не знайдено (наприклад, базу ще не синхронізовано
+		// або введено селище/місто, якого немає в таблиці) — звертаємось до Nova Poshta API
+		if ( empty( $mapped ) && mb_strlen( $query ) >= 2 && $this->sync->client()->has_api_key() ) {
+			try {
+				$api_cities = $this->sync->client()->search_settlements( $query );
+				foreach ( $api_cities as $item ) {
+					$ref = (string) ( $item['DeliveryCity'] ?? ( $item['Ref'] ?? '' ) );
+					$label = trim( (string) ( $item['Present'] ?? '' ) );
+					if ( '' === $label ) {
+						$main = trim( (string) ( $item['MainDescription'] ?? '' ) );
+						$area = trim( (string) ( $item['Area'] ?? '' ) );
+						$label = $main . ( '' !== $area ? ', ' . $area . ( false === mb_stripos( $area, 'обл' ) ? ' обл.' : '' ) : '' );
+					}
+					if ( '' !== $ref && '' !== $label ) {
+						$mapped[] = array(
+							'ref'   => $ref,
+							'label' => $label,
+						);
+					}
+				}
+			} catch ( \Throwable $e ) {
+				// Плавний fallback без аварійного завершення
+			}
+		}
 
 		wp_send_json_success( $mapped );
 	}
@@ -136,14 +153,58 @@ class WarehouseAjax {
 
 		$mapped = array_map(
 			static function ( $row ) {
+				$desc        = (string) ( $row['description'] ?? '' );
+				$wh_type     = (string) ( $row['warehouse_type'] ?? '' );
+				$is_postomat = in_array( $wh_type, array( 'f9316480-5f2d-425d-bc2c-ac7cd29decf0', '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc' ), true ) || ( false !== mb_stripos( $desc, 'поштомат' ) );
+
 				return array(
-					'ref'   => $row['ref'],
-					'label' => $row['description'],
-					'type'  => $row['warehouse_type'],
+					'ref'            => (string) ( $row['ref'] ?? '' ),
+					'label'          => $desc,
+					'type'           => $wh_type,
+					'is_postomat'    => $is_postomat,
+					'max_dim_width'  => isset( $row['max_dim_width'] ) && null !== $row['max_dim_width'] ? (float) $row['max_dim_width'] : null,
+					'max_dim_height' => isset( $row['max_dim_height'] ) && null !== $row['max_dim_height'] ? (float) $row['max_dim_height'] : null,
+					'max_dim_length' => isset( $row['max_dim_length'] ) && null !== $row['max_dim_length'] ? (float) $row['max_dim_length'] : null,
 				);
 			},
 			$rows
 		);
+
+		// Fallback на live API якщо в локальній базі немає відділень по цьому city_ref
+		if ( empty( $mapped ) && $this->sync->client()->has_api_key() ) {
+			try {
+				$api_whs = $this->sync->client()->get_warehouses( $city_ref, $query );
+				foreach ( $api_whs as $wh ) {
+					$desc    = (string) ( $wh['Description'] ?? '' );
+					$wh_type = (string) ( $wh['TypeOfWarehouse'] ?? '' );
+					$is_post = in_array( $wh_type, array( 'f9316480-5f2d-425d-bc2c-ac7cd29decf0', '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc' ), true ) || ( false !== mb_stripos( $desc, 'поштомат' ) );
+
+					if ( 'postomat' === $type && ! $is_post ) {
+						continue;
+					}
+					if ( 'warehouse' === $type && $is_post ) {
+						continue;
+					}
+
+					$dims  = $wh['SendingLimitationsOnDimensions'] ?? array();
+					$max_w = isset( $dims['Width'] ) && (float) $dims['Width'] > 0 ? (float) $dims['Width'] : null;
+					$max_h = isset( $dims['Height'] ) && (float) $dims['Height'] > 0 ? (float) $dims['Height'] : null;
+					$max_l = isset( $dims['Length'] ) && (float) $dims['Length'] > 0 ? (float) $dims['Length'] : null;
+
+					$mapped[] = array(
+						'ref'            => (string) ( $wh['Ref'] ?? '' ),
+						'label'          => $desc,
+						'type'           => $wh_type,
+						'is_postomat'    => $is_post,
+						'max_dim_width'  => $max_w,
+						'max_dim_height' => $max_h,
+						'max_dim_length' => $max_l,
+					);
+				}
+			} catch ( \Throwable $e ) {
+				// Плавний fallback
+			}
+		}
 
 		wp_send_json_success( $mapped );
 	}

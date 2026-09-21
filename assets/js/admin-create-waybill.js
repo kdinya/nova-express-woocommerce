@@ -181,7 +181,7 @@ jQuery(function ($) {
 		}
 	});
 
-	// ---- Пошук міста (локальна база) ----
+	// ---- Пошук міста (локальна база + fallback до API) ----
 	var cityTimer = null;
 	$('#nvx-cw-city-search').on('input', function () {
 		var q = $(this).val();
@@ -193,12 +193,17 @@ jQuery(function ($) {
 		cityTimer = setTimeout(function () {
 			get('nvx_local_search_cities', { q: q }).done(function (res) {
 				var $box = $('#nvx-cw-city-suggest').empty();
-				if (!res || !res.success) {
+				if (!res || !res.success || !res.data || !res.data.length) {
+					$box.append($('<div class="nvx-suggest-item nvx-suggest-item--muted">').text('Нічого не знайдено'));
 					return;
 				}
 				res.data.forEach(function (item) {
 					var $item = $('<div class="nvx-suggest-item">').text(item.label);
-					$item.on('click', function () {
+					function chooseCity(e) {
+						if (e) {
+							e.preventDefault();
+							e.stopPropagation();
+						}
 						$('#nvx-cw-city-ref').val(item.ref);
 						$('#nvx-cw-city-search').val(item.label);
 						$box.empty();
@@ -206,11 +211,25 @@ jQuery(function ($) {
 						$('#nvx-cw-warehouse-label').val('');
 						$('#nvx-cw-warehouse-search').val('').attr('placeholder', 'Почніть вводити назву або номер відділення…');
 						$('#nvx-cw-warehouse-suggest').empty();
-					});
+					}
+					$item.on('mousedown', chooseCity);
+					$item.on('click', chooseCity);
 					$box.append($item);
 				});
 			});
-		}, 250);
+		}, 200);
+	});
+
+	$(document).on('click', function (e) {
+		if (!$(e.target).closest('#nvx-cw-city-search, #nvx-cw-city-suggest').length) {
+			$('#nvx-cw-city-suggest').empty();
+		}
+		if (!$(e.target).closest('#nvx-cw-warehouse-search, #nvx-cw-warehouse-suggest').length) {
+			$('#nvx-cw-warehouse-suggest').empty();
+		}
+		if (!$(e.target).closest('#nvx-cw-street-search, #nvx-cw-street-suggest').length) {
+			$('#nvx-cw-street-suggest').empty();
+		}
 	});
 
 	// Відділення: клік/фокус без тексту → усі по місту; введення → фільтр

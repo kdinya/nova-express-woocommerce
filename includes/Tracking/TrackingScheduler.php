@@ -5,6 +5,7 @@ namespace NovaExpress\Tracking;
 use NovaExpress\Api\NovaPoshtaClient;
 use NovaExpress\Automation\RuleEngine;
 use NovaExpress\Ttn\TtnRepository;
+use NovaExpress\Helpers\Formatting;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -86,7 +87,7 @@ class TrackingScheduler {
 					( $order->get_shipping_last_name() ?: $order->get_billing_last_name() ) . ' ' .
 					( $order->get_shipping_first_name() ?: $order->get_billing_first_name() )
 				);
-				$total_str = wp_strip_all_tags( $order->get_formatted_order_total() );
+				$total_str = Formatting::clean_order_total( $order );
 				$order_url = $order->get_edit_order_url();
 			}
 			$out[] = array(

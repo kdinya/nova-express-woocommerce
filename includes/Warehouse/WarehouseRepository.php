@@ -124,7 +124,14 @@ class WarehouseRepository {
 	public function search_cities( string $query, int $limit = 15 ): array {
 		global $wpdb;
 
-		$like = '%' . $wpdb->esc_like( $query ) . '%';
+		$clean = trim( $query );
+		if ( '' === $clean ) {
+			return array();
+		}
+
+		// Підтримуємо різні варіанти апострофа (', ’, `, ‘)
+		$pattern = preg_replace( "/['’`ʻ‘]/u", '%', $clean );
+		$like    = '%' . $wpdb->esc_like( $pattern ) . '%';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		return $wpdb->get_results(
