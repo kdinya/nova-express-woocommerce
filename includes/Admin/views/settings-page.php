@@ -54,7 +54,14 @@ defined( 'ABSPATH' ) || exit;
 			<div class="nvx-sync-box">
 				<div class="nvx-sync-box__stat">
 					<strong id="nvx-wh-count"><?php echo esc_html( number_format_i18n( $warehouses_count ) ); ?></strong>
-					<span><?php esc_html_e( 'відділень у локальній базі', 'wc-nova-express' ); ?></span>
+					<span><?php esc_html_e( 'у базі магазину', 'wc-nova-express' ); ?></span>
+				</div>
+				<div class="nvx-sync-box__stat" style="border-left:1px solid #e2e8f0; padding-left:16px;">
+					<div style="display:flex; align-items:center; gap:6px;">
+						<strong id="nvx-api-wh-count"><?php echo null !== $api_warehouses_count ? esc_html( number_format_i18n( $api_warehouses_count ) ) : '—'; ?></strong>
+						<button type="button" id="nvx-refresh-api-count" title="<?php esc_attr_e( 'Оновити лічильник Нової Пошти', 'wc-nova-express' ); ?>" style="background:none; border:none; cursor:pointer; font-size:13px; padding:0; line-height:1; color:#64748b;">🔄</button>
+					</div>
+					<span><?php esc_html_e( 'в API Нової Пошти', 'wc-nova-express' ); ?></span>
 				</div>
 				<?php
 				$saved_sync_page  = (int) get_option( 'nvx_warehouse_sync_last_page', 0 );

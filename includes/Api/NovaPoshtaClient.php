@@ -49,6 +49,25 @@ class NovaPoshtaClient {
 	/**
 	 * Список відділень/поштоматів у населеному пункті (Address.getWarehouses).
 	 */
+	/**
+	 * Загальна кількість відділень у базі Нової Пошти (з info.totalCount).
+	 */
+	public function get_warehouses_total_count(): ?int {
+		try {
+			$props = array(
+				'Page'  => '1',
+				'Limit' => '1',
+			);
+			$response = $this->call( 'Address', 'getWarehouses', $props, 15 );
+			if ( isset( $response['info']['totalCount'] ) ) {
+				return (int) $response['info']['totalCount'];
+			}
+		} catch ( \Throwable $e ) {
+			return null;
+		}
+		return null;
+	}
+
 	public function get_warehouses_page( int $page = 1, int $limit = 150 ): array {
 		$props = array(
 			'Page'     => (string) max( 1, $page ),

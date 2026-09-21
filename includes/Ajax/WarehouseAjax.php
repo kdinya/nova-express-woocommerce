@@ -21,6 +21,7 @@ class WarehouseAjax {
 	public function register(): void {
 		add_action( 'wp_ajax_nvx_sync_warehouses_page', array( $this, 'sync_page' ) );
 		add_action( 'wp_ajax_nvx_reset_warehouses_sync', array( $this, 'reset_sync' ) );
+		add_action( 'wp_ajax_nvx_check_warehouses_count', array( $this, 'check_api_count' ) );
 
 		// Локальний швидкий пошук — доступний і гостям (чекаут), і адмінці.
 		add_action( 'wp_ajax_nvx_local_search_cities', array( $this, 'search_cities' ) );
@@ -28,6 +29,33 @@ class WarehouseAjax {
 
 		add_action( 'wp_ajax_nvx_local_search_warehouses', array( $this, 'search_warehouses' ) );
 		add_action( 'wp_ajax_nopriv_nvx_local_search_warehouses', array( $this, 'search_warehouses' ) );
+	}
+
+	public function check_api_count(): void {
+		check_ajax_referer( 'nvx_admin_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Недостатньо прав.', 'wc-nova-express' ) ), 403 );
+			return;
+		}
+
+		$posted_api_key = isset( $_REQUEST['api_key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['api_key'] ) ) : '';
+		if ( '' !== $posted_api_key ) {
+			$this->sync->client()->set_api_key( $posted_api_key );
+		}
+
+		delete_transient( 'nvx_np_warehouses_total_count' );
+		$total = $this->sync->client()->get_warehouses_total_count();
+		if ( null !== $total ) {
+			set_transient( 'nvx_np_warehouses_total_count', $total, HOUR_IN_SECONDS );
+		}
+
+		wp_send_json_success(
+			array(
+				'total_in_db' => $this->repository->count(),
+				'total_in_api' => $total,
+			)
+		);
 	}
 
 	public function reset_sync(): void {

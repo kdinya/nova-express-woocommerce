@@ -146,6 +146,26 @@ jQuery(function ($) {
 			$('#nvx-reset-sync-link').hide();
 		}
 	}
+	$(document).on('click', '#nvx-refresh-api-count', function (e) {
+		e.preventDefault();
+		var $btn = $(this);
+		$btn.css('opacity', '0.5');
+		NvxCore.post('nvx_check_warehouses_count', { api_key: $('#nvx_api_key').val() || '' })
+			.done(function (res) {
+				if (res && res.success && res.data) {
+					if (typeof res.data.total_in_db !== 'undefined') {
+						$('#nvx-wh-count').text(res.data.total_in_db.toLocaleString('uk-UA'));
+					}
+					if (res.data.total_in_api) {
+						$('#nvx-api-wh-count').text(res.data.total_in_api.toLocaleString('uk-UA'));
+					}
+				}
+			})
+			.always(function () {
+				$btn.css('opacity', '1');
+			});
+	});
+
 	updateSyncButtonUI();
 
 	$(document).on('click', '#nvx-reset-sync-link', function (e) {
@@ -227,7 +247,12 @@ jQuery(function ($) {
 						NVX_ADMIN.syncSavedPage = 0;
 						NVX_ADMIN.syncResumePage = 1;
 						$loading.remove();
-						logLine('success', 'База даних відділень успішно оновлена (' + d.total_in_db.toLocaleString('uk-UA') + ' записів).');
+						var successMsg = 'База даних відділень успішно оновлена (' + d.total_in_db.toLocaleString('uk-UA') + ' у базі).';
+						if (d.deleted_stale && d.deleted_stale > 0) {
+							successMsg += ' Закритих відділень видалено: ' + d.deleted_stale.toLocaleString('uk-UA') + '.';
+						}
+						logLine('success', successMsg);
+						$('#nvx-api-wh-count').text(d.total_in_db.toLocaleString('uk-UA'));
 						updateSyncButtonUI();
 						$btn.prop('disabled', false);
 					}

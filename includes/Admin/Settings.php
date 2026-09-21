@@ -229,9 +229,23 @@ class Settings {
 			return;
 		}
 
-		$settings          = self::get_all();
-		$warehouses_count  = ( new \NovaExpress\Warehouse\WarehouseRepository() )->count();
-		$checkout_type     = self::detect_checkout_type();
+		$settings             = self::get_all();
+		$warehouses_count     = ( new \NovaExpress\Warehouse\WarehouseRepository() )->count();
+		$checkout_type        = self::detect_checkout_type();
+		$api_warehouses_count = null;
+
+		if ( ! empty( $settings['api_key'] ) ) {
+			$cached_api_count = get_transient( 'nvx_np_warehouses_total_count' );
+			if ( false !== $cached_api_count && is_numeric( $cached_api_count ) ) {
+				$api_warehouses_count = (int) $cached_api_count;
+			} else {
+				$client               = new \NovaExpress\Api\NovaPoshtaClient( $settings['api_key'] );
+				$api_warehouses_count = $client->get_warehouses_total_count();
+				if ( null !== $api_warehouses_count ) {
+					set_transient( 'nvx_np_warehouses_total_count', $api_warehouses_count, HOUR_IN_SECONDS );
+				}
+			}
+		}
 
 		include NVX_PLUGIN_DIR . 'includes/Admin/views/settings-page.php';
 	}
