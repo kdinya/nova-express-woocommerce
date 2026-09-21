@@ -54,7 +54,9 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 	data-default-warehouse-label="<?php echo esc_attr( $default_warehouse_label ); ?>">
 
 	<header class="nvx-cw-header">
-		<div class="nvx-cw-header__logo">NE</div>
+		<div class="nvx-cw-header__logo" style="background:none;padding:0;overflow:hidden;box-shadow:none;">
+			<img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express" style="width:44px;height:44px;display:block;border-radius:8px;" />
+		</div>
 		<div class="nvx-cw-header__title">
 			<h1><?php esc_html_e( 'Створення ТТН', 'wc-nova-express' ); ?></h1>
 			<p>

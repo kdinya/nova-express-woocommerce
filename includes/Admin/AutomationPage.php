@@ -200,10 +200,11 @@ class AutomationPage {
 
 	/**
 	 * Довідник статусів замовлень WooCommerce для бічної панелі на вкладці «Автоматизації замовлень».
-	 * Включає всі зареєстровані статуси магазину (в тому числі користувацькі від теми чи плагінів)
-	 * у форматі "Реальна назва (стандартна назва / код)".
+	 * Включає всі зареєстровані статуси магазину (в тому числі користувацькі від теми чи плагінів).
+	 * Для кожного: title — назва статусу в магазині, slug — "wc-код / Стандартна назва",
+	 * help — опис (виводиться окремим рядком під назвою).
 	 *
-	 * @return array<string,array{title:string,help:string}>
+	 * @return array<string,array{title:string,slug:string,help:string}>
 	 */
 	public function order_status_help(): array {
 		$known_descriptions = array(
@@ -263,12 +264,14 @@ class AutomationPage {
 			if ( isset( $known_descriptions[ $clean_key ] ) ) {
 				$known = $known_descriptions[ $clean_key ];
 				$out[ $clean_key ] = array(
-					'title' => $label . ' (' . $known['standard'] . ')',
+					'title' => $label,
+					'slug'  => $known['standard'],
 					'help'  => $known['help'],
 				);
 			} else {
 				$out[ $clean_key ] = array(
-					'title' => $label . ' (' . $raw_key . ')',
+					'title' => $label,
+					'slug'  => $raw_key,
 					'help'  => sprintf(
 						/* translators: %s: status slug */
 						__( 'Користувацький статус замовлення WooCommerce (%s).', 'wc-nova-express' ),

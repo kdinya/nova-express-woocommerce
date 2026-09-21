@@ -279,6 +279,13 @@
 .nvx-status-guide__text{ color:var(--nvx-text); line-height:1.35; }
 .nvx-status-guide__text strong{ display:block; margin-bottom:2px; }
 
+/* Статуси замовлень WooCommerce: назва (зелена) + wc-код / стандартна назва, нижче — опис */
+.nvx-status-guide__body{ display:flex; flex-direction:column; gap:3px; min-width:0; line-height:1.35; }
+.nvx-status-guide__headline{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
+.nvx-status-guide__name{ color:var(--nvx-success); font-weight:700; }
+.nvx-status-guide__slug{ color:var(--nvx-text-soft); font-size:12px; }
+.nvx-status-guide__desc{ color:var(--nvx-text); }
+
 
 /* Мультивибір статусів-тригерів */
 .nvx-trigger-checks{

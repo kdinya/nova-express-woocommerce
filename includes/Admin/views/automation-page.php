@@ -144,13 +144,25 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 					: esc_html__( 'Оберіть потрібний статус як тригер правила. Коротко, що означає кожен код:', 'wc-nova-express' ); ?></p>
 				<ul class="nvx-status-guide__list">
 					<?php foreach ( $status_help as $code => $item ) : ?>
-						<li>
-							<span class="nvx-status-guide__code"><?php echo esc_html( $code ); ?></span>
-							<span class="nvx-status-guide__text">
-								<strong><?php echo esc_html( $item['title'] ); ?></strong>
-								<?php echo esc_html( $item['help'] ); ?>
-							</span>
-						</li>
+						<?php if ( 'order' === $rule_kind ) : ?>
+							<li>
+								<span class="nvx-status-guide__body">
+									<span class="nvx-status-guide__headline">
+										<strong class="nvx-status-guide__name"><?php echo esc_html( $item['title'] ); ?></strong>
+										<span class="nvx-status-guide__slug"><?php echo esc_html( $item['slug'] ); ?></span>
+									</span>
+									<span class="nvx-status-guide__desc"><?php echo esc_html( $item['help'] ); ?></span>
+								</span>
+							</li>
+						<?php else : ?>
+							<li>
+								<span class="nvx-status-guide__code"><?php echo esc_html( $code ); ?></span>
+								<span class="nvx-status-guide__text">
+									<strong><?php echo esc_html( $item['title'] ); ?></strong>
+									<?php echo esc_html( $item['help'] ); ?>
+								</span>
+							</li>
+						<?php endif; ?>
 					<?php endforeach; ?>
 				</ul>
 			</section>
