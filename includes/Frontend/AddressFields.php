@@ -59,7 +59,7 @@ class AddressFields {
 					),
 					array(
 						'value' => TtnManager::SERVICE_DOORS_DOORS,
-						'label' => __( "Кур'єром за адресою", 'wc-nova-express' ),
+						'label' => __( "Кур’єром за адресою", 'wc-nova-express' ),
 					),
 				),
 			)
@@ -143,20 +143,20 @@ class AddressFields {
 		$rendered = true;
 
 		echo '<div id="nvx-checkout-fields" class="nvx-checkout-box" style="display:none;">';
-		echo '<h3 style="display:flex;align-items:center;margin:0 0 1em;"><img src="' . esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ) . '" alt="" width="28" height="28" style="width:28px;height:28px;display:block;flex-shrink:0;margin-right:10px;border-radius:6px;" /><span>' . esc_html__( 'Доставка Новою Поштою', 'wc-nova-express' ) . '</span></h3>';
+		echo '<h3 style="display:flex;align-items:center;margin:0 0 1em;"><img src="' . esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ) . '" alt="" width="28" height="28" style="width:28px;height:28px;display:block;flex-shrink:0;margin-right:10px;border-radius:6px;" /><span>' . esc_html__( 'Доставка Новою Поштою (Nova Express Woo)', 'wc-nova-express' ) . '</span></h3>';
 
 		echo '<div class="nvx-field-row">';
-		echo '<p class="form-row form-row-wide">
-				<label>' . esc_html__( 'Тип доставки', 'wc-nova-express' ) . '</label>
+		echo '<p class="form-row form-row-wide" id="nvx_service_type_row">
+				<label for="nvx_service_type">' . esc_html__( 'Тип доставки', 'wc-nova-express' ) . ' <abbr class="required">*</abbr></label>
 				<select id="nvx_service_type" name="nvx_service_type">
-					<option value="' . esc_attr( TtnManager::SERVICE_WAREHOUSE_WAREHOUSE ) . '">' . esc_html__( 'У відділення / поштомат', 'wc-nova-express' ) . '</option>
-					<option value="' . esc_attr( TtnManager::SERVICE_DOORS_DOORS ) . '">' . esc_html__( 'Кур\'єром за адресою', 'wc-nova-express' ) . '</option>
+					<option value="' . esc_attr( TtnManager::SERVICE_WAREHOUSE_WAREHOUSE ) . '">' . esc_html__( 'У відділення або поштомат', 'wc-nova-express' ) . '</option>
+					<option value="' . esc_attr( TtnManager::SERVICE_DOORS_DOORS ) . '">' . esc_html__( 'Кур’єром за адресою', 'wc-nova-express' ) . '</option>
 				</select>
 			</p>';
 		echo '</div>';
 
-		echo '<p class="form-row form-row-wide">
-				<label>' . esc_html__( 'Місто', 'wc-nova-express' ) . ' <abbr class="required">*</abbr></label>
+		echo '<p class="form-row form-row-wide" id="nvx_city_row">
+				<label for="nvx_city_search">' . esc_html__( 'Місто', 'wc-nova-express' ) . ' <abbr class="required">*</abbr></label>
 				<input type="text" id="nvx_city_search" autocomplete="off" placeholder="' . esc_attr__( 'Почніть вводити назву міста…', 'wc-nova-express' ) . '" />
 				<input type="hidden" id="nvx_city_ref" name="nvx_city_ref" />
 				<input type="hidden" id="nvx_city_name" name="nvx_city_name" />
@@ -165,7 +165,7 @@ class AddressFields {
 
 		echo '<div id="nvx_warehouse_block">
 				<p class="form-row form-row-wide" id="nvx_point_type_row">
-					<label for="nvx_point_type">' . esc_html__( 'Куди доставити', 'wc-nova-express' ) . '</label>
+					<label for="nvx_point_type">' . esc_html__( 'Куди саме доставити', 'wc-nova-express' ) . ' <abbr class="required">*</abbr></label>
 					<select id="nvx_point_type" name="nvx_point_type">
 						<option value="warehouse">' . esc_html__( 'У відділення', 'wc-nova-express' ) . '</option>
 						<option value="postomat">' . esc_html__( 'У поштомат', 'wc-nova-express' ) . '</option>

@@ -111,7 +111,7 @@ class TtnManager {
 		$order->add_order_note(
 			sprintf(
 				/* translators: %s: waybill number */
-				__( 'Nova Express: створено ТТН №%s.', 'wc-nova-express' ),
+				__( 'Nova Express Woo: створено ТТН №%s.', 'wc-nova-express' ),
 				$result['IntDocNumber']
 			)
 		);
@@ -398,7 +398,7 @@ class TtnManager {
 		$order->add_order_note(
 			sprintf(
 				/* translators: %s: waybill number */
-				__( 'Nova Express: додано наявну ТТН №%s.', 'wc-nova-express' ),
+				__( 'Nova Express Woo: додано наявну ТТН №%s.', 'wc-nova-express' ),
 				$waybill_number
 			)
 		);
@@ -436,7 +436,7 @@ class TtnManager {
 
 		if ( empty( $settings['sender_counterparty_ref'] ) || empty( $settings['sender_contact_ref'] ) ) {
 			throw new NovaPoshtaApiException(
-				__( 'Не налаштовано контрагента-відправника. Перейдіть у Nova Express → Налаштування та натисніть «Отримати дані відправника автоматично».', 'wc-nova-express' )
+				__( 'Не налаштовано контрагента-відправника. Перейдіть у Nova Express Woo → Налаштування та натисніть «Отримати дані відправника автоматично».', 'wc-nova-express' )
 			);
 		}
 

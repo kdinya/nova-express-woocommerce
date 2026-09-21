@@ -57,7 +57,7 @@ class AdminPage {
 		);
 		?>
 		<div class="wrap nvx-admin-shell">
-			<h1 class="nvx-admin-shell__title"><?php esc_html_e( 'Nova Express', 'wc-nova-express' ); ?></h1>
+			<h1 class="nvx-admin-shell__title"><?php esc_html_e( 'Nova Express Woo', 'wc-nova-express' ); ?></h1>
 			<nav class="nav-tab-wrapper nvx-tabs">
 				<?php foreach ( $tabs as $key => $label ) : ?>
 					<a class="nav-tab <?php echo $tab === $key ? 'nav-tab-active' : ''; ?>"

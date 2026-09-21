@@ -8,7 +8,7 @@ defined( 'ABSPATH' ) || exit;
 	<div class="nvx-header">
 		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express Woo" /></div>
 		<div>
-			<h1><?php esc_html_e( 'Nova Express', 'wc-nova-express' ); ?></h1>
+			<h1><?php esc_html_e( 'Nova Express Woo', 'wc-nova-express' ); ?></h1>
 			<p><?php esc_html_e( 'Доставка Новою Поштою, ТТН та автоматизації для вашого магазину', 'wc-nova-express' ); ?></p>
 		</div>
 	</div>
@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<?php if ( 'blocks' === $checkout_type ) : ?>
 		<div class="nvx-alert" style="background:#fff7e6; color:#8a6414;">
-			<?php esc_html_e( 'Ваша сторінка оформлення замовлення використовує блоковий чекаут WooCommerce (Cart & Checkout Blocks). Поля Nova Express на ній працюють у спрощеному режимі — прості текстові поля без живого пошуку міста/відділення (пошук з підказками доступний лише на класичному чекауті). Якщо потрібен повноцінний UI з автопідбором, замініть блок "Оформлення замовлення" на сторінці на класичну форму: Сторінки → Оформлення замовлення → видаліть блок і вставте шорткод [woocommerce_checkout].', 'wc-nova-express' ); ?>
+			<?php esc_html_e( 'Ваша сторінка оформлення замовлення використовує блоковий чекаут WooCommerce (Cart & Checkout Blocks). Поля Nova Express Woo на ній працюють у спрощеному режимі — прості текстові поля без живого пошуку міста/відділення (пошук з підказками доступний лише на класичному чекауті). Якщо потрібен повноцінний UI з автопідбором, замініть блок "Оформлення замовлення" на сторінці на класичну форму: Сторінки → Оформлення замовлення → видаліть блок і вставте шорткод [woocommerce_checkout].', 'wc-nova-express' ); ?>
 		</div>
 	<?php elseif ( 'unknown' === $checkout_type ) : ?>
 		<div class="nvx-alert" style="background:#fff7e6; color:#8a6414;">

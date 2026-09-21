@@ -120,10 +120,16 @@ jQuery(function ($) {
 		}
 		var type = $type.val();
 		if (type === 'doors_doors') {
+			// Кур'єр: повністю ховаємо відділення/поштомат
 			$('#nvx_warehouse_block').hide();
+			$('#nvx_point_type_row').hide();
+			$('#nvx_warehouse_search_row').hide();
 			$('#nvx_street_block').show();
 		} else {
+			// Відділення або поштомат: показуємо вибір куди доставити і поле пошуку
 			$('#nvx_warehouse_block').show();
+			$('#nvx_point_type_row').show();
+			$('#nvx_warehouse_search_row').show();
 			$('#nvx_street_block').hide();
 		}
 	}
