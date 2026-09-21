@@ -181,6 +181,18 @@ class OrderAjax {
 			wp_send_json_error( array( 'message' => $e->getMessage() ), 500 );
 		}
 
+		// Актуальний статус із бази — щоб картка замовлення оновила лише його, без перезавантаження сторінки.
+		if ( empty( $result['deleted'] ) ) {
+			$fresh = $this->manager->repository()->find_by_id( $ttn_id );
+			if ( $fresh ) {
+				$result['waybill'] = array(
+					'carrier_status_code' => (string) ( $fresh['carrier_status_code'] ?? '' ),
+					'carrier_status_text' => (string) ( $fresh['carrier_status_text'] ?? '' ),
+					'is_delivered'        => ! empty( $fresh['is_delivered'] ),
+				);
+			}
+		}
+
 		wp_send_json_success( $result );
 	}
 /**

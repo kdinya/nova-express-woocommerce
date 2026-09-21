@@ -160,11 +160,6 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 		<section class="nvx-cw-col">
 			<h2><?php esc_html_e( 'Дані відправника', 'wc-nova-express' ); ?></h2>
 
-			<div class="nvx-cw-carrier-badge">
-				<span class="dot"></span>
-				<?php esc_html_e( 'Нова Пошта', 'wc-nova-express' ); ?>
-			</div>
-
 			<?php $sender_profiles = \NovaExpress\Admin\Settings::get_sender_profiles(); ?>
 			<label class="nvx-field">
 				<span><?php esc_html_e( 'Відправлення з відділення', 'wc-nova-express' ); ?></span>

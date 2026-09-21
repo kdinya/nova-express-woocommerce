@@ -19,6 +19,7 @@ class Installer {
 		}
 
 		self::maybe_upgrade_schema();
+		self::run_migrations( get_option( 'nvx_db_version' ) );
 		update_option( 'nvx_db_version', NVX_DB_VERSION );
 		flush_rewrite_rules();
 	}
@@ -35,10 +36,56 @@ class Installer {
 			return;
 		}
 
+		$previous_version = get_option( 'nvx_db_version' );
+
 		self::create_tables();
 		self::maybe_upgrade_schema();
+		self::run_migrations( $previous_version );
 		self::maybe_schedule_cron();
 		update_option( 'nvx_db_version', NVX_DB_VERSION );
+	}
+
+	/**
+	 * Одноразові міграції даних за версією БД, з якої оновлюється сайт.
+	 *
+	 * @param string|false $previous_version Збережена версія БД (false — плагін ще не був встановлений).
+	 */
+	private static function run_migrations( $previous_version ): void {
+		if ( false === $previous_version || version_compare( (string) $previous_version, '1.8.0', '<' ) ) {
+			self::migrate_split_created_added_trigger();
+		}
+	}
+
+	/**
+	 * 1.8.0: тригер «ТТН створено або додано» розділено на «ТТН створено» (ttn_created)
+	 * та «ТТН додано» (ttn_added). Щоб наявні правила з ttn_created працювали як і раніше
+	 * (і для створених, і для доданих ТТН), додаємо їм також ttn_added.
+	 */
+	private static function migrate_split_created_added_trigger(): void {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'nvx_automation_rules';
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( "SELECT id, trigger_status FROM `{$table}` WHERE trigger_kind = 'ttn'", ARRAY_A );
+		if ( empty( $rows ) ) {
+			return;
+		}
+
+		foreach ( $rows as $row ) {
+			$codes = array_values( array_filter( array_map( 'trim', explode( ',', (string) $row['trigger_status'] ) ) ) );
+			if ( ! in_array( 'ttn_created', $codes, true ) || in_array( 'ttn_added', $codes, true ) ) {
+				continue;
+			}
+			$codes[] = 'ttn_added';
+			$wpdb->update(
+				$table,
+				array( 'trigger_status' => implode( ',', $codes ) ),
+				array( 'id' => (int) $row['id'] ),
+				array( '%s' ),
+				array( '%d' )
+			);
+		}
 	}
 
 	public static function deactivate(): void {

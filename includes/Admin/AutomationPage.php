@@ -75,7 +75,8 @@ class AutomationPage {
 	 */
 	public function carrier_statuses(): array {
 		return array(
-			'ttn_created' => __( 'ТТН створено або додано', 'wc-nova-express' ),
+			'ttn_created' => __( 'ТТН створено', 'wc-nova-express' ),
+			'ttn_added'   => __( 'ТТН додано', 'wc-nova-express' ),
 			'1'           => __( '1 — Нова пошта очікує надходження від відправника', 'wc-nova-express' ),
 			'2'           => __( '2 — Видалено (накладну видалено/скасовано)', 'wc-nova-express' ),
 			'3'           => __( '3 — Номер не знайдено', 'wc-nova-express' ),
@@ -104,8 +105,12 @@ class AutomationPage {
 	public function carrier_status_help(): array {
 		return array(
 			'ttn_created' => array(
-				'title' => __( 'ТТН створено або додано', 'wc-nova-express' ),
-				'help'  => __( 'Накладну щойно сформовано або вручну прив\'язано до замовлення. Посилку ще не передано перевізнику.', 'wc-nova-express' ),
+				'title' => __( 'ТТН створено', 'wc-nova-express' ),
+				'help'  => __( 'Накладну щойно сформовано через плагін (сторінка «Створення ТТН» або автоматично). Посилку ще не передано перевізнику.', 'wc-nova-express' ),
+			),
+			'ttn_added'   => array(
+				'title' => __( 'ТТН додано', 'wc-nova-express' ),
+				'help'  => __( 'Наявну накладну (створену поза плагіном, наприклад у кабінеті Нової Пошти) вручну додано до замовлення кнопкою «Додати ТТН».', 'wc-nova-express' ),
 			),
 			'1'   => array(
 				'title' => __( 'Очікує надходження', 'wc-nova-express' ),

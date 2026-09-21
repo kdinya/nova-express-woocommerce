@@ -48,20 +48,47 @@ jQuery(function ($) {
 		var $btn = $(this);
 		var $card = $btn.closest('.nvx-waybill-card');
 		var ttnId = $card.data('ttn-id');
+		var originalLabel = $btn.data('label') || $.trim($btn.text());
 
-		$btn.prop('disabled', true).text('Перевіряємо…');
+		$btn.data('label', originalLabel).prop('disabled', true).text('Перевіряємо…');
+
+		function restore() {
+			$btn.prop('disabled', false).text(originalLabel);
+		}
 
 		NvxCore.post('nvx_refresh_waybill', { order_id: orderId, ttn_id: ttnId })
 			.done(function (res) {
-				if (res && res.success) {
-					window.location.reload();
-				} else {
-					$btn.prop('disabled', false).text('↻ Оновити статус зараз');
+				if (!(res && res.success)) {
+					restore();
 					window.alert((res && res.data && res.data.message) || NVX_ADMIN.i18n.error);
+					return;
 				}
+
+				// ТТН зникла в Новій Пошті й видалена з бази — змінюється сам блок
+				// (з'являються «Створити»/«Додати»), тому лише в цьому випадку перезавантажуємо.
+				if (res.data && res.data.deleted) {
+					window.location.reload();
+					return;
+				}
+
+				// Інакше оновлюємо лише статус ТТН у цій картці.
+				var w = res.data && res.data.waybill;
+				if (w) {
+					var text = (w.carrier_status_code ? '[' + w.carrier_status_code + '] ' : '') +
+						(w.carrier_status_text || 'Очікує опитування');
+					$card.find('.nvx-waybill-card__status').text(text);
+					$card.toggleClass('is-delivered', !!w.is_delivered);
+				}
+
+				$btn.prop('disabled', false).text('✓ Оновлено');
+				setTimeout(function () {
+					if (!$btn.prop('disabled')) {
+						$btn.text(originalLabel);
+					}
+				}, 1500);
 			})
 			.fail(function (xhr) {
-				$btn.prop('disabled', false).text('↻ Оновити статус зараз');
+				restore();
 				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || NVX_ADMIN.i18n.error;
 				window.alert(msg);
 			});

@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Виконує правила автоматизації:
  * - зміна статусу ТТН (трекінг);
- * - створення / прив'язка ТТН (тригер ttn_created).
+ * - створення ТТН (тригер ttn_created) та додавання наявної ТТН до замовлення (тригер ttn_added).
  */
 class RuleEngine {
 
@@ -58,10 +58,12 @@ class RuleEngine {
 
 	/**
 	 * Хук nvx/ttn_created( WC_Order $order, array $waybill_row, string $source ).
-	 * $source: created | attached
+	 * $source: created → тригер ttn_created («ТТН створено»);
+	 *          attached → тригер ttn_added («ТТН додано»).
 	 */
 	public function handle_ttn_created( \WC_Order $order, array $waybill_row, string $source = 'created' ): void {
-		$rules = $this->repository->enabled_for_status( 'ttn_created' );
+		$trigger = ( 'attached' === $source ) ? 'ttn_added' : 'ttn_created';
+		$rules   = $this->repository->enabled_for_status( $trigger );
 
 		if ( empty( $rules ) ) {
 			return;
@@ -69,13 +71,13 @@ class RuleEngine {
 
 		$status_event = array(
 			'waybill_number'       => $waybill_row['waybill_number'] ?? '',
-			'status_code'          => 'ttn_created',
+			'status_code'          => $trigger,
 			'status_text'          => 'attached' === $source
 				? __( 'ТТН додано до замовлення', 'wc-nova-express' )
 				: __( 'ТТН створено', 'wc-nova-express' ),
 			'previous_status_code' => '',
 			'is_delivered'         => false,
-			'event'                => 'ttn_created',
+			'event'                => $trigger,
 			'source'               => $source,
 		);
 

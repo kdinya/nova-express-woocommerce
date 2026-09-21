@@ -102,9 +102,9 @@ class RuleRepository {
 		$matched = array();
 		foreach ( $all as $rule ) {
 			$raw = (string) ( $rule['trigger_status'] ?? 'any' );
-			// «Будь-яка зміна» — не для службового тригера створення ТТН.
+			// «Будь-яка зміна» — не для службових тригерів створення / додавання ТТН.
 			if ( 'any' === $raw || '' === $raw ) {
-				if ( 'ttn' === $kind && 'ttn_created' === $status_code ) {
+				if ( 'ttn' === $kind && in_array( $status_code, array( 'ttn_created', 'ttn_added' ), true ) ) {
 					continue;
 				}
 				$matched[] = $rule;

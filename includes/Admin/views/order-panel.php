@@ -26,8 +26,6 @@ $has_active_ttn = ! empty( $waybills );
 		<?php foreach ( $waybills as $w ) : ?>
 			<div class="nvx-waybill-card <?php echo ! empty( $w['is_delivered'] ) ? 'is-delivered' : ''; ?>" data-ttn-id="<?php echo esc_attr( $w['id'] ); ?>">
 				<div class="nvx-waybill-simple">
-					<div class="nvx-waybill-simple__brand">Нова Пошта</div>
-
 					<div class="nvx-waybill-simple__row">
 						<span class="nvx-waybill-simple__label"><?php esc_html_e( 'Номер ТТН', 'wc-nova-express' ); ?></span>
 						<a class="nvx-waybill-simple__value nvx-waybill-card__number" href="https://novaposhta.ua/tracking/<?php echo esc_attr( $w['waybill_number'] ); ?>" target="_blank" rel="noopener">
@@ -37,7 +35,7 @@ $has_active_ttn = ! empty( $waybills );
 
 					<div class="nvx-waybill-simple__row">
 						<span class="nvx-waybill-simple__label"><?php esc_html_e( 'Статус відстеження', 'wc-nova-express' ); ?></span>
-						<span class="nvx-waybill-simple__value">
+						<span class="nvx-waybill-simple__value nvx-waybill-card__status">
 							<?php if ( ! empty( $w['carrier_status_code'] ) ) : ?>
 								[<?php echo esc_html( $w['carrier_status_code'] ); ?>]
 							<?php endif; ?>

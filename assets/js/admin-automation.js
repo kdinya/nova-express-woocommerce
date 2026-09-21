@@ -36,8 +36,8 @@ jQuery(function ($) {
 			var $lab = $('<label>').attr('for', id);
 			var $cb = $('<input>', { type: 'checkbox', class: 'nvx-rule-trigger-code', value: code, id: id });
 			$cb.prop('checked', checked).prop('disabled', false);
-			// Цифра/код статусу спереду (крім службового ttn_created)
-			var prefix = (String(code) === 'ttn_created') ? '' : ('[' + code + '] ');
+			// Цифра/код статусу спереду (крім службових ttn_created / ttn_added)
+			var prefix = (String(code) === 'ttn_created' || String(code) === 'ttn_added') ? '' : ('[' + code + '] ');
 			$lab.append($cb).append(document.createTextNode(' ' + prefix + label));
 			if (checked) {
 				$lab.addClass('is-checked');
