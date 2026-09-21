@@ -27,7 +27,7 @@ $has_active_ttn = ! empty( $waybills );
 			<span style="font-size:11px; background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px;">
 				<?php
 				$is_doors = in_array( $service_type, array( 'doors_doors', 'warehouse_doors' ), true );
-				echo $is_doors ? esc_html__( 'Кур'єр', 'wc-nova-express' ) : esc_html__( 'Відділення', 'wc-nova-express' );
+				echo $is_doors ? esc_html__( 'Кур\'єр', 'wc-nova-express' ) : esc_html__( 'Відділення', 'wc-nova-express' );
 				?>
 			</span>
 		</div>
