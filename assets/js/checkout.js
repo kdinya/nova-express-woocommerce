@@ -201,16 +201,6 @@ jQuery(function ($) {
 		$('#nvx_warehouse_label').val('');
 		$('#nvx_warehouse_search').val('');
 		$('#nvx_warehouse_suggest').empty();
-
-		if (typeof NVX_CHECKOUT !== 'undefined') {
-			$.post(NVX_CHECKOUT.ajaxUrl, {
-				action: 'nvx_set_session_address',
-				nonce: NVX_CHECKOUT.nonce,
-				city_ref: ref
-			}).done(function () {
-				$(document.body).trigger('update_checkout');
-			});
-		}
 	});
 
 	$(document).on('focus', '#nvx_warehouse_search', function () {

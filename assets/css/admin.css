@@ -601,6 +601,15 @@
 	color:#475569;
 	font-size:12.5px;
 }
+.nvx-order-col-ttn__status[class*="--"]{ display:inline-flex; align-items:center; gap:6px; font-weight:600; }
+.nvx-order-col-ttn__status[class*="--"]::before{
+	content:""; width:8px; height:8px; border-radius:50%; background:currentColor; flex-shrink:0;
+}
+.nvx-order-col-ttn__status--new{ color:#64748b; }
+.nvx-order-col-ttn__status--transit{ color:#0369a1; }
+.nvx-order-col-ttn__status--ready{ color:#b45309; }
+.nvx-order-col-ttn__status--done{ color:#2e7d32; }
+.nvx-order-col-ttn__status--problem{ color:#c62828; }
 .nvx-order-col-ttn__empty{ color:#94a3b8; }
 .column-nvx_ttn{ width:140px; }
 

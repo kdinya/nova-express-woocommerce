@@ -26,8 +26,6 @@ class AddressFields {
 		add_action( 'woocommerce_checkout_process', array( $this, 'validate_fields' ) );
 		add_filter( 'woocommerce_checkout_fields', array( $this, 'make_wc_address_optional' ), 1000 );
 		add_action( 'woocommerce_checkout_create_order', array( $this, 'persist_to_order' ), 10, 2 );
-		add_action( 'wp_ajax_nvx_set_session_address', array( $this, 'set_session_address' ) );
-		add_action( 'wp_ajax_nopriv_nvx_set_session_address', array( $this, 'set_session_address' ) );
 
 		// Сумісність із блоковим чекаутом (Cart & Checkout Blocks): класичні
 		// хуки вище на ньому НЕ спрацьовують, тому поля реєструються окремо
@@ -266,25 +264,6 @@ class AddressFields {
 			}
 		}
 	}
-
-	/**
-	 * AJAX: покупець обрав місто → зберігаємо в сесію (city_ref лишається
-	 * в сесії для сумісності/можливого майбутнього використання; на
-	 * вартість доставки це більше не впливає — вона на чекауті взагалі
-	 * не рахується, див. NovaExpressShippingMethod).
-	 */
-	public function set_session_address(): void {
-		check_ajax_referer( 'nvx_public_nonce', 'nonce' );
-
-		$city_ref = isset( $_POST['city_ref'] ) ? sanitize_text_field( wp_unslash( $_POST['city_ref'] ) ) : '';
-
-		if ( WC()->session && '' !== $city_ref ) {
-			WC()->session->set( 'nvx_recipient_city_ref', $city_ref );
-		}
-
-		wp_send_json_success();
-	}
-
 
 	/**
 	 * Коли обрано Nova Express — область/місто/індекс WC не потрібні

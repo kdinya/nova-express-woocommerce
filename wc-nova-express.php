@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Nova Express for WooCommerce
- * Plugin URI:        https://example.com/nova-express
+ * Plugin URI:        https://github.com/kdinya/nova-express-woocommerce
  * Description:       Доставка Новою Поштою для WooCommerce: розрахунок вартості, ручне створення ТТН (ТТН) з картки замовлення, автоматичний моніторинг статусів ТТН та автоматизації (нотатки, зміна статусу, вебхуки).
  * Version:           2026.09.6
  * Author:            kdinya

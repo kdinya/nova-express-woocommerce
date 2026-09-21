@@ -202,33 +202,10 @@ defined( 'ABSPATH' ) || exit;
 		</section>
 
 		<section class="nvx-card">
-			<h2><?php esc_html_e( '4. Вартість доставки та параметри за замовчуванням', 'wc-nova-express' ); ?></h2>
+			<h2><?php esc_html_e( '4. Параметри за замовчуванням', 'wc-nova-express' ); ?></h2>
 			<p class="nvx-card__hint">
-				<?php esc_html_e( 'Оберіть режим нарахування вартості доставки на чекауті та початкові значення для нових накладних.', 'wc-nova-express' ); ?>
+				<?php esc_html_e( 'Початкові значення для нових накладних.', 'wc-nova-express' ); ?>
 			</p>
-
-			<label class="nvx-field">
-				<span><?php esc_html_e( 'Режим вартості доставки на чекауті', 'wc-nova-express' ); ?></span>
-				<select name="price_mode" id="nvx_price_mode">
-					<option value="free_receiver" <?php selected( $settings['price_mode'] ?? 'free_receiver', 'free_receiver' ); ?>>
-						<?php esc_html_e( 'За тарифами перевізника (оплата при отриманні — 0 грн у замовленні)', 'wc-nova-express' ); ?>
-					</option>
-					<option value="fixed" <?php selected( $settings['price_mode'] ?? '', 'fixed' ); ?>>
-						<?php esc_html_e( 'Фіксована вартість доставки', 'wc-nova-express' ); ?>
-					</option>
-					<option value="api" <?php selected( $settings['price_mode'] ?? '', 'api' ); ?>>
-						<?php esc_html_e( 'Розрахунок вартості онлайн через API Нової Пошти', 'wc-nova-express' ); ?>
-					</option>
-				</select>
-				<small><?php esc_html_e( 'За замовчуванням рекомендовано "За тарифами перевізника": сума доставки не додається до чеку замовлення, а покупець сплачує доставку у відділенні за тарифами Нової Пошти.', 'wc-nova-express' ); ?></small>
-			</label>
-
-			<div id="nvx_fixed_price_wrap" style="<?php echo ( ($settings['price_mode'] ?? '') === 'fixed' ) ? '' : 'display:none;'; ?> margin-top:12px;">
-				<label class="nvx-field">
-					<span><?php esc_html_e( 'Фіксована сума доставки (грн)', 'wc-nova-express' ); ?></span>
-					<input type="number" step="0.01" min="0" name="fixed_price" value="<?php echo esc_attr( $settings['fixed_price'] ?? 0 ); ?>" />
-				</label>
-			</div>
 
 			<div class="nvx-field-row" style="margin-top:16px;">
 				<label class="nvx-field">

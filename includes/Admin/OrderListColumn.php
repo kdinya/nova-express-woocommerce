@@ -133,12 +133,16 @@ class OrderListColumn {
 			$this->cache[ $order_id ] = $row;
 		}
 
-		$number = '';
-		$status = '';
+		$number  = '';
+		$status  = '';
+		$code    = '';
+		$has_row = false;
 
 		if ( $row ) {
-			$number = (string) ( $row['waybill_number'] ?? '' );
-			$status = (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: '' );
+			$has_row = true;
+			$number  = (string) ( $row['waybill_number'] ?? '' );
+			$code    = (string) ( $row['carrier_status_code'] ?? '' );
+			$status  = (string) ( $row['carrier_status_text'] ?: $row['carrier_status_code'] ?: '' );
 		}
 
 		if ( '' === $number ) {
@@ -154,16 +158,77 @@ class OrderListColumn {
 
 		echo '<div class="nvx-order-col-ttn">';
 		echo '<a class="nvx-order-col-ttn__num" href="' . esc_url( $track_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $number ) . '</a>';
-		if ( '' !== $status ) {
-			// Короткий статус — обрізаємо дуже довгі рядки.
-			$short = $status;
-			if ( function_exists( 'mb_strlen' ) && mb_strlen( $short ) > 42 ) {
-				$short = mb_substr( $short, 0, 40 ) . '…';
-			} elseif ( strlen( $short ) > 42 ) {
-				$short = substr( $short, 0, 40 ) . '…';
+		$short = $has_row ? self::short_status( $code ) : null;
+
+		if ( $short ) {
+			// Короткий зрозумілий статус; повний текст від Нової Пошти — у підказці при наведенні.
+			echo '<span class="nvx-order-col-ttn__status nvx-order-col-ttn__status--' . esc_attr( $short['tone'] ) . '" title="' . esc_attr( $status ) . '">' . esc_html( $short['label'] ) . '</span>';
+		} elseif ( '' !== $status ) {
+			// Невідомий код статусу — показуємо текст від Нової Пошти, обрізавши дуже довгі рядки.
+			$text = $status;
+			if ( function_exists( 'mb_strlen' ) && mb_strlen( $text ) > 42 ) {
+				$text = mb_substr( $text, 0, 40 ) . '…';
+			} elseif ( strlen( $text ) > 42 ) {
+				$text = substr( $text, 0, 40 ) . '…';
 			}
-			echo '<span class="nvx-order-col-ttn__status" title="' . esc_attr( $status ) . '">' . esc_html( $short ) . '</span>';
+			echo '<span class="nvx-order-col-ttn__status" title="' . esc_attr( $status ) . '">' . esc_html( $text ) . '</span>';
 		}
 		echo '</div>';
+	}
+
+	/**
+	 * Короткий статус ТТН для списку замовлень за кодом статусу Нової Пошти.
+	 * Повний перелік кодів — у довідці на вкладці «Автоматизації ТТН».
+	 *
+	 * @param string $code Код статусу НП (порожній — ТТН щойно створено, ще не опитувалась).
+	 * @return array{label:string,tone:string}|null null — код невідомий.
+	 */
+	private static function short_status( string $code ): ?array {
+		switch ( $code ) {
+			case '':
+			case '1':
+				return array( 'label' => __( 'Створено', 'wc-nova-express' ), 'tone' => 'new' );
+
+			case '4':
+			case '41':
+			case '5':
+			case '6':
+			case '12':
+			case '14':
+			case '101':
+			case '104':
+			case '112':
+				return array( 'label' => __( 'В дорозі', 'wc-nova-express' ), 'tone' => 'transit' );
+
+			case '7':
+			case '8':
+				return array( 'label' => __( 'У відділенні', 'wc-nova-express' ), 'tone' => 'ready' );
+
+			case '9':
+			case '10':
+			case '11':
+				return array( 'label' => __( 'Отримано', 'wc-nova-express' ), 'tone' => 'done' );
+
+			case '102':
+			case '103':
+				return array( 'label' => __( 'Відмова', 'wc-nova-express' ), 'tone' => 'problem' );
+
+			case '105':
+				return array( 'label' => __( 'Повертається', 'wc-nova-express' ), 'tone' => 'problem' );
+
+			case '106':
+				return array( 'label' => __( 'Повернено', 'wc-nova-express' ), 'tone' => 'problem' );
+
+			case '111':
+				return array( 'label' => __( 'Не вручено', 'wc-nova-express' ), 'tone' => 'problem' );
+
+			case '2':
+				return array( 'label' => __( 'Видалено', 'wc-nova-express' ), 'tone' => 'problem' );
+
+			case '3':
+				return array( 'label' => __( 'Не знайдено', 'wc-nova-express' ), 'tone' => 'problem' );
+		}
+
+		return null;
 	}
 }

@@ -58,19 +58,13 @@ class NovaExpressShippingMethod extends \WC_Shipping_Method {
 	}
 
 	public function calculate_shipping( $package = array() ): void {
-		$settings   = \NovaExpress\Admin\Settings::get_all();
-		$price_mode = $settings['price_mode'] ?? 'free_receiver';
-		$cost       = 0;
-
-		if ( 'fixed' === $price_mode ) {
-			$cost = max( 0, (float) ( $settings['fixed_price'] ?? 0 ) );
-		}
-
+		// Плагін не впливає на вартість на чекауті: метод завжди з нульовою ціною,
+		// вартість доставки сплачується в Новій Пошті при отриманні.
 		$this->add_rate(
 			array(
 				'id'      => $this->get_rate_id(),
 				'label'   => $this->title,
-				'cost'    => $cost,
+				'cost'    => 0,
 				'package' => $package,
 			)
 		);
