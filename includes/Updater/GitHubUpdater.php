@@ -161,9 +161,12 @@ class GitHubUpdater {
 		if ( ! $wp_filesystem->exists( $main_file ) ) {
 			return $source;
 		}
-		$package_head = (string) $wp_filesystem->get_contents( $main_file );
-		$own          = get_file_data( $this->plugin_file, array( 'Name' => 'Plugin Name' ) );
-		if ( empty( $own['Name'] ) || ! preg_match( '/^[ \t\/*#@]*Plugin Name:\s*(.+)$/mi', substr( $package_head, 0, 8192 ), $m ) || trim( $m[1] ) !== $own['Name'] ) {
+		$package_head  = (string) $wp_filesystem->get_contents( $main_file );
+		$own           = get_file_data( $this->plugin_file, array( 'Name' => 'Plugin Name' ) );
+		$package_name  = preg_match( '/^[ \t\/*#@]*Plugin Name:\s*(.+)$/mi', substr( $package_head, 0, 8192 ), $m ) ? trim( $m[1] ) : '';
+		$names_match   = ( ! empty( $own['Name'] ) && $package_name === $own['Name'] );
+		$is_our_plugin = $names_match || ( false !== stripos( $package_name, 'Nova Express' ) );
+		if ( ! $is_our_plugin ) {
 			return $source;
 		}
 
@@ -316,6 +319,10 @@ class GitHubUpdater {
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+		$was_active        = is_plugin_active( $this->plugin_slug );
+		$is_network_active = is_plugin_active_for_network( $this->plugin_slug );
 
 		$skin     = new \WP_Ajax_Upgrader_Skin();
 		$upgrader = new \Plugin_Upgrader( $skin );
@@ -332,6 +339,24 @@ class GitHubUpdater {
 				: __( 'Оновлення не вдалося встановити. Перевірте з’єднання з GitHub або права на запис у теку wp-content/plugins.', 'wc-nova-express' );
 			wp_send_json_error( array( 'message' => $err_msg ) );
 		}
+
+		// Plugin_Upgrader деактивує плагін перед оновленням файлів (deactivate_plugins).
+		// Обов'язково повторно активуємо його після завершення оновлення.
+		$plugin_to_activate = $this->plugin_slug;
+		if ( ! file_exists( WP_PLUGIN_DIR . '/' . $plugin_to_activate ) ) {
+			$candidates = array(
+				'wc-nova-express/wc-nova-express.php',
+				'nova-express-woocommerce/wc-nova-express.php',
+			);
+			foreach ( $candidates as $candidate ) {
+				if ( file_exists( WP_PLUGIN_DIR . '/' . $candidate ) ) {
+					$plugin_to_activate = $candidate;
+					break;
+				}
+			}
+		}
+
+		activate_plugin( $plugin_to_activate, '', $is_network_active, true );
 
 		wp_send_json_success(
 			array(
