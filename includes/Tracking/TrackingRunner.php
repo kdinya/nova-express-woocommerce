@@ -241,5 +241,137 @@ class TrackingRunner {
 		);
 	}
 
+	/**
+	 * Номер був у запиті, але не в відповіді — НЕ видаляємо.
+	 */
+	private function handle_batch_miss( array $row ): void {
+		$this->repository->touch_polled( (int) $row['id'] );
+
+		$details = array();
+		if ( ! empty( $row['tracking_details'] ) ) {
+			$decoded = json_decode( (string) $row['tracking_details'], true );
+			if ( is_array( $decoded ) ) {
+				$details = $decoded;
+			}
+		}
+		$details['poll_miss_count'] = (int) ( $details['poll_miss_count'] ?? 0 ) + 1;
+		$details['last_poll_miss']  = current_time( 'mysql' );
+
+		global $wpdb;
+		$wpdb->update(
+			$this->repository->table_name(),
+			array(
+				'tracking_details' => wp_json_encode( $details, JSON_UNESCAPED_UNICODE ),
+				'updated_at'       => current_time( 'mysql' ),
+			),
+			array( 'id' => (int) $row['id'] ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+	}
+
+	/**
+	 * Лише явний текст про відсутність накладної. Порожній Status/Code — НЕ видалення.
+	 */
+	public static function looks_deleted( array $status ): bool {
+		$text = mb_strtolower( ( $status['Status'] ?? '' ) . ' ' . ( $status['StatusCode'] ?? '' ) );
+
+		foreach ( array( 'не знайдено', 'не існує', 'видален', 'скасован', 'not found', 'номер не знайдено' ) as $needle ) {
+			if ( false !== mb_strpos( $text, $needle ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Атомарне блокування.
+	 */
+	private function acquire_lock(): bool {
+		$now = time();
+
+		if ( wp_using_ext_object_cache() ) {
+			if ( ! wp_cache_add( self::LOCK_KEY, $now, 'nvx', self::LOCK_TTL ) ) {
+				return false;
+			}
+			return true;
+		}
+
+		global $wpdb;
+
+		$option_name = '_transient_' . self::LOCK_KEY;
+		$timeout_name = '_transient_timeout_' . self::LOCK_KEY;
+
+		$expires = (int) $wpdb->get_var(
+			$wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $timeout_name )
+		);
+		if ( $expires && $expires < $now ) {
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name IN (%s, %s)", $option_name, $timeout_name ) );
+			wp_cache_delete( $option_name, 'options' );
+			wp_cache_delete( $timeout_name, 'options' );
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$inserted = $wpdb->query(
+			$wpdb->prepare(
+				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+				$option_name,
+				(string) $now
+			)
+		);
+
+		if ( ! $inserted ) {
+			return false;
+		}
+
+		$wpdb->query(
+			$wpdb->prepare(
+				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+				$timeout_name,
+				(string) ( $now + self::LOCK_TTL )
+			)
+		);
+
+		wp_cache_delete( $option_name, 'options' );
+		wp_cache_delete( $timeout_name, 'options' );
+
+		return true;
+	}
+
+	public function is_backed_off(): bool {
+		return (bool) get_transient( self::BACKOFF_KEY );
+	}
+
+	private function record_api_failure(): void {
+		$failures = (int) get_transient( self::BACKOFF_FAILURES_KEY );
+		$failures++;
+		set_transient( self::BACKOFF_FAILURES_KEY, $failures, HOUR_IN_SECONDS );
+
+		if ( $failures >= 2 ) {
+			if ( 2 === $failures ) {
+				$pause_seconds = 5 * MINUTE_IN_SECONDS;
+			} elseif ( 3 === $failures ) {
+				$pause_seconds = 15 * MINUTE_IN_SECONDS;
+			} else {
+				$pause_seconds = 30 * MINUTE_IN_SECONDS;
+			}
+			set_transient( self::BACKOFF_KEY, time() + $pause_seconds, $pause_seconds );
+		}
+	}
+
+	private function reset_api_failures(): void {
+		delete_transient( self::BACKOFF_FAILURES_KEY );
+		delete_transient( self::BACKOFF_KEY );
+	}
+
+	private function release_lock(): void {
+		if ( wp_using_ext_object_cache() ) {
+			wp_cache_delete( self::LOCK_KEY, 'nvx' );
+			return;
+		}
+		delete_transient( self::LOCK_KEY );
+	}
+
 	
 }
