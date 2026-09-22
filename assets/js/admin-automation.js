@@ -448,6 +448,39 @@ jQuery(function ($) {
 		});
 	}
 
+	function bindEmailBlock($block) {
+		$block.find('.nvx-email-test').on('click', function () {
+			var $btn = $(this);
+			var $st = $block.find('.nvx-email-test-status');
+			var to = $block.find('.nvx-action-field[data-key="email_to"]').val() || '';
+			var subject = $block.find('.nvx-action-field[data-key="email_subject"]').val() || '';
+			var body = $block.find('.nvx-action-field[data-key="email_body"]').val() || '';
+
+			NvxCore.setStatus($st, 'Надсилаємо тест…');
+			$btn.prop('disabled', true);
+
+			NvxCore.post('nvx_test_email', {
+				email_to: to,
+				email_subject: subject,
+				email_body: body
+			})
+				.done(function (res) {
+					if (res && res.success) {
+						NvxCore.setStatus($st, '✓ ' + ((res.data && res.data.message) || 'OK'), 'success');
+					} else {
+						NvxCore.setStatus($st, (res && res.data && res.data.message) || 'Помилка', 'error');
+					}
+				})
+				.fail(function (xhr) {
+					var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || ('HTTP ' + (xhr.status || '?'));
+					NvxCore.setStatus($st, msg, 'error');
+				})
+				.always(function () {
+					$btn.prop('disabled', false);
+				});
+		});
+	}
+
 	function addActionBlock($rule, type, values) {
 		var tpl = actionTemplates[type];
 		if (!tpl) {
@@ -473,6 +506,10 @@ jQuery(function ($) {
 
 		if (type === 'send_webhook') {
 			bindWebhookBlock($block, values);
+		}
+
+		if (type === 'send_email') {
+			bindEmailBlock($block);
 		}
 
 		$block.find('.nvx-action-delete').on('click', function () {

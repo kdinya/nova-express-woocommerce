@@ -414,6 +414,10 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 				<span><?php esc_html_e( 'Текст листа (плейсхолдери: {waybill}, {status}, {code}, {order_number}, {order_id}, {order_status}, {customer_name}, {customer_email}, {order_total}, {payment_method}, {currency}, {order_date}, {city_name}, {warehouse}, {meta:ключ})', 'wc-nova-express' ); ?></span>
 				<textarea class="nvx-action-field" data-key="email_body" rows="4" placeholder="<?php esc_attr_e( 'Замовлення №{order_number}\nТТН: {waybill}\nСтатус: {status}', 'wc-nova-express' ); ?>"></textarea>
 			</label>
+			<div class="nvx-email-test-row">
+				<button type="button" class="nvx-btn nvx-btn--ghost nvx-email-test"><?php esc_html_e( '✉️ Тест email', 'wc-nova-express' ); ?></button>
+				<span class="nvx-inline-status nvx-email-test-status"></span>
+			</div>
 		</div>
 	</template>
 </div>

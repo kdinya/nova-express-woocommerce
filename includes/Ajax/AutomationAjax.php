@@ -21,6 +21,7 @@ class AutomationAjax {
 		add_action( 'wp_ajax_nvx_reorder_rules', array( $this, 'reorder_rules' ) );
 		add_action( 'wp_ajax_nvx_clear_automation_log', array( $this, 'clear_log' ) );
 		add_action( 'wp_ajax_nvx_test_webhook', array( $this, 'test_webhook' ) );
+		add_action( 'wp_ajax_nvx_test_email', array( $this, 'test_email' ) );
 	}
 
 	/**
@@ -328,6 +329,86 @@ class AutomationAjax {
 				'url'     => $final_url,
 			)
 		);
+	}
+
+	public function test_email(): void {
+		$this->guard();
+
+		$raw_to = isset( $_POST['email_to'] ) ? sanitize_text_field( wp_unslash( $_POST['email_to'] ) ) : '';
+		$to_list = array_filter( array_map( 'trim', preg_split( '/[,;]+/', $raw_to ) ) );
+		$to_list = array_filter( $to_list, 'is_email' );
+
+		// Якщо поле "Кому" порожнє — надсилаємо на email поточного користувача або адміна сайту.
+		if ( empty( $to_list ) ) {
+			$current_user = wp_get_current_user();
+			$fallback = ( $current_user && ! empty( $current_user->user_email ) )
+				? $current_user->user_email
+				: (string) get_option( 'admin_email' );
+
+			if ( is_email( $fallback ) ) {
+				$to_list = array( $fallback );
+			}
+		}
+
+		if ( empty( $to_list ) ) {
+			wp_send_json_error( array( 'message' => __( 'Не вказано коректну email-адресу для тесту.', 'wc-nova-express' ) ), 400 );
+		}
+
+		$subject_tpl = isset( $_POST['email_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['email_subject'] ) ) : '';
+		if ( '' === $subject_tpl ) {
+			$subject_tpl = __( 'Статус ТТН №{waybill}: {status}', 'wc-nova-express' );
+		}
+
+		$body_tpl = isset( $_POST['email_body'] ) ? sanitize_textarea_field( wp_unslash( $_POST['email_body'] ) ) : '';
+		if ( '' === $body_tpl ) {
+			$body_tpl = __( "Замовлення №{order_number}\nТТН: {waybill}\nСтатус: {status} (код {code})\nКлієнт: {customer_name}", 'wc-nova-express' );
+		}
+
+		$replacements = array(
+			'{waybill}'         => '20450123456789',
+			'{status}'          => __( 'Прибув у відділення', 'wc-nova-express' ),
+			'{code}'            => '7',
+			'{order_number}'    => '1024',
+			'{order_id}'        => '1024',
+			'{order_status}'    => __( 'В обробці', 'wc-nova-express' ),
+			'{customer_name}'   => __( 'Тест Клієнт', 'wc-nova-express' ),
+			'{customer_email}'  => implode( ', ', $to_list ),
+			'{customer_phone}'  => '+380501234567',
+			'{order_total}'     => '1 250 грн',
+			'{payment_method}'  => __( 'Післяплата', 'wc-nova-express' ),
+			'{currency}'        => 'UAH',
+			'{order_date}'      => date_i18n( 'd.m.Y H:i' ),
+			'{city_name}'       => __( 'Київ', 'wc-nova-express' ),
+			'{warehouse}'       => __( 'Відділення №1: вул. Пирогівський шлях, 135', 'wc-nova-express' ),
+		);
+
+		$subject = str_replace( array_keys( $replacements ), array_values( $replacements ), $subject_tpl );
+		$body    = str_replace( array_keys( $replacements ), array_values( $replacements ), $body_tpl );
+
+		$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
+		if ( $body !== wp_strip_all_tags( $body ) ) {
+			$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+		}
+
+		$sent = wp_mail( $to_list, '[TEST] ' . $subject, $body, $headers );
+
+		if ( ! $sent ) {
+			wp_send_json_error( array(
+				'message' => sprintf(
+					__( 'wp_mail() не зміг надіслати лист на %s. Перевірте поштові налаштування сервера/SMTP.', 'wc-nova-express' ),
+					implode( ', ', $to_list )
+				),
+			), 500 );
+		}
+
+		wp_send_json_success( array(
+			'message' => sprintf(
+				__( 'Тестовий лист надіслано на %s', 'wc-nova-express' ),
+				implode( ', ', $to_list )
+			),
+			'to'      => implode( ', ', $to_list ),
+			'subject' => '[TEST] ' . $subject,
+		) );
 	}
 
 	private function guard(): void {
