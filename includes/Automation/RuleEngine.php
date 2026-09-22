@@ -262,9 +262,11 @@ private function run_rules( array $rules, \WC_Order $order, array $waybill_row, 
 		);
 
 		$key = 'nvx_evt_' . $fingerprint;
+		// 5 хвилин (300 сек) для надійного запобігання дублюванню подій при повторах крону або вебок
+		$ttl = 300;
 
 		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
-			$added = wp_cache_add( $key, 1, 'nvx_events', 120 );
+			$added = wp_cache_add( $key, 1, 'nvx_events', $ttl );
 			if ( ! $added ) {
 				return true;
 			}
@@ -278,7 +280,7 @@ private function run_rules( array $rules, \WC_Order $order, array $waybill_row, 
 		}
 
 		delete_option( $key );
-		if ( ! add_option( $key, $now + 120, '', 'no' ) ) {
+		if ( ! add_option( $key, $now + $ttl, '', 'no' ) ) {
 			return true;
 		}
 

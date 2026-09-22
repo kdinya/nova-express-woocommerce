@@ -40,8 +40,9 @@ class TtnManager {
 		// нічого не бачить (запис у нашій таблиці з'явиться лише ПІСЛЯ
 		// успішної відповіді Nova Poshta), тому паралельний другий виклик
 		// міг проскочити і створити другу реальну ТТН в кабінеті НП.
-		$lock_key = 'nvx_ttn_creating_' . $order->get_id();
-		if ( ! $this->acquire_lock( $lock_key, 2 * MINUTE_IN_SECONDS ) ) {
+		$lock_key   = 'nvx_ttn_creating_' . $order->get_id();
+		$lock_token = $this->acquire_lock( $lock_key, 2 * MINUTE_IN_SECONDS );
+		if ( ! $lock_token ) {
 			throw new NovaPoshtaApiException(
 				__( 'Створення ТТН для цього замовлення вже виконується (попередній запит ще обробляється). Зачекайте кілька секунд і перевірте кабінет Нової Пошти, перш ніж повторювати.', 'wc-nova-express' )
 			);
@@ -74,7 +75,7 @@ class TtnManager {
 
 			// Звичайна помилка API (валідація тощо) — точно відомо, що ТТН
 			// не створено, тож немає причин тримати лок і затримувати повтор.
-			$this->release_lock( $lock_key );
+			$this->release_lock( $lock_key, $lock_token );
 			throw $e;
 		}
 
@@ -88,7 +89,7 @@ class TtnManager {
 				)
 			);
 		} catch ( \RuntimeException $e ) {
-			$this->release_lock( $lock_key );
+			$this->release_lock( $lock_key, $lock_token );
 			// ТТН уже в НП — повідомляємо явно, щоб адмін не створював дубль.
 			throw new NovaPoshtaApiException(
 				sprintf(
@@ -100,7 +101,7 @@ class TtnManager {
 			);
 		}
 
-		$this->release_lock( $lock_key );
+		$this->release_lock( $lock_key, $lock_token );
 
 		// Лише мета + нотатка. Статус замовлення / видалення — поза межами create_for_order.
 		// Автоматизації (у т.ч. change_status) йдуть окремо через do_action( nvx/ttn_created ).
@@ -330,15 +331,16 @@ class TtnManager {
 	public function attach_existing( \WC_Order $order, string $waybill_number ): array {
 		$this->guard_single_active_ttn( $order );
 
-		$lock_key = 'nvx_ttn_creating_' . $order->get_id();
-		if ( ! $this->acquire_lock( $lock_key, 60 ) ) {
+		$lock_key   = 'nvx_ttn_creating_' . $order->get_id();
+		$lock_token = $this->acquire_lock( $lock_key, 60 );
+		if ( ! $lock_token ) {
 			throw new NovaPoshtaApiException( __( 'Операція з ТТН для цього замовлення вже триває. Зачекайте хвилину.', 'wc-nova-express' ) );
 		}
 
 		try {
 			return $this->do_attach_existing( $order, $waybill_number );
 		} finally {
-			$this->release_lock( $lock_key );
+			$this->release_lock( $lock_key, $lock_token );
 		}
 	}
 
@@ -720,30 +722,65 @@ class TtnManager {
 		return $this->repository;
 	}
 	/**
-	 * Атомарне захоплення блокування операції (захист від race condition при подвійному кліку).
+	 * Атомарне захоплення блокування операції (захист від race condition при подвійному кліку)
+	 * з генерацією унікального токена власника (lock owner token).
+	 *
+	 * @return string|null Токен блокування при успіху або null, якщо блокування вже зайняте.
 	 */
-	private function acquire_lock( string $key, int $ttl = 120 ): bool {
-		if ( function_exists( "wp_using_ext_object_cache" ) && wp_using_ext_object_cache() ) {
-			return (bool) wp_cache_add( $key, 1, "nvx_locks", $ttl );
+	private function acquire_lock( string $key, int $ttl = 120 ): ?string {
+		$token = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : bin2hex( random_bytes( 16 ) );
+
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			$acquired = (bool) wp_cache_add( $key, $token, 'nvx_locks', $ttl );
+			return $acquired ? $token : null;
 		}
 
-		$now = time();
-		$expires = (int) get_option( $key, 0 );
-		if ( $expires > $now ) {
-			return false;
+		$now     = time();
+		$current = get_option( $key );
+
+		if ( is_array( $current ) && isset( $current['expires'] ) ) {
+			if ( (int) $current['expires'] > $now ) {
+				return null;
+			}
+		} elseif ( is_numeric( $current ) && (int) $current > $now ) {
+			// Зворотна сумісність із попереднім числовим форматом timestamp.
+			return null;
 		}
 
 		delete_option( $key );
-		return (bool) add_option( $key, $now + $ttl, "", "no" );
+		$payload = array(
+			'token'   => $token,
+			'expires' => $now + $ttl,
+		);
+
+		$added = (bool) add_option( $key, $payload, '', 'no' );
+		return $added ? $token : null;
 	}
 
 	/**
-	 * Звільнення блокування.
+	 * Звільнення блокування лише якщо токен збігається з поточним власником.
 	 */
-	private function release_lock( string $key ): void {
-		if ( function_exists( "wp_using_ext_object_cache" ) && wp_using_ext_object_cache() ) {
-			wp_cache_delete( $key, "nvx_locks" );
+	private function release_lock( string $key, ?string $token = null ): void {
+		if ( null === $token || '' === $token ) {
+			return;
 		}
-		delete_option( $key );
+
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			$stored_token = wp_cache_get( $key, 'nvx_locks' );
+			if ( $stored_token === $token ) {
+				wp_cache_delete( $key, 'nvx_locks' );
+			}
+			return;
+		}
+
+		$current = get_option( $key );
+		if ( is_array( $current ) && isset( $current['token'] ) ) {
+			if ( hash_equals( (string) $current['token'], (string) $token ) ) {
+				delete_option( $key );
+			}
+		} elseif ( is_numeric( $current ) ) {
+			// Зворотна сумісність: старий формат без токена
+			delete_option( $key );
+		}
 	}
 }

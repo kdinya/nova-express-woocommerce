@@ -396,7 +396,8 @@ jQuery(function ($) {
 					var ttnId = res.data.id || 0;
 					var printBase = $app.data('print-base') || '';
 					var customUrl = printBase + '&ttn_id=' + encodeURIComponent(ttnId) + '&order_id=' + encodeURIComponent(orderId) + '&format=custom';
-					var html = 'ТТН №<strong class="nvx-cw-success-ttn">' + res.data.waybill_number + '</strong> успішно створено.' +
+					var safeTtn = $('<div>').text(String(res.data.waybill_number || '')).html();
+					var html = 'ТТН №<strong class="nvx-cw-success-ttn">' + safeTtn + '</strong> успішно створено.' +
 						'<div class="nvx-cw-print-actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">' +
 						'<a class="nvx-btn nvx-btn--primary" href="' + customUrl + '" target="_blank" rel="noopener">Друкувати</a>' +
 						'</div>';

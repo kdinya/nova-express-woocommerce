@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
-    name: Syntax & Lint Check
+  test:
+    name: Lint & PHPUnit (PHP ${{ matrix.php-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,6 +20,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
+          tools: composer:v2
 
       - name: Lint PHP files
         run: |
@@ -28,3 +29,9 @@ jobs:
       - name: Lint JavaScript files
         run: |
           node --check assets/js/*.js
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --configuration phpunit.xml.dist
