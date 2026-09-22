@@ -18,5 +18,9 @@
     "psr-4": {
       "NovaExpress\\Tests\\": "tests/"
     }
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit --configuration phpunit.xml.dist",
+    "verify": "bash bin/verify.sh"
   }
 }

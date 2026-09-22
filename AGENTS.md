@@ -22,11 +22,11 @@
    - A task is NOT complete until the WordPress built-in updater (`GitHubUpdater`) is guaranteed to recognize and cleanly download the new version.
    - **Version Format — STRICT (user-mandated, never deviate):**
      - Format: `vYYYY.MM.NN` where `v2026` = year (4 digits), `.09` = month (2 digits), and the last number (`.NN`) is a **sequential release counter, NOT the day of the month**.
-     - Examples: `v2026.09.09` → next sequential version is `v2026.09.10` (NOT `v2026.09.22`, NOT date-based). Counter simply increments: 09 → 10 → 11...
-     - This exact format must be used in the Git tag (`v2026.09.09`), plugin header, `NVX_VERSION` constant, and `readme.txt` Stable tag (header/constant/readme without the leading `v`).
+     - Examples: `v2026.09.10` → next sequential version is `v2026.09.11` (NOT date-based). Counter simply increments: 10 → 11 → 12...
+     - This exact format must be used in the Git tag (`v2026.09.10`), plugin header, `NVX_VERSION` constant, and `readme.txt` Stable tag (header/constant/readme without the leading `v`).
    - **Overwrite-Until-Told-Otherwise Rule:**
-     - By default, new code changes OVERWRITE the current latest release: keep the existing version number and tag (e.g. stay on `v2026.09.09`), force-update the tag, delete and re-publish the GitHub Release, and let the workflow rebuild the ZIP/SHA-256 assets.
-     - Increment the sequential counter (e.g. `v2026.09.09` → `v2026.09.10`) ONLY when the user explicitly says to create a new version.
+     - By default, new code changes OVERWRITE the current latest release: keep the existing version number and tag (e.g. stay on current release `v2026.09.10`), force-update the tag, delete and re-publish the GitHub Release, and let the workflow rebuild the ZIP/SHA-256 assets.
+     - Increment the sequential counter (e.g. `v2026.09.10` → `v2026.09.11`) ONLY when the user explicitly says to create a new version.
    - **Version Consistency Rule:** Every release requires updating the version in all 3 mandatory locations simultaneously:
      1. `wc-nova-express.php`: Plugin header (`* Version: YYYY.MM.NN`).
      2. `wc-nova-express.php`: Constant definition (`define( 'NVX_VERSION', 'YYYY.MM.NN' );`).
@@ -34,17 +34,20 @@
      - Releases on GitHub must be published (not draft). Publishing triggers `.github/workflows/release-zip.yml`.
      - The workflow packages `wc-nova-express.zip` (verifying that tests and developer files are excluded) and attaches it along with `wc-nova-express.zip.sha256` to the release assets.
 
-4. **Mandatory Syntax & Linter Verification Before Any Commit, Push, or Release (Zero Syntax Tolerance):**
-   - **Hard Blocker Policy:** A single syntax error in JavaScript (such as missing variable assignments, broken commas, unclosed brackets) completely crashes execution on WooCommerce checkout: field toggling fails, postcodes and unwanted address fields become visible, and orders cannot be placed. Never commit, push, package, or release code without running syntax validation on EVERY modified file.
-   - **JavaScript Validation:** Must execute `node --check <file>` on every modified JS file (e.g. `node --check assets/js/checkout.js`). Must exit with 0 errors.
-   - **PHP Linting:** Must execute `php -l <file>` on every modified PHP file (e.g. `find . -type f -name "*.php" -not -path "./vendor/*" -exec php -l {} +`). Must pass with zero syntax errors. If PHP CLI is temporarily absent in the sandbox, the agent MUST run a Node-based or regex/token parser check or ensure PHP is installed before proceeding.
-   - **JSON / Assets:** Ensure all JSON files, views, and assets are valid and well-formed.
-   - **PHPUnit suite:** `vendor/bin/phpunit --configuration phpunit.xml.dist` must pass 100% when environment allows.
-   - **Specifically verify:**
-     - `tests/Unit/VersionConsistencyTest.php` (header vs constant vs readme).
-     - `tests/Unit/ReleasePackagingTest.php` (ensures developer/test files are not packaged).
-     - `tests/Unit/NovaPoshtaContractTest.php` (ensures payload schemas conform to Nova Poshta API specs).
-     - `tests/Unit/TtnLockTest.php` (atomic lock token integrity).
+4. **Mandatory Pre-Flight Verification Gate Before ANY Commit, Push, Tag, or Release (ZERO TOLERANCE):**
+   - **Hard Blocker Policy:** Never push code, update tags, or publish releases without first executing the local verification gate and getting 100% PASS on all checks. A single broken bracket or version mismatch breaks GitHub Actions CI and store checkouts.
+   - **Automated Verification Script (`bin/verify.sh` or `composer verify`):**
+     Run `bash bin/verify.sh` (or `composer test` + `node --check` + `php -l`). It executes:
+     1. **Version Consistency:** Matches plugin header, `NVX_VERSION`, and `readme.txt` Stable tag.
+     2. **PHP Syntax:** Runs `php -l` across all plugin PHP files. 0 syntax errors allowed.
+     3. **JavaScript Syntax:** Runs `node --check` across `assets/js/*.js`. 0 syntax errors allowed.
+     4. **PHPUnit Test Suite:** Executes full suite (`vendor/bin/phpunit`). All tests must pass (100%).
+   - **Release Step Ordering (STRICT):**
+     1. Edit code.
+     2. Run `bash bin/verify.sh`. If anything fails, fix it immediately; DO NOT commit or push.
+     3. Commit and push to `origin/main`.
+     4. Verify that CI on `main` passes.
+     5. Only after CI passes, update/create the Git tag and publish the GitHub Release.
 
 5. **Concise, High-Signal Communication:**
    - Keep answers clear, direct, and focused on outcomes.
@@ -52,6 +55,7 @@
 
 6. **Self-Updating Instruction Requirement:**
    - Whenever a new feature, database table, hook, API integration, or architectural pattern is added to the plugin, the AI responsible **must append or update the relevant section in this document (`AGENTS.md`)**.
+
 7. **Source of Truth: Always Analyze the Latest Repository Version:**
    - Before performing ANY task, **always clone or read the current repository files directly** (or verify the latest commit on `main`).
    - **Never rely on chat history, memory, or previously discussed code states.** Other AI assistants may have edited the repository between conversations; the code you remember may be outdated.
@@ -60,7 +64,6 @@
 8. **Audience & Language Policy:**
    - The plugin targets a **Ukrainian-only audience**. There are **no internationalization (i18n) requirements**: hardcoded Ukrainian strings in admin views and AJAX responses are acceptable and must be preserved.
    - Do **not** spend effort wrapping strings in `__()`, `_e()`, or generating `.pot` translation files unless the user explicitly requests it later.
-
 
 9. **Strict Adherence to Plugin Design System (No Default Browser Widgets):**
    - The plugin has its own established visual identity built around a signature green palette (`--nvx-primary: #7CB342`, `--nvx-primary-dark: #689f38`, `--nvx-border: #dde5d6`, rounded corners, custom SVG icons).
@@ -91,14 +94,13 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
 ### 2.3. Waybill (ТТН) Management & Security (`includes/Ttn/`)
 - **`TtnManager.php` & `TtnRepository.php`:**
   - Manages creation, editing, barcode generation, and status syncing for waybills.
-  - **Atomic Concurrency Lock (`lock_owner_token`):** Prevents double waybill creation caused by rapid double-clicking or concurrent requests. A transient lock with an owner token is acquired before API calls and released upon completion.
+  - **Atomic Concurrency Lock (`lock_owner_token`):** Prevents double waybill creation caused by rapid double-clicking or concurrent requests. A transient lock with an owner token is acquired before API calls and released upon completion (including in error paths).
   - **Dispatch State Protection:** Once a waybill has been dispatched (carrier status indicates parcel is in transit or completed), the delete button is permanently hidden in admin views to prevent accidental deletion of live shipments.
+  - **Safe Tracking Marking:** Never delete local TTN records automatically on temporary tracking API `not_found` responses; flag as unknown/not_found and keep record intact.
   - **Site Timezone Formatting:** Timestamps for status updates and carrier changes must always account for WordPress timezone offsets (`wp_date()` / site timezone), never raw UTC.
-  - **Postomat (Поштомат) Live Validation Rules:**
-    - Maximum weight: **20 kg**.
-    - Maximum dimensions: **40 × 60 × 30 cm** (sum / individual limits).
-    - Maximum declared value: **29,000 UAH**.
-    - Maximum parcels/places: **1 place only**.
+  - **Postomat (Поштомат) Admin Warnings (NOT Checkout Blocks):**
+    - Postomat limits: max weight 20 kg, dimensions 40 × 60 × 30 cm, declared value 29,000 UAH, 1 place.
+    - **Do NOT block buyers at checkout** when choosing postomats. Only display non-blocking warning banners in the admin waybill creation page (`create-waybill-page.php`) so managers can adjust shipment parameters if needed.
   - **Phone Normalization:** Before any waybill creation API call, recipient/sender phone numbers MUST be normalized server-side to the Nova Poshta required format `+380XXXXXXXXX`. Never rely on frontend validation alone for phone format.
 
 ### 2.4. Local Warehouse & City Synchronization (`includes/Warehouse/`)
@@ -120,12 +122,14 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
   - **Action Execution Strategy:**
     - **Synchronous Actions:** Internal changes like updating order status (`ChangeStatusAction`) or appending order notes (`AddNoteAction`) execute immediately.
     - **Deferred Asynchronous Actions:** External network operations such as webhooks (`SendWebhookAction`) or emails (`SendEmailAction`) are scheduled via WP-Cron (`nvx/run_deferred_action`) to prevent blocking UI requests.
+    - **Webhook Method:** Webhooks use GET requests by user design (do NOT change to POST unless explicitly requested by repository owner).
   - **Log Retention & Cleanup:** Automation execution logs in `wp_nvx_automation_log` are pruned via daily cron `nvx/prune_automation_log` (default 90-day retention, filterable via `nvx/automation_log_retention_days`).
 
 ### 2.6. Scheduled Tracking (`includes/Tracking/`)
 - **`TrackingScheduler.php` & `TrackingRunner.php`:**
   - Registers scheduled cron checks at configurable intervals (e.g., 30m, 1h).
-  - Queries active, non-delivered waybills in batches (`TrackingDocument.getStatusDocuments`).
+  - Queries active, non-delivered waybills in batches of up to 100 TTNs per request (`TrackingDocument.getStatusDocuments`).
+  - Exponential backoff: transient pause (5m, 15m, 30m) on consecutive API failures to protect server resources.
   - Updates order meta and triggers automation events when status changes occur.
 
 ### 2.7. Admin Experience & Customization (`includes/Admin/`)
@@ -139,15 +143,17 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
 - Hooks into `pre_set_site_transient_update_plugins` and `plugins_api`.
 - Fetches the latest published release from `https://api.github.com/repos/kdinya/nova-express-woocommerce/releases/latest`.
 - Compares `tag_name` with `NVX_VERSION`.
-- Downloads the asset `wc-nova-express.zip` and verifies the folder structure via `upgrader_source_selection`.
+- **Strict Asset Requirement:** Must strictly download the explicitly named asset `wc-nova-express.zip` (verifying presence and size). Never fall back to unsafe GitHub branch zipballs (`zipball_url`).
+- Verifies folder structure via `upgrader_source_selection`.
 - Ensures the plugin remains active after update execution without session loss.
 
 ---
 
 ### 2.9. Frontend Checkout Compatibility (`includes/Frontend/`)
 - The checkout integration MUST be **universal**: it has to work reliably with **both** the classic WooCommerce checkout (`woocommerce_checkout_fields` hooks + jQuery selectors) and the modern **Cart & Checkout Blocks** used by current themes.
+- When Nova Poshta is selected: standard address fields (city, postcode, address line 1, state) must be hidden and marked non-required.
+- When other shipping methods (e.g. Ukrposhta, courier) are selected: standard fields (especially city and postcode) must be visible and strictly required (`validate-required`).
 - Any change to checkout behavior must preserve existing hooks, CSS classes, and JS selectors that custom themes and one-page checkout plugins may depend on.
-- When touching checkout code, always verify both paths: classic template rendering and block-based rendering. If a feature can only support one path, warn the user before implementing.
 
 ### 2.10. Database Schema Changes (`includes/Install/Installer.php`)
 - Any change to plugin tables (`wp_nvx_cities`, `wp_nvx_warehouses`, `wp_nvx_ttn`, `wp_nvx_automation_log`, rules table) MUST go through the versioned migration checks in `Installer` (increment the DB version option, apply `dbDelta` or targeted `ALTER TABLE`), never through one-off manual queries that existing installs will not receive.
@@ -156,14 +162,15 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
 
 Before submitting or releasing code:
 1. [ ] **Analyze feedback first:** Did you explain your plan to the user and receive confirmation?
-2. [ ] **Version consistency:** Are `wc-nova-express.php` (header & constant) and `readme.txt` (Stable tag) synchronized?
-3. [ ] **Strict Syntax Verification (CRITICAL):** Did `node --check` pass on all modified JS files and `php -l` on all modified PHP files with 0 errors? (NEVER push or release without syntax verification).
-4. [ ] **Test execution:** Did all PHPUnit tests pass cleanly (`vendor/bin/phpunit`)?
-5. [ ] **Security check:** Are nonces checked, capabilities verified (`manage_woocommerce`), and inputs sanitized?
-6. [ ] **HPOS verification:** Are all order data calls using WC Order methods (`get_meta`/`update_meta_data`)?
-7. [ ] **UI check:** Are responsive styles intact on mobile/narrow screens?
-8. [ ] **Instruction update:** Did you document any new hooks, features, or behaviors in this `AGENTS.md` file?
-9. [ ] **Repository freshness:** Did you analyze the actual latest commit on `main` (not chat history) before making changes?
-10. [ ] **Checkout universality:** If checkout code changed, does it work in both classic checkout and Checkout Blocks without breaking themes/plugins?
-11. [ ] **Schema migration:** If tables changed, did `Installer` handle existing installations via versioned migration?
-12. [ ] **Design System:** Do all UI controls match the plugin green theme (`#7CB342`) without unstyled browser-blue checkboxes?
+2. [ ] **Local Verification Gate (`bin/verify.sh`):** Did `bash bin/verify.sh` pass 100% (Version check + PHP lint + JS lint + PHPUnit)?
+3. [ ] **Version consistency:** Are `wc-nova-express.php` (header & constant) and `readme.txt` (Stable tag) synchronized?
+4. [ ] **Strict Syntax Verification (CRITICAL):** Did `node --check` pass on all modified JS files and `php -l` on all modified PHP files with 0 errors? (NEVER push or release without syntax verification).
+5. [ ] **Test execution:** Did all PHPUnit tests pass cleanly (`vendor/bin/phpunit`)?
+6. [ ] **Security check:** Are nonces checked, capabilities verified (`manage_woocommerce`), and inputs sanitized?
+7. [ ] **HPOS verification:** Are all order data calls using WC Order methods (`get_meta`/`update_meta_data`)?
+8. [ ] **UI check:** Are responsive styles intact on mobile/narrow screens?
+9. [ ] **Instruction update:** Did you document any new hooks, features, or behaviors in this `AGENTS.md` file?
+10. [ ] **Repository freshness:** Did you analyze the actual latest commit on `main` (not chat history) before making changes?
+11. [ ] **Checkout universality:** If checkout code changed, does it work in both classic checkout and Checkout Blocks without breaking themes/plugins?
+12. [ ] **Schema migration:** If tables changed, did `Installer` handle existing installations via versioned migration?
+13. [ ] **Design System:** Do all UI controls match the plugin green theme (`#7CB342`) without unstyled browser-blue checkboxes?
