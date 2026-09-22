@@ -40,6 +40,11 @@ class Assets {
 		$settings_ver = file_exists( $settings_file ) ? (string) filemtime( $settings_file ) : NVX_VERSION;
 
 		wp_enqueue_style( 'nvx-admin', NVX_PLUGIN_URL . 'assets/css/admin.css', array(), $css_ver );
+		// Динамічний акцентний колір для адмінки плагіна.
+		$admin_color = Settings::get_admin_color();
+		$custom_css  = self::generate_dynamic_css( $admin_color );
+		wp_add_inline_style( 'nvx-admin', $custom_css );
+
 
 		wp_enqueue_script( 'nvx-admin-core', NVX_PLUGIN_URL . 'assets/js/admin-core.js', array( 'jquery' ), $core_ver, true );
 
@@ -68,8 +73,53 @@ class Assets {
 			wp_enqueue_script( 'nvx-admin-automation', NVX_PLUGIN_URL . 'assets/js/admin-automation.js', array( 'nvx-admin-core' ), NVX_VERSION, true );
 		}
 
+		
+		if ( $is_shell_page && 'appearance' === $tab ) {
+			$appearance_file = NVX_PLUGIN_DIR . 'assets/js/admin-appearance.js';
+			$appearance_ver  = file_exists( $appearance_file ) ? (string) filemtime( $appearance_file ) : NVX_VERSION;
+			wp_enqueue_script( 'nvx-admin-appearance', NVX_PLUGIN_URL . 'assets/js/admin-appearance.js', array( 'jquery' ), $appearance_ver, true );
+		}
+
 		if ( $is_settings_page ) {
 			wp_enqueue_script( 'nvx-admin-settings', NVX_PLUGIN_URL . 'assets/js/admin-settings.js', array( 'nvx-admin-core' ), $settings_ver, true );
 		}
 	}
+
+	private static function generate_dynamic_css( string $hex ): string {
+		$hex = ltrim( $hex, '#' );
+		if ( strlen( $hex ) === 3 ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		if ( strlen( $hex ) !== 6 || ! ctype_xdigit( $hex ) ) {
+			$hex = '7cb342';
+		}
+
+		$r = hexdec( substr( $hex, 0, 2 ) );
+		$g = hexdec( substr( $hex, 2, 2 ) );
+		$b = hexdec( substr( $hex, 4, 2 ) );
+
+		// Розрахунок темнішого (hover) та світлішого відтінків
+		$dark_r  = max( 0, (int) round( $r * 0.85 ) );
+		$dark_g  = max( 0, (int) round( $g * 0.85 ) );
+		$dark_b  = max( 0, (int) round( $b * 0.85 ) );
+		$dark_hex = sprintf( '#%02x%02x%02x', $dark_r, $dark_g, $dark_b );
+
+		$light_r = min( 255, (int) round( $r + ( 255 - $r ) * 0.15 ) );
+		$light_g = min( 255, (int) round( $g + ( 255 - $g ) * 0.15 ) );
+		$light_b = min( 255, (int) round( $b + ( 255 - $b ) * 0.15 ) );
+		$light_hex = sprintf( '#%02x%02x%02x', $light_r, $light_g, $light_b );
+
+		$primary_hex  = '#' . $hex;
+		$primary_soft = sprintf( 'rgba(%d, %d, %d, 0.09)', $r, $g, $b );
+		$shadow       = sprintf( '0 10px 28px rgba(%d, %d, %d, 0.28)', $r, $g, $b );
+
+		return ":root {
+	--nvx-primary: {$primary_hex};
+	--nvx-primary-dark: {$dark_hex};
+	--nvx-primary-soft: {$primary_soft};
+	--nvx-header-gradient: linear-gradient(135deg, {$primary_hex} 0%, {$light_hex} 50%, {$dark_hex} 100%);
+	--nvx-header-shadow: {$shadow};
+}";
+	}
+
 }

@@ -48,6 +48,7 @@ class Settings {
 			// За замовчуванням дані НЕ видаляються автоматично при видаленні плагіна
 			// через адмінку WordPress, щоб не втратити історію ТТН/журнал автоматизацій.
 			'wipe_data_on_uninstall' => 'no',
+			'admin_primary_color'    => '#7CB342',
 		);
 
 		return wp_parse_args( get_option( self::OPTION_KEY, array() ), $defaults );
@@ -303,4 +304,38 @@ class Settings {
 		$all = self::get_sender_profiles();
 		return $all[0] ?? null;
 	}
+
+	public static function get_admin_color(): string {
+		 = self::get_all();
+		 = ! empty( ['admin_primary_color'] ) ? sanitize_hex_color( ['admin_primary_color'] ) : '';
+		return ! empty(  ) ?  : '#7CB342';
+	}
+
+	public function save_appearance(): void {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( esc_html__( 'Недостатньо прав.', 'wc-nova-express' ) );
+		}
+
+		check_admin_referer( 'nvx_save_appearance' );
+
+		 = isset( ['admin_primary_color'] ) ? sanitize_hex_color( wp_unslash( ['admin_primary_color'] ) ) : '';
+		if ( empty(  ) ) {
+			 = '#7CB342';
+		}
+
+		 = self::get_all();
+		['admin_primary_color'] = ;
+		update_option( self::OPTION_KEY,  );
+
+		wp_safe_redirect( add_query_arg(
+			array(
+				'page'    => 'nvx-express',
+				'tab'     => 'appearance',
+				'updated' => '1',
+			),
+			admin_url( 'admin.php' )
+		) );
+		exit;
+	}
+
 }

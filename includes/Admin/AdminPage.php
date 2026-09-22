@@ -54,6 +54,7 @@ class AdminPage {
 			'automation_ttn'    => __( 'Автоматизації ТТН', 'wc-nova-express' ),
 			'automation_order'  => __( 'Автоматизації замовлень', 'wc-nova-express' ),
 			'monitoring'        => __( 'Моніторинг ТТН', 'wc-nova-express' ),
+			'appearance'        => __( 'Оформлення', 'wc-nova-express' ),
 		);
 		?>
 		<div class="wrap nvx-admin-shell">

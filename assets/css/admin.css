@@ -24,9 +24,9 @@
 
 .nvx-header{
 	display:flex; align-items:center; gap:16px;
-	background:linear-gradient(135deg, #7CB342 0%, #8BC34A 50%, #689f38 100%);
+	background:var(--nvx-header-gradient, linear-gradient(135deg, #7CB342 0%, #8BC34A 50%, #689f38 100%));
 	color:#fff; padding:26px 28px; border-radius:20px; margin-bottom:24px;
-	box-shadow:0 10px 28px rgba(124,179,66,.28);
+	box-shadow:var(--nvx-header-shadow, 0 10px 28px rgba(124,179,66,.28));
 	flex-wrap:wrap; box-sizing:border-box; max-width:100%;
 }
 .nvx-header > div:nth-child(2){
@@ -851,4 +851,51 @@ body.woocommerce_page_nvx-express .wrap {
 	.nvx-sync-box__stats{ width:100%; justify-content:flex-start; }
 	.nvx-sync-box__actions{ width:100%; flex-direction:column; align-items:stretch; }
 	.nvx-sync-box__actions .nvx-btn{ width:100%; justify-content:center; }
+}
+
+/* Налаштування оформлення (Appearance) */
+.nvx-color-presets{
+	display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;
+}
+.nvx-preset-btn{
+	display:inline-flex; align-items:center; gap:8px;
+	padding:8px 14px; border-radius:99px;
+	border:1.5px solid var(--nvx-border,#cbd5e1);
+	background:#fff; cursor:pointer; font-size:13px; font-weight:500;
+	color:#334155; transition:border-color .15s, box-shadow .15s, background .15s;
+}
+.nvx-preset-btn:hover{
+	border-color:#94a3b8; background:#f8fafc;
+}
+.nvx-preset-btn.is-active{
+	border-color:var(--nvx-primary,#7cb342);
+	background:var(--nvx-primary-soft, rgba(124,179,66,.09));
+	color:#0f172a; font-weight:700;
+	box-shadow:0 0 0 2px var(--nvx-primary-soft, rgba(124,179,66,.2));
+}
+.nvx-preset-btn__dot{
+	width:16px; height:16px; border-radius:50%; flex-shrink:0;
+	box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);
+}
+.nvx-color-input-wrap{
+	display:flex; align-items:center; gap:10px; margin-top:4px;
+}
+.nvx-color-picker{
+	width:42px; height:38px; border:1.5px solid var(--nvx-border,#cbd5e1);
+	border-radius:8px; padding:2px; cursor:pointer; background:#fff;
+}
+.nvx-color-text{
+	width:120px !important; font-family:ui-monospace, Menlo, Consolas, monospace !important;
+	font-weight:600 !important; text-transform:uppercase;
+}
+.nvx-preview-box{
+	margin-top:24px; padding:18px 20px; border-radius:12px;
+	border:1.5px dashed var(--nvx-border,#cbd5e1); background:#fafafa;
+}
+.nvx-preview-box__title{
+	font-size:12.5px; font-weight:700; color:var(--nvx-text-soft,#64748b);
+	margin-bottom:12px; text-transform:uppercase; letter-spacing:.4px;
+}
+.nvx-preview-box__items{
+	display:flex; align-items:center; gap:14px; flex-wrap:wrap;
 }
