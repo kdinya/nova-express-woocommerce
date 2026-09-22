@@ -46,4 +46,38 @@ final class FormattingTest extends TestCase {
         $this->assertStringContainsString( '[7]', $display );
         $this->assertStringContainsString( 'Прибув у відділення', $display );
     }
+
+    public function testApplyOrderTemplatePlaceholders(): void {
+        $order = new \WC_Order( '180,00 грн.', 1234 );
+        $order->set_meta_data( '_nvx_city_name', 'Львів' );
+        $order->set_meta_data( '_nvx_warehouse_label', 'Відділення №5' );
+        $order->set_meta_data( '_custom_track_ref', 'REF-999' );
+
+        $template = 'Замовлення #{order_number}: {customer_name}, тел {phone}, місто {city_name}, склад {warehouse}, сума {order_total} {currency}';
+        $result = Formatting::apply_order_template( $template, $order );
+
+        $this->assertStringContainsString( 'Замовлення #1234:', $result );
+        $this->assertStringContainsString( 'Тарас Шевченко', $result );
+        $this->assertStringContainsString( '0671234567', $result );
+        $this->assertStringContainsString( 'місто Львів', $result );
+        $this->assertStringContainsString( 'склад Відділення №5', $result );
+        $this->assertStringContainsString( '180 UAH', $result );
+
+        // Test {meta:...}
+        $meta_template = 'Ref: {meta:_custom_track_ref}';
+        $this->assertSame( 'Ref: REF-999', Formatting::apply_order_template( $meta_template, $order ) );
+    }
+
+    public function testResolveAdditionalInfo(): void {
+        $order = new \WC_Order( '180,00 грн.', 555 );
+        $template = 'Доставка до {customer_name} (замовлення #{order_number})';
+
+        // Filter contains matches
+        $res_matched = Formatting::resolve_additional_info( $template, $order, 'Шевченко' );
+        $this->assertStringContainsString( 'Доставка до Тарас Шевченко', $res_matched );
+
+        // Filter contains does not match
+        $res_unmatched = Formatting::resolve_additional_info( $template, $order, 'Франко' );
+        $this->assertSame( '', $res_unmatched );
+    }
 }
