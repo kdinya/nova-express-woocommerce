@@ -160,3 +160,21 @@ form.checkout .nvx-checkout-box select {
 	box-shadow: none;
 }
 
+
+
+/* Повідомлення про невірний номер телефону */
+.nvx-phone-error {
+	display: block !important;
+	margin-top: 6px !important;
+	padding: 4px 8px !important;
+	font-size: 12px !important;
+	line-height: 1.35 !important;
+	color: #c62828 !important;
+	background: #fdecea !important;
+	border-left: 3px solid #c62828 !important;
+	border-radius: 4px !important;
+}
+input.nvx-phone-input--invalid {
+	border-color: #c62828 !important;
+	box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15) !important;
+}

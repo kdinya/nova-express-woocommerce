@@ -355,34 +355,65 @@ jQuery(function ($) {
 	});
 
 	// --- Автоматична маска та нормалізація телефону (+380...) ---
-	function formatUkrainianPhone(val) {
-		var digits = val.replace(/\D/g, '');
+	// Форматує лише вже введені цифри й ніколи не домальовує розділові знаки
+	// в кінці, тому Backspace і повне видалення номера працюють коректно.
+	function nvxPhoneDigits(val) {
+		var digits = (val || '').replace(/\D/g, '');
 		if (!digits) return '';
-
 		if (digits.indexOf('380') === 0) {
-			digits = digits.substring(2); // Лишаємо 0XXXXXXXXX
-		} else if (digits.indexOf('38') === 0 && digits.length > 2) {
+			digits = digits.substring(3);
+		} else if (digits.indexOf('38') === 0) {
 			digits = digits.substring(2);
-		} else if (digits.charAt(0) !== '0') {
+		}
+		if (!digits || digits.charAt(0) !== '0') {
 			digits = '0' + digits;
 		}
+		return digits.substring(0, 10);
+	}
 
-		digits = digits.substring(0, 10); // макс 10 цифр (0XXXXXXXXX)
+	function formatUkrainianPhone(val) {
+		var digits = nvxPhoneDigits(val);
+		if (!digits) return '';
 
-		var res = '+38 (';
-		if (digits.length > 0) {
-			res += digits.substring(0, Math.min(3, digits.length));
-		}
+		var res = '+38 (' + digits.substring(0, Math.min(3, digits.length));
 		if (digits.length >= 3) {
-			res += ') ' + digits.substring(3, Math.min(6, digits.length));
-		}
-		if (digits.length >= 6) {
-			res += '-' + digits.substring(6, Math.min(8, digits.length));
-		}
-		if (digits.length >= 8) {
-			res += '-' + digits.substring(8, Math.min(10, digits.length));
+			res += ')';
+			if (digits.length > 3) {
+				res += ' ' + digits.substring(3, Math.min(6, digits.length));
+			}
+			if (digits.length > 6) {
+				res += '-' + digits.substring(6, Math.min(8, digits.length));
+			}
+			if (digits.length > 8) {
+				res += '-' + digits.substring(8, 10);
+			}
 		}
 		return res;
+	}
+
+	function isPhoneValid(val) {
+		return nvxPhoneDigits(val).length === 10;
+	}
+
+	function showPhoneError($phone, message) {
+		var $wrap = $phone.closest('p.form-row, p, .nvx-field, div').first();
+		var $error = $wrap.find('.nvx-phone-error');
+		if (message) {
+			if (!$error.length) {
+				$error = $('<span class="nvx-phone-error"></span>');
+				$wrap.append($error);
+			}
+			$error.text(message);
+			$phone.addClass('nvx-phone-input--invalid');
+		} else {
+			$error.remove();
+			$phone.removeClass('nvx-phone-input--invalid');
+		}
+	}
+
+	function setCursorToEnd(el) {
+		var len = el.value.length;
+		try { el.setSelectionRange(len, len); } catch (err) { /* ігноруємо */ }
 	}
 
 	function initPhoneMask() {
@@ -394,23 +425,78 @@ jQuery(function ($) {
 		if (!$phone.length) return;
 
 		$phone.attr('placeholder', '+38 (0__) ___-__-__');
+		$phone.attr('inputmode', 'tel');
 
-		$phone.off('input.nvx_mask blur.nvx_mask').on('input.nvx_mask', function(e) {
-			var input = this;
-			var val = input.value;
-			if (!val) return;
-			var formatted = formatUkrainianPhone(val);
-			if (formatted && formatted !== val) {
-				input.value = formatted;
-			}
-		});
+		$phone.off('.nvx_mask')
+			.on('input.nvx_mask', function () {
+				var input = this;
+				var formatted = formatUkrainianPhone(input.value);
+				if (formatted !== input.value) {
+					input.value = formatted;
+					setCursorToEnd(input);
+				}
+				if (isPhoneValid(input.value)) {
+					showPhoneError($phone, null);
+				}
+			})
+			.on('keydown.nvx_mask', function (e) {
+				if (e.key !== 'Backspace') return;
+				var el = this;
+				var start = el.selectionStart;
+				var end = el.selectionEnd;
+				if (typeof start !== 'number' || start !== end) return;
 
-		// Якщо поле вже заповнене при завантаженні (збережений профіль/autofill)
+				if (start <= 6) {
+					// Курсор у межах префікса «+38 (0» — очищуємо поле повністю,
+					// інакше форматер щоразу повертає «0» і Backspace застрягає
+					e.preventDefault();
+					el.value = '';
+					showPhoneError($phone, null);
+					return;
+				}
+
+				var prev = el.value;
+				// Якщо перед курсором розділовий знак («)», «-», пробіл) —
+				// видаляємо його разом із цифрою перед ним,
+				// інакше Backspace «застрягає» на розділовому знаку
+				if ('() -'.indexOf(prev.charAt(start - 1)) !== -1) {
+					e.preventDefault();
+					var trimmed = prev.substring(0, start - 1).replace(/[^\d+]+$/, '');
+					trimmed = trimmed.replace(/\d$/, '');
+					el.value = trimmed ? formatUkrainianPhone(trimmed) : '';
+					setCursorToEnd(el);
+				}
+			})
+			.on('blur.nvx_mask', function () {
+				var val = this.value;
+				if (val && !isPhoneValid(val)) {
+					showPhoneError($phone, 'Вкажіть повний номер телефону у форматі +38 (0XX) XXX-XX-XX');
+				} else {
+					showPhoneError($phone, null);
+				}
+			});
+
+		// Форматуємо значення, збережене в профілі/autofill, але не чіпаємо порожнє поле
 		if ($phone.val()) {
 			var formattedInit = formatUkrainianPhone($phone.val());
 			if (formattedInit) $phone.val(formattedInit);
 		}
 	}
+
+	// Блокуємо оформлення замовлення з неповним номером і показуємо повідомлення
+	$(document.body).on('checkout_place_order', function () {
+		if (typeof window.NVX_CHECKOUT !== 'undefined' && !window.NVX_CHECKOUT.enablePhoneMask) {
+			return;
+		}
+		var $phone = $('#billing_phone');
+		if (!$phone.length) return;
+		var val = $phone.val();
+		if (val && !isPhoneValid(val)) {
+			showPhoneError($phone, 'Вкажіть повний номер телефону у форматі +38 (0XX) XXX-XX-XX');
+			$phone.trigger('focus');
+			return false;
+		}
+	});
 
 	initPhoneMask();
 	$(document.body).on('updated_checkout', initPhoneMask);

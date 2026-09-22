@@ -907,3 +907,80 @@ body.woocommerce_page_nvx-express .wrap {
 .nvx-preview-box__items{
 	display:flex; align-items:center; gap:14px; flex-wrap:wrap;
 }
+
+
+/* Checkbox styled with plugin brand (green #7CB342) */
+.nvx-field--checkbox {
+	display: flex !important;
+	align-items: flex-start !important;
+	gap: 12px !important;
+	cursor: pointer !important;
+	background: #fbfdf9 !important;
+	border: 1px solid var(--nvx-border, #dde5d6) !important;
+	border-radius: 10px !important;
+	padding: 12px 14px !important;
+	transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease !important;
+	box-sizing: border-box !important;
+}
+.nvx-field--checkbox:hover {
+	border-color: var(--nvx-primary, #7CB342) !important;
+	background: #f5f9f0 !important;
+}
+.nvx-field--checkbox input[type="checkbox"] {
+	-webkit-appearance: none !important;
+	appearance: none !important;
+	box-sizing: border-box !important;
+	width: 20px !important;
+	height: 20px !important;
+	min-width: 20px !important;
+	min-height: 20px !important;
+	max-width: 20px !important;
+	max-height: 20px !important;
+	margin: 2px 0 0 0 !important;
+	padding: 0 !important;
+	flex-shrink: 0 !important;
+	border: 2px solid #a3b899 !important;
+	border-radius: 5px !important;
+	background: #ffffff !important;
+	cursor: pointer !important;
+	position: relative !important;
+	outline: none !important;
+	box-shadow: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: border-color .15s ease, background-color .15s ease !important;
+}
+.nvx-field--checkbox input[type="checkbox"]::before,
+.nvx-field--checkbox input[type="checkbox"]::after {
+	content: none !important;
+	display: none !important;
+}
+.nvx-field--checkbox input[type="checkbox"]:checked {
+	background-color: var(--nvx-primary, #7CB342) !important;
+	border-color: var(--nvx-primary-dark, #689f38) !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2L6.5 11.2L12.5 4.8' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+	background-position: center center !important;
+	background-repeat: no-repeat !important;
+	background-size: 14px 14px !important;
+}
+.nvx-field--checkbox input[type="checkbox"]:focus {
+	box-shadow: 0 0 0 3px rgba(124, 179, 66, 0.25) !important;
+}
+.nvx-field--checkbox .nvx-checkbox-text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.nvx-field--checkbox .nvx-checkbox-title {
+	font-weight: 600;
+	color: var(--nvx-text, #1a1a1a);
+	font-size: 14px;
+	line-height: 1.35;
+}
+.nvx-field--checkbox .nvx-field__hint {
+	color: var(--nvx-text-soft, #5c6556);
+	font-size: 12px;
+	line-height: 1.4;
+	margin: 0;
+}
