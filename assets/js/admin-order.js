@@ -74,7 +74,7 @@ jQuery(function ($) {
 				// Інакше оновлюємо лише статус ТТН у цій картці.
 				var w = res.data && res.data.waybill;
 				if (w) {
-					var text = w.status_short || ((w.carrier_status_code ? '[' + w.carrier_status_code + '] ' : '') +
+					var text = w.status_display || ((w.carrier_status_code ? '[' + w.carrier_status_code + '] ' : '') +
 						(w.carrier_status_text || 'Очікує опитування'));
 					$card.find('.nvx-waybill-card__status').text(text);
 					if (w.last_updated_formatted) {

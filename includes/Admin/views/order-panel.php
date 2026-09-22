@@ -43,7 +43,7 @@ $has_active_ttn = ! empty( $waybills );
 							<span class="nvx-waybill-card__updated-time" style="font-weight:normal;color:#64748b;"><?php echo $last_time_fmt ? '(' . esc_html( $last_time_fmt ) . ')' : ''; ?></span>
 						</span>
 						<span class="nvx-waybill-simple__value nvx-waybill-card__status">
-							<?php echo esc_html( \NovaExpress\Helpers\Formatting::format_ttn_status_display( $w, false ) ); ?>
+							<?php echo esc_html( \NovaExpress\Helpers\Formatting::format_ttn_status_display( $w ) ); ?>
 						</span>
 					</div>
 				</div>

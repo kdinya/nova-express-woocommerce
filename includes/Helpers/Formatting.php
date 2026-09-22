@@ -195,6 +195,8 @@ class Formatting {
 					$time_str = (string) $details['ActualDeliveryDate'];
 				} elseif ( ! empty( $details['TrackingUpdateDate'] ) ) {
 					$time_str = (string) $details['TrackingUpdateDate'];
+				} elseif ( ! empty( $details['DateCreated'] ) ) {
+					$time_str = (string) $details['DateCreated'];
 				}
 			}
 		}
