@@ -221,20 +221,28 @@ jQuery(function ($) {
 
 	$(document).on('click', '#nvx-reset-sync-link', function (e) {
 		e.preventDefault();
-		if (!confirm('Скинути збережену сторінку і почати синхронізацію спочатку з 1 сторінки?')) {
-			return;
-		}
-		syncSavedPage = 0;
-		syncResumePage = 1;
-		NVX_ADMIN.syncSavedPage = 0;
-		NVX_ADMIN.syncResumePage = 1;
-		updateSyncButtonUI();
-		NvxCore.post('nvx_reset_warehouses_sync', {});
-		$('#nvx-sync-log').empty();
-		$('#nvx-sync-progress').hide();
-		$('#nvx-sync-progress-fill').css('width', '0%');
-		$('#nvx-sync-progress-percent').text('0%');
-		logLine('info', 'Прогрес скинуто. Натисніть «Синхронізувати базу відділень» для завантаження з 1 сторінки.');
+		NvxCore.confirm({
+			title: 'Скидання сторінки синхронізації',
+			message: 'Скинути збережену сторінку і почати синхронізацію спочатку з 1 сторінки?',
+			confirmText: 'Скинути спочатку',
+			cancelText: 'Скасувати',
+			destructive: true
+		}).then(function (ok) {
+			if (!ok) {
+				return;
+			}
+			syncSavedPage = 0;
+			syncResumePage = 1;
+			NVX_ADMIN.syncSavedPage = 0;
+			NVX_ADMIN.syncResumePage = 1;
+			updateSyncButtonUI();
+			NvxCore.post('nvx_reset_warehouses_sync', {});
+			$('#nvx-sync-log').empty();
+			$('#nvx-sync-progress').hide();
+			$('#nvx-sync-progress-fill').css('width', '0%');
+			$('#nvx-sync-progress-percent').text('0%');
+			logLine('info', 'Прогрес скинуто. Натисніть «Синхронізувати базу відділень» для завантаження з 1 сторінки.');
+		});
 	});
 
 	$('#nvx-sync-warehouses').on('click', function () {
@@ -487,31 +495,39 @@ jQuery(function ($) {
 		var $btn = $(this);
 		var $procMsg = $('#nvx-update-process-msg');
 
-		if (!confirm('Запустити автоматичне оновлення плагіна?')) {
-			return;
-		}
+		NvxCore.confirm({
+			title: 'Оновлення плагіна',
+			message: 'Запустити автоматичне оновлення плагіна Nova Express до найновішої версії?',
+			confirmText: 'Оновити',
+			cancelText: 'Скасувати',
+			type: 'primary'
+		}).then(function (ok) {
+			if (!ok) {
+				return;
+			}
 
-		$btn.prop('disabled', true);
-		$procMsg.show().css('color', '#2271b1').text('Завантаження та встановлення оновлення… Будь ласка, зачекайте.');
+			$btn.prop('disabled', true);
+			$procMsg.show().css('color', '#2271b1').text('Завантаження та встановлення оновлення… Будь ласка, зачекайте.');
 
-		NvxCore.post('nvx_run_update', {})
-			.done(function (res) {
-				if (res && res.success) {
-					$procMsg.css('color', '#46b450').text(res.data.message || 'Оновлення завершено! Перезавантаження…');
-					setTimeout(function () {
-						window.location.reload();
-					}, 1600);
-				} else {
-					var msg = (res && res.data && res.data.message) || 'Помилка встановлення оновлення.';
+			NvxCore.post('nvx_run_update', {})
+				.done(function (res) {
+					if (res && res.success) {
+						$procMsg.css('color', '#46b450').text(res.data.message || 'Оновлення завершено! Перезавантаження…');
+						setTimeout(function () {
+							window.location.reload();
+						}, 1600);
+					} else {
+						var msg = (res && res.data && res.data.message) || 'Помилка встановлення оновлення.';
+						$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
+						$btn.prop('disabled', false);
+					}
+				})
+				.fail(function (xhr) {
+					var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || 'Помилка під час встановлення оновлення.';
 					$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
 					$btn.prop('disabled', false);
-				}
-			})
-			.fail(function (xhr) {
-				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || 'Помилка під час встановлення оновлення.';
-				$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
-				$btn.prop('disabled', false);
-			});
+				});
+		});
 	});
 
 });

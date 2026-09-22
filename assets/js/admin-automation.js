@@ -597,17 +597,25 @@ jQuery(function ($) {
 
 		$rule.find('.nvx-rule-delete').on('click', function (e) {
 			e.stopPropagation();
-			if (!window.confirm(NVX_ADMIN.i18n.confirmDelete)) {
-				return;
-			}
-			var id = $rule.attr('data-id');
-			if (id) {
-				NvxCore.post('nvx_delete_rule', { id: id }).done(function () {
+			NvxCore.confirm({
+				title: 'Видалення правила',
+				message: NVX_ADMIN.i18n.confirmDelete,
+				confirmText: 'Видалити',
+				cancelText: 'Скасувати',
+				destructive: true
+			}).then(function (ok) {
+				if (!ok) {
+					return;
+				}
+				var id = $rule.attr('data-id');
+				if (id) {
+					NvxCore.post('nvx_delete_rule', { id: id }).done(function () {
+						$rule.remove();
+					});
+				} else {
 					$rule.remove();
-				});
-			} else {
-				$rule.remove();
-			}
+				}
+			});
 		});
 
 		$rule.find('.nvx-rule-save').on('click', function (e) {
@@ -713,17 +721,25 @@ jQuery(function ($) {
 	});
 
 	$('#nvx-clear-log').on('click', function () {
-		if (!window.confirm('Очистити журнал виконань?')) {
-			return;
-		}
-		var $btn = $(this);
-		$btn.prop('disabled', true);
-		NvxCore.post('nvx_clear_automation_log', {}).done(function (res) {
-			if (res && res.success) {
-				$('#nvx-log-body').html('<p class="nvx-empty">Поки що немає записів.</p>');
+		NvxCore.confirm({
+			title: 'Очищення журналу',
+			message: 'Очистити журнал виконань? Усі записи будуть видалені без можливості відновлення.',
+			confirmText: 'Очистити',
+			cancelText: 'Скасувати',
+			destructive: true
+		}).then(function (ok) {
+			if (!ok) {
+				return;
 			}
-		}).always(function () {
-			$btn.prop('disabled', false);
+			var $btn = $(this);
+			$btn.prop('disabled', true);
+			NvxCore.post('nvx_clear_automation_log', {}).done(function (res) {
+				if (res && res.success) {
+					$('#nvx-log-body').html('<p class="nvx-empty">Поки що немає записів.</p>');
+				}
+			}).always(function () {
+				$btn.prop('disabled', false);
+			});
 		});
 	});
 

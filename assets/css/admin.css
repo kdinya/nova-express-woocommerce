@@ -987,3 +987,149 @@ body.woocommerce_page_nvx-express .wrap {
 	line-height: 1.4;
 	margin: 0;
 }
+
+/* ---- Nova Express Modal Dialogs (Design System) ---- */
+.nvx-modal-backdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 23, 42, 0.45);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	box-sizing: border-box;
+	opacity: 0;
+	transition: opacity 0.18s ease-out;
+}
+.nvx-modal-backdrop.is-active {
+	opacity: 1;
+}
+.nvx-modal {
+	background: var(--nvx-surface, #ffffff);
+	border: 1px solid var(--nvx-border, #dde5d6);
+	border-radius: 18px;
+	box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.04);
+	width: 100%;
+	max-width: 450px;
+	box-sizing: border-box;
+	transform: scale(0.95);
+	transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+	overflow: hidden;
+}
+.nvx-modal-backdrop.is-active .nvx-modal {
+	transform: scale(1);
+}
+.nvx-modal__head {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	padding: 22px 22px 14px;
+}
+.nvx-modal__icon {
+	width: 42px;
+	height: 42px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+.nvx-modal__icon svg {
+	width: 22px;
+	height: 22px;
+	display: block;
+}
+.nvx-modal__icon--primary {
+	background: var(--nvx-primary-soft, #f1f8e9);
+	color: var(--nvx-primary-dark, #689f38);
+}
+.nvx-modal__icon--danger {
+	background: var(--nvx-danger-soft, #fdecea);
+	color: var(--nvx-danger, #c62828);
+}
+.nvx-modal__icon--warning {
+	background: #fff8e1;
+	color: #e65100;
+}
+.nvx-modal__icon--info {
+	background: #eef2ff;
+	color: #3b82f6;
+}
+.nvx-modal__icon--success {
+	background: var(--nvx-success-soft, #e8f5e9);
+	color: var(--nvx-success, #2e7d32);
+}
+.nvx-modal__title-wrap {
+	flex: 1;
+	min-width: 0;
+	padding-top: 2px;
+}
+.nvx-modal__title {
+	margin: 0;
+	font-size: 16.5px;
+	font-weight: 700;
+	color: var(--nvx-text, #1a1a1a);
+	line-height: 1.3;
+}
+.nvx-modal__close {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--nvx-text-soft, #5c6556);
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	transition: background 0.15s, color 0.15s;
+}
+.nvx-modal__close:hover {
+	background: #f1f5f9;
+	color: #0f172a;
+}
+.nvx-modal__close svg {
+	width: 16px;
+	height: 16px;
+}
+.nvx-modal__body {
+	padding: 0 22px 20px 22px;
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: var(--nvx-text-soft, #5c6556);
+	word-break: break-word;
+}
+.nvx-modal__foot {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 14px 22px;
+	background: #fafcfa;
+	border-top: 1px solid var(--nvx-border, #dde5d6);
+}
+.nvx-btn--danger-solid {
+	background: var(--nvx-danger, #c62828);
+	color: #ffffff !important;
+	border: none;
+}
+.nvx-btn--danger-solid:hover {
+	background: #b71c1c;
+	color: #ffffff !important;
+}
+.nvx-btn--secondary {
+	background: #f1f5f9;
+	color: #334155 !important;
+	border: 1px solid #cbd5e1;
+}
+.nvx-btn--secondary:hover {
+	background: #e2e8f0;
+	color: #0f172a !important;
+}

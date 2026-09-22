@@ -60,7 +60,7 @@ jQuery(function ($) {
 			.done(function (res) {
 				if (!(res && res.success)) {
 					restore();
-					window.alert((res && res.data && res.data.message) || NVX_ADMIN.i18n.error);
+					NvxCore.alert((res && res.data && res.data.message) || NVX_ADMIN.i18n.error);
 					return;
 				}
 
@@ -93,7 +93,7 @@ jQuery(function ($) {
 			.fail(function (xhr) {
 				restore();
 				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || NVX_ADMIN.i18n.error;
-				window.alert(msg);
+				NvxCore.alert(msg);
 			});
 	});
 
@@ -102,27 +102,35 @@ jQuery(function ($) {
 		var ttnId = $card.data('ttn-id');
 		var number = $card.find('.nvx-waybill-card__number').text().trim();
 
-		if (!window.confirm('Видалити ТТН ' + number + ' повністю з бази? Цю дію не можна скасувати. Спроба видалити накладну також і на боці Нової Пошти (якщо це ще можливо).')) {
-			return;
-		}
+		NvxCore.confirm({
+			title: 'Видалення ТТН ' + number,
+			message: 'Видалити ТТН ' + number + ' повністю з бази? Цю дію не можна скасувати. Спроба видалити накладну також і на боці Нової Пошти (якщо це ще можливо).',
+			confirmText: 'Видалити',
+			cancelText: 'Скасувати',
+			destructive: true
+		}).then(function (ok) {
+			if (!ok) {
+				return;
+			}
 
-		$card.css('opacity', 0.5);
+			$card.css('opacity', 0.5);
 
-		NvxCore.post('nvx_delete_waybill', { order_id: orderId, ttn_id: ttnId })
-			.done(function (res) {
-				if (res && res.success) {
-					// Перезавантажуємо картку, щоб з'явились кнопки «Створити ТТН» / «Додати».
-					window.location.reload();
-				} else {
+			NvxCore.post('nvx_delete_waybill', { order_id: orderId, ttn_id: ttnId })
+				.done(function (res) {
+					if (res && res.success) {
+						// Перезавантажуємо картку, щоб з'явились кнопки «Створити ТТН» / «Додати».
+						window.location.reload();
+					} else {
+						$card.css('opacity', 1);
+						NvxCore.alert((res && res.data && res.data.message) || NVX_ADMIN.i18n.error);
+					}
+				})
+				.fail(function (xhr) {
 					$card.css('opacity', 1);
-					window.alert((res && res.data && res.data.message) || NVX_ADMIN.i18n.error);
-				}
-			})
-			.fail(function (xhr) {
-				$card.css('opacity', 1);
-				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || NVX_ADMIN.i18n.error;
-				window.alert(msg);
-			});
+					var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || NVX_ADMIN.i18n.error;
+					NvxCore.alert(msg);
+				});
+		});
 	});
 
 	// Коли в новій вкладці (сторінка створення ТТН) успішно створено накладну —
