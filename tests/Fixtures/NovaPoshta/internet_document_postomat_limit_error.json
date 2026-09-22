@@ -1,0 +1,9 @@
+{
+  "success": false,
+  "data": [],
+  "errors": [
+    "max param value size exceeded for recipient postomat"
+  ],
+  "warnings": [],
+  "info": []
+}

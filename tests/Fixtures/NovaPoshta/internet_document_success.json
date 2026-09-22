@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "data": [
+    {
+      "Ref": "1c7414bf-03f6-11e7-8ba7-005056887b8d",
+      "CostOnSite": 85.00,
+      "EstimatedDeliveryDate": "23.09.2026",
+      "IntDocNumber": "20450000000002",
+      "TypeDocument": "InternetDocument"
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "info": []
+}

@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "data": [
+    {
+      "SiteKey": "1001",
+      "Description": "Відділення №1: вул. Пирогівський шлях, 135",
+      "ShortAddress": "вул. Пирогівський шлях, 135",
+      "Phone": "0800500609",
+      "TypeOfWarehouse": "9a68df70-0267-42a8-bb5c-37f427e36ee4",
+      "Ref": "1ec09d88-e1c2-11e3-8c4a-0050568002cf",
+      "Number": "1",
+      "CityRef": "8d5a980d-391c-11dd-90d9-001a92567626",
+      "TotalMaxWeightAllowed": 1100,
+      "PlaceMaxWeightAllowed": 1100
+    },
+    {
+      "SiteKey": "35001",
+      "Description": "Поштомат №35001: просп. Перемоги, 20",
+      "ShortAddress": "просп. Перемоги, 20",
+      "Phone": "0800500609",
+      "TypeOfWarehouse": "f9316480-5f2d-425d-bc2c-ac7cd29deae0",
+      "Ref": "90e0c8d1-5503-4fbb-b3c9-fef9b3a0a38e",
+      "Number": "35001",
+      "CityRef": "8d5a980d-391c-11dd-90d9-001a92567626",
+      "TotalMaxWeightAllowed": 20,
+      "PlaceMaxWeightAllowed": 20
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "info": {
+    "totalCount": 2
+  }
+}

@@ -28,11 +28,8 @@ jobs:
           RAW_TAG="${TAG}"
           TAG_VER="${RAW_TAG#v}"
           
-          # 1. Check Version header in wc-nova-express.php
           HEADER_VER=$(grep -m 1 -E "^[[:space:]]*\*[[:space:]]*Version:" wc-nova-express.php | awk '{print $NF}')
-          # 2. Check NVX_VERSION constant in wc-nova-express.php
           CONST_VER=$(grep -E "define\([[:space:]]*'NVX_VERSION'" wc-nova-express.php | sed -E "s/.*'NVX_VERSION'[[:space:]]*,[[:space:]]*'([^']+)'.*/\1/")
-          # 3. Check Stable tag in readme.txt
           STABLE_VER=$(grep -m 1 -i "Stable tag:" readme.txt | awk '{print $NF}')
           
           echo "Comparing versions:"
@@ -63,44 +60,39 @@ jobs:
           
           echo "Version verification passed: all versions match ${TAG_VER}"
 
-      - name: Build wc-nova-express.zip
-        run: git archive --format=zip --prefix=wc-nova-express/ -o wc-nova-express.zip HEAD
+      - name: Build wc-nova-express.zip and SHA-256 checksum
+        run: |
+          git archive --format=zip --prefix=wc-nova-express/ -o wc-nova-express.zip HEAD
+          sha256sum wc-nova-express.zip > wc-nova-express.zip.sha256
+          echo "Generated SHA-256: $(cat wc-nova-express.zip.sha256)"
 
       - name: Verify package integrity and structure
         run: |
-          # Check archive integrity
           unzip -t wc-nova-express.zip
+          unzip -l wc-nova-express.zip | grep "wc-nova-express/wc-nova-express.php"
           
-          # Check that main entrypoint exists inside archive
-          unzip -l wc-nova-express.zip | grep "wc-nova-express/wc-nova-express.php" || {
-            echo "::error::wc-nova-express.php is missing in the root of the archive!"
-            exit 1
-          }
-          
-          # Ensure dev/test files were excluded via .gitattributes
           if unzip -l wc-nova-express.zip | grep -E "wc-nova-express/(tests/|\.github/)"; then
             echo "::error::Developer/test files leaked into the release ZIP archive!"
             exit 1
           fi
           
-          # Check non-trivial archive size (> 50 KB)
           ZIP_SIZE=$(stat -c%s "wc-nova-express.zip")
           echo "Generated ZIP size: ${ZIP_SIZE} bytes"
           if [ "$ZIP_SIZE" -lt 50000 ]; then
             echo "::error::Archive size is unexpectedly small (${ZIP_SIZE} bytes)!"
             exit 1
           fi
-          echo "Archive validation passed successfully."
+          sha256sum -c wc-nova-express.zip.sha256
 
       - name: Attach to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "$TAG" wc-nova-express.zip --clobber
+          gh release upload "$TAG" wc-nova-express.zip wc-nova-express.zip.sha256 --clobber
           sleep 2
-          ASSET_COUNT=$(gh release view "$TAG" --json assets --jq '[.assets[] | select(.name == "wc-nova-express.zip" and .size > 50000)] | length')
-          if [ "$ASSET_COUNT" -lt 1 ]; then
-            echo "::error::Release asset wc-nova-express.zip was not uploaded or is corrupted!"
+          ASSET_COUNT=$(gh release view "$TAG" --json assets --jq '[.assets[] | select((.name == "wc-nova-express.zip" or .name == "wc-nova-express.zip.sha256") and .size > 0)] | length')
+          if [ "$ASSET_COUNT" -lt 2 ]; then
+            echo "::error::Release assets were not uploaded properly!"
             exit 1
           fi
-          echo "Verified: wc-nova-express.zip attached successfully and verified on GitHub Releases."
+          echo "Verified: wc-nova-express.zip and wc-nova-express.zip.sha256 attached successfully."
