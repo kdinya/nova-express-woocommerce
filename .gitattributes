@@ -1,0 +1,12 @@
+/.github export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/tests export-ignore
+/phpunit.xml.dist export-ignore
+/composer.json export-ignore
+/composer.lock export-ignore
+/docs export-ignore
+/Code_review.md export-ignore
+/Повторний_code_review.md export-ignore
+/Третій_code_review.md export-ignore
+/Четвертий_code_review.md export-ignore

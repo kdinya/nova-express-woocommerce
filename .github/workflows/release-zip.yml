@@ -1,14 +1,12 @@
-name: Build release zip
+name: Build and verify release zip
 
-# До кожного релізу додає архів wc-nova-express.zip, у якому коренева тека
-# називається wc-nova-express — тоді ручне встановлення ZIP завжди лягає в цю теку.
 on:
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Тег релізу (наприклад v2026.09.9)'
+        description: 'Тег релізу (наприклад v2026.09.09)'
         required: true
 
 permissions:
@@ -16,6 +14,7 @@ permissions:
 
 jobs:
   zip:
+    name: Build & Verify Release Asset
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
@@ -24,8 +23,74 @@ jobs:
         with:
           ref: ${{ env.TAG }}
 
+      - name: Pre-flight version verification
+        run: |
+          RAW_TAG="${TAG}"
+          TAG_VER="${RAW_TAG#v}"
+          
+          # 1. Check Version header in wc-nova-express.php
+          HEADER_VER=$(grep -m 1 -E "^[[:space:]]*\*[[:space:]]*Version:" wc-nova-express.php | awk '{print $NF}')
+          # 2. Check NVX_VERSION constant in wc-nova-express.php
+          CONST_VER=$(grep -E "define\([[:space:]]*'NVX_VERSION'" wc-nova-express.php | sed -E "s/.*'NVX_VERSION'[[:space:]]*,[[:space:]]*'([^']+)'.*/\1/")
+          # 3. Check Stable tag in readme.txt
+          STABLE_VER=$(grep -m 1 -i "Stable tag:" readme.txt | awk '{print $NF}')
+          
+          echo "Comparing versions:"
+          echo "Git Tag:       ${TAG_VER}"
+          echo "Plugin Header: ${HEADER_VER}"
+          echo "NVX_VERSION:   ${CONST_VER}"
+          echo "readme.txt:    ${STABLE_VER}"
+          
+          if [ -z "$HEADER_VER" ] || [ -z "$CONST_VER" ]; then
+            echo "::error::Could not extract version from wc-nova-express.php"
+            exit 1
+          fi
+          
+          if [ "$TAG_VER" != "$HEADER_VER" ]; then
+            echo "::error::Tag version ($TAG_VER) does not match plugin header ($HEADER_VER)"
+            exit 1
+          fi
+          
+          if [ "$TAG_VER" != "$CONST_VER" ]; then
+            echo "::error::Tag version ($TAG_VER) does not match NVX_VERSION constant ($CONST_VER)"
+            exit 1
+          fi
+          
+          if [ -n "$STABLE_VER" ] && [ "$TAG_VER" != "$STABLE_VER" ]; then
+            echo "::error::Tag version ($TAG_VER) does not match readme.txt Stable tag ($STABLE_VER)"
+            exit 1
+          fi
+          
+          echo "Version verification passed: all versions match ${TAG_VER}"
+
       - name: Build wc-nova-express.zip
         run: git archive --format=zip --prefix=wc-nova-express/ -o wc-nova-express.zip HEAD
+
+      - name: Verify package integrity and structure
+        run: |
+          # Check archive integrity
+          unzip -t wc-nova-express.zip
+          
+          # Check that main entrypoint exists inside archive
+          unzip -l wc-nova-express.zip | grep "wc-nova-express/wc-nova-express.php" || {
+            echo "::error::wc-nova-express.php is missing in the root of the archive!"
+            exit 1
+          }
+          
+          # Ensure dev/test files were excluded via .gitattributes
+          if unzip -l wc-nova-express.zip | grep -E "wc-nova-express/(tests/|\.github/)"; then
+            echo "::error::Developer/test files leaked into the release ZIP archive!"
+            exit 1
+          fi
+          
+          # Check non-trivial archive size (> 50 KB)
+          ZIP_SIZE=$(stat -c%s "wc-nova-express.zip")
+          echo "Generated ZIP size: ${ZIP_SIZE} bytes"
+          if [ "$ZIP_SIZE" -lt 50000 ]; then
+            echo "::error::Archive size is unexpectedly small (${ZIP_SIZE} bytes)!"
+            exit 1
+          fi
+          echo "Archive validation passed successfully."
 
       - name: Attach to release
         env:
@@ -33,9 +98,9 @@ jobs:
         run: |
           gh release upload "$TAG" wc-nova-express.zip --clobber
           sleep 2
-          ASSET_COUNT=$(gh release view "$TAG" --json assets --jq '[.assets[] | select(.name == "wc-nova-express.zip" and .size > 0)] | length')
+          ASSET_COUNT=$(gh release view "$TAG" --json assets --jq '[.assets[] | select(.name == "wc-nova-express.zip" and .size > 50000)] | length')
           if [ "$ASSET_COUNT" -lt 1 ]; then
-            echo "::error::Release asset wc-nova-express.zip was not uploaded or is empty!"
+            echo "::error::Release asset wc-nova-express.zip was not uploaded or is corrupted!"
             exit 1
           fi
-          echo "Verified: wc-nova-express.zip attached successfully."
+          echo "Verified: wc-nova-express.zip attached successfully and verified on GitHub Releases."

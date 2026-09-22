@@ -30,8 +30,28 @@ jobs:
         run: |
           node --check assets/js/*.js
 
+      - name: Check version consistency
+        run: |
+          HEADER_VER=$(grep -m 1 -E "^[[:space:]]*\*[[:space:]]*Version:" wc-nova-express.php | awk '{print $NF}')
+          CONST_VER=$(grep -E "define\([[:space:]]*'NVX_VERSION'" wc-nova-express.php | sed -E "s/.*'NVX_VERSION'[[:space:]]*,[[:space:]]*'([^']+)'.*/\1/")
+          STABLE_VER=$(grep -m 1 -i "Stable tag:" readme.txt | awk '{print $NF}')
+          
+          echo "Header: $HEADER_VER, Constant: $CONST_VER, Stable tag: $STABLE_VER"
+          if [ "$HEADER_VER" != "$CONST_VER" ] || [ "$HEADER_VER" != "$STABLE_VER" ]; then
+            echo "::error::Version mismatch between wc-nova-express.php and readme.txt!"
+            exit 1
+          fi
+
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run PHPUnit
         run: vendor/bin/phpunit --configuration phpunit.xml.dist
+
+      - name: Test production package archive
+        run: |
+          git archive --format=zip --prefix=wc-nova-express/ -o test-package.zip HEAD
+          unzip -t test-package.zip
+          unzip -l test-package.zip | grep "wc-nova-express/wc-nova-express.php"
+          ! unzip -l test-package.zip | grep -E "wc-nova-express/(tests/|\.github/)"
+          rm -f test-package.zip

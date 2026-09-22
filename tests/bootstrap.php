@@ -194,3 +194,143 @@ if ( ! class_exists( 'WC_Order' ) ) {
         public function save() { return true; }
     }
 }
+
+// Additional WordPress mocks for updater and packaging tests
+if ( ! function_exists( 'plugin_basename' ) ) {
+    function plugin_basename( $file ) {
+        $file = str_replace( '\\', '/', $file );
+        $parts = explode( '/', $file );
+        $count = count( $parts );
+        if ( $count >= 2 ) {
+            return $parts[ $count - 2 ] . '/' . $parts[ $count - 1 ];
+        }
+        return basename( $file );
+    }
+}
+
+if ( ! function_exists( 'plugin_dir_path' ) ) {
+    function plugin_dir_path( $file ) {
+        return trailingslashit( dirname( $file ) );
+    }
+}
+
+if ( ! function_exists( 'plugin_dir_url' ) ) {
+    function plugin_dir_url( $file ) {
+        return 'https://example.com/wp-content/plugins/' . basename( dirname( $file ) ) . '/';
+    }
+}
+
+if ( ! function_exists( 'trailingslashit' ) ) {
+    function trailingslashit( $string ) {
+        return untrailingslashit( $string ) . '/';
+    }
+}
+
+if ( ! function_exists( 'untrailingslashit' ) ) {
+    function untrailingslashit( $string ) {
+        return rtrim( $string, '/\\' );
+    }
+}
+
+if ( ! function_exists( 'set_transient' ) ) {
+    function set_transient( $transient, $value, $expiration = 0 ) {
+        $GLOBALS['_mock_transients'][ $transient ] = $value;
+        return true;
+    }
+}
+
+if ( ! function_exists( 'get_transient' ) ) {
+    function get_transient( $transient ) {
+        return isset( $GLOBALS['_mock_transients'][ $transient ] ) ? $GLOBALS['_mock_transients'][ $transient ] : false;
+    }
+}
+
+if ( ! function_exists( 'delete_transient' ) ) {
+    function delete_transient( $transient ) {
+        if ( isset( $GLOBALS['_mock_transients'][ $transient ] ) ) {
+            unset( $GLOBALS['_mock_transients'][ $transient ] );
+            return true;
+        }
+        return false;
+    }
+}
+
+if ( ! function_exists( 'set_site_transient' ) ) {
+    function set_site_transient( $transient, $value, $expiration = 0 ) {
+        return set_transient( 'site_' . $transient, $value, $expiration );
+    }
+}
+
+if ( ! function_exists( 'get_site_transient' ) ) {
+    function get_site_transient( $transient ) {
+        return get_transient( 'site_' . $transient );
+    }
+}
+
+if ( ! function_exists( 'delete_site_transient' ) ) {
+    function delete_site_transient( $transient ) {
+        return delete_transient( 'site_' . $transient );
+    }
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+    function is_wp_error( $thing ) {
+        return ( $thing instanceof \WP_Error );
+    }
+}
+
+if ( ! class_exists( 'WP_Error' ) ) {
+    class WP_Error {
+        private $code;
+        private $message;
+        public function __construct( $code = '', $message = '' ) {
+            $this->code = $code;
+            $this->message = $message;
+        }
+        public function get_error_code() { return $this->code; }
+        public function get_error_message() { return $this->message; }
+        public function has_errors() { return ! empty( $this->code ); }
+    }
+}
+
+if ( ! function_exists( 'esc_url' ) ) {
+    function esc_url( $url ) {
+        return filter_var( $url, FILTER_SANITIZE_URL );
+    }
+}
+
+if ( ! function_exists( 'esc_html' ) ) {
+    function esc_html( $text ) {
+        return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+    }
+}
+
+if ( ! function_exists( 'nl2br' ) ) {
+    // Built-in PHP function, exists.
+}
+
+if ( ! function_exists( 'current_time' ) ) {
+    function current_time( $type, $gmt = 0 ) {
+        return ( 'mysql' === $type ) ? gmdate( 'Y-m-d H:i:s' ) : time();
+    }
+}
+
+if ( ! function_exists( 'get_file_data' ) ) {
+    function get_file_data( $file, $default_headers, $context = '' ) {
+        $fp = fopen( $file, 'r' );
+        if ( ! $fp ) {
+            return array();
+        }
+        $file_data = fread( $fp, 8192 );
+        fclose( $fp );
+        $all_headers = $default_headers;
+        foreach ( $default_headers as $field => $regex ) {
+            if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( $regex, '/' ) . ':(.*)$/mi', $file_data, $match ) && $match[1] ) {
+                $all_headers[ $field ] = trim( preg_replace( '/\s*(?:\*\/|\?>).*/', '', $match[1] ) );
+            } else {
+                $all_headers[ $field ] = '';
+            }
+        }
+        return $all_headers;
+    }
+}
