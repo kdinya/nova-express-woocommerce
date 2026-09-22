@@ -228,6 +228,12 @@ defined( 'ABSPATH' ) || exit;
 
 		<section class="nvx-card">
 			<h2><?php esc_html_e( '4. Параметри за замовчуванням', 'wc-nova-express' ); ?></h2>
+			<label class="nvx-field nvx-field--checkbox" style="margin-top:12px;">
+				<input type="checkbox" name="enable_phone_mask" value="yes" <?php checked( 'yes', $settings['enable_phone_mask'] ?? 'yes' ); ?> />
+				<span><?php esc_html_e( 'Маска та перевірка номера телефону (+380...) на чекауті', 'wc-nova-express' ); ?></span>
+				<small class="nvx-field__hint"><?php esc_html_e( 'Автоматично форматує номер при введенні, блокує замовлення з неповним номером та зберігає в базі коректний формат +380XXXXXXXXX.', 'wc-nova-express' ); ?></small>
+			</label>
+
 			<p class="nvx-card__hint">
 				<?php esc_html_e( 'Початкові значення для нових накладних.', 'wc-nova-express' ); ?>
 			</p>

@@ -353,7 +353,6 @@ jQuery(function ($) {
 	$(document).on('woodmart-ajax-load woodmart_theme_init wd_checkout_update', function () {
 		toggleNvxBlock();
 	});
-});
 
 	// --- Автоматична маска та нормалізація телефону (+380...) ---
 	function formatUkrainianPhone(val) {
@@ -391,7 +390,7 @@ jQuery(function ($) {
 			return;
 		}
 
-		var $phone = ;
+		var $phone = $('#billing_phone');
 		if (!$phone.length) return;
 
 		$phone.attr('placeholder', '+38 (0__) ___-__-__');
@@ -414,4 +413,5 @@ jQuery(function ($) {
 	}
 
 	initPhoneMask();
-	.on('updated_checkout', initPhoneMask);
+	$(document.body).on('updated_checkout', initPhoneMask);
+});
