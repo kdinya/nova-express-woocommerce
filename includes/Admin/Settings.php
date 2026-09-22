@@ -48,6 +48,7 @@ class Settings {
 			'additional_warehouses'  => array(),
 			// За замовчуванням дані НЕ видаляються автоматично при видаленні плагіна
 			// через адмінку WordPress, щоб не втратити історію ТТН/журнал автоматизацій.
+			'enable_phone_mask'        => 'yes',
 			'wipe_data_on_uninstall' => 'no',
 			'admin_primary_color'    => '#7CB342',
 		);
@@ -134,6 +135,7 @@ class Settings {
 			'description_template'    => sanitize_text_field( wp_unslash( $_POST['description_template'] ?? '' ) ),
 			'additional_info_template' => sanitize_textarea_field( wp_unslash( $_POST['additional_info_template'] ?? '' ) ),
 			'additional_info_contains' => sanitize_text_field( wp_unslash( $_POST['additional_info_contains'] ?? '' ) ),
+			'enable_phone_mask'        => ! empty( $_POST['enable_phone_mask'] ) ? 'yes' : 'no',
 			'wipe_data_on_uninstall'  => ! empty( $_POST['wipe_data_on_uninstall'] ) ? 'yes' : 'no',
 		);
 

@@ -354,3 +354,64 @@ jQuery(function ($) {
 		toggleNvxBlock();
 	});
 });
+
+	// --- Автоматична маска та нормалізація телефону (+380...) ---
+	function formatUkrainianPhone(val) {
+		var digits = val.replace(/\D/g, '');
+		if (!digits) return '';
+
+		if (digits.indexOf('380') === 0) {
+			digits = digits.substring(2); // Лишаємо 0XXXXXXXXX
+		} else if (digits.indexOf('38') === 0 && digits.length > 2) {
+			digits = digits.substring(2);
+		} else if (digits.charAt(0) !== '0') {
+			digits = '0' + digits;
+		}
+
+		digits = digits.substring(0, 10); // макс 10 цифр (0XXXXXXXXX)
+
+		var res = '+38 (';
+		if (digits.length > 0) {
+			res += digits.substring(0, Math.min(3, digits.length));
+		}
+		if (digits.length >= 3) {
+			res += ') ' + digits.substring(3, Math.min(6, digits.length));
+		}
+		if (digits.length >= 6) {
+			res += '-' + digits.substring(6, Math.min(8, digits.length));
+		}
+		if (digits.length >= 8) {
+			res += '-' + digits.substring(8, Math.min(10, digits.length));
+		}
+		return res;
+	}
+
+	function initPhoneMask() {
+		if (typeof window.NVX_CHECKOUT !== 'undefined' && !window.NVX_CHECKOUT.enablePhoneMask) {
+			return;
+		}
+
+		var $phone = ;
+		if (!$phone.length) return;
+
+		$phone.attr('placeholder', '+38 (0__) ___-__-__');
+
+		$phone.off('input.nvx_mask blur.nvx_mask').on('input.nvx_mask', function(e) {
+			var input = this;
+			var val = input.value;
+			if (!val) return;
+			var formatted = formatUkrainianPhone(val);
+			if (formatted && formatted !== val) {
+				input.value = formatted;
+			}
+		});
+
+		// Якщо поле вже заповнене при завантаженні (збережений профіль/autofill)
+		if ($phone.val()) {
+			var formattedInit = formatUkrainianPhone($phone.val());
+			if (formattedInit) $phone.val(formattedInit);
+		}
+	}
+
+	initPhoneMask();
+	.on('updated_checkout', initPhoneMask);

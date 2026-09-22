@@ -201,6 +201,13 @@ class AddressFields {
 	}
 
 	public function validate_fields(): void {
+		$settings = \NovaExpress\Admin\Settings::get_all();
+		if ( "yes" === ( $settings["enable_phone_mask"] ?? "yes" ) && ! empty( $_POST["billing_phone"] ) ) {
+			$digits = preg_replace( "/\D+/", "", (string) $_POST["billing_phone"] );
+			if ( strlen( $digits ) !== 10 && strlen( $digits ) !== 12 ) {
+				wc_add_notice( __( "Будь ласка, вкажіть коректний номер телефону: +38 (0XX) XXX-XX-XX", "wc-nova-express" ), "error" );
+			}
+		}
 		if ( ! $this->cart_has_nova_express() ) {
 			return;
 		}
@@ -231,6 +238,14 @@ class AddressFields {
 	}
 
 	public function persist_to_order( \WC_Order $order, array $data ): void {
+		$settings = \NovaExpress\Admin\Settings::get_all();
+		if ( "yes" === ( $settings["enable_phone_mask"] ?? "yes" ) && ! empty( $_POST["billing_phone"] ) ) {
+			$raw_phone = sanitize_text_field( wp_unslash( $_POST["billing_phone"] ) );
+			$normalized = \NovaExpress\Helpers\Formatting::normalize_phone( $raw_phone );
+			if ( "" !== $normalized ) {
+				$order->set_billing_phone( "+" . $normalized );
+			}
+		}
 		if ( empty( $_POST['nvx_city_ref'] ) ) {
 			return;
 		}

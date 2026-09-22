@@ -23,7 +23,8 @@ class CheckoutAssets {
 			'NVX_CHECKOUT',
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'nvx_public_nonce' ),
+				'nonce'           => wp_create_nonce( 'nvx_public_nonce' ),
+				'enablePhoneMask' => ( 'yes' === ( \NovaExpress\Admin\Settings::get_all()['enable_phone_mask'] ?? 'yes' ) ),
 			)
 		);
 	}
