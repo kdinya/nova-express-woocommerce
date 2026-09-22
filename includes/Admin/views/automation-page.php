@@ -269,6 +269,10 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 			</div>
 
 			<div class="nvx-webhook-sms" hidden>
+				<div class="nvx-macrodroid-box">
+					<div class="nvx-macrodroid-box__title">📱 <?php esc_html_e( 'Відправка SMS через ваш телефон (MacroDroid)', 'wc-nova-express' ); ?></div>
+					<p><?php esc_html_e( 'MacroDroid — це додаток автоматизації для Android. Плагін через вебхук передає номер телефону та текст на ваш смартфон, а MacroDroid автоматично відправляє SMS через вашу SIM-карту. Це дозволяє надсилати повідомлення клієнтам безкоштовно, використовуючи пакет SMS вашого мобільного тарифу без підключення платних SMS-сервісів.', 'wc-nova-express' ); ?></p>
+				</div>
 				<label class="nvx-field">
 					<span><?php esc_html_e( 'Шаблон SMS', 'wc-nova-express' ); ?></span>
 					<textarea class="nvx-action-field nvx-sms-template" data-key="sms_template" rows="3" placeholder="<?php esc_attr_e( 'Ваше замовлення №{order_number} відправлено. ТТН: {waybill}. Дякуємо!', 'wc-nova-express' ); ?>"></textarea>

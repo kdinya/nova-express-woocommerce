@@ -389,16 +389,16 @@ jQuery(function ($) {
 			});
 		}
 		syncModeChips();
-		// Миттєве підсвічування по click/pointerdown (не чекаємо mouseleave).
-		$block.on('pointerdown click', '.nvx-mode-chip', function () {
-			var $lab = $(this);
-			var $radio = $lab.find('.nvx-payload-mode-radio, .nvx-delivery-method-radio');
-			if (!$radio.prop('checked')) {
+		$block.on('change', '.nvx-payload-mode-radio, .nvx-delivery-method-radio', function () {
+			syncModeChips();
+		});
+		$block.on('click', '.nvx-mode-chip', function (e) {
+			var $radio = $(this).find('.nvx-payload-mode-radio, .nvx-delivery-method-radio');
+			if ($radio.length && !$radio.prop('checked')) {
 				$radio.prop('checked', true).trigger('change');
 			}
 			syncModeChips();
 		});
-		$block.on('change', '.nvx-payload-mode-radio, .nvx-delivery-method-radio', syncModeChips);
 
 		$block.find('.nvx-webhook-test').on('click', function () {
 			var $btn = $(this);
