@@ -19,6 +19,7 @@ class Settings {
 	/** Хук збереження форми (меню реєструє AdminPage). */
 	public function register_save_hook(): void {
 		add_action( 'admin_post_nvx_save_settings', array( $this, 'save' ) );
+		add_action( 'admin_post_nvx_save_appearance', array( $this, 'save_appearance' ) );
 	}
 
 	public static function get_all(): array {
@@ -306,9 +307,9 @@ class Settings {
 	}
 
 	public static function get_admin_color(): string {
-		 = self::get_all();
-		 = ! empty( ['admin_primary_color'] ) ? sanitize_hex_color( ['admin_primary_color'] ) : '';
-		return ! empty(  ) ?  : '#7CB342';
+		$settings = self::get_all();
+		$color    = ! empty( $settings['admin_primary_color'] ) ? sanitize_hex_color( $settings['admin_primary_color'] ) : '';
+		return ! empty( $color ) ? $color : '#7CB342';
 	}
 
 	public function save_appearance(): void {
@@ -318,14 +319,14 @@ class Settings {
 
 		check_admin_referer( 'nvx_save_appearance' );
 
-		 = isset( ['admin_primary_color'] ) ? sanitize_hex_color( wp_unslash( ['admin_primary_color'] ) ) : '';
-		if ( empty(  ) ) {
-			 = '#7CB342';
+		$color = isset( $_POST['admin_primary_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['admin_primary_color'] ) ) : '';
+		if ( empty( $color ) ) {
+			$color = '#7CB342';
 		}
 
-		 = self::get_all();
-		['admin_primary_color'] = ;
-		update_option( self::OPTION_KEY,  );
+		$settings                        = self::get_all();
+		$settings['admin_primary_color'] = $color;
+		update_option( self::OPTION_KEY, $settings );
 
 		wp_safe_redirect( add_query_arg(
 			array(
@@ -337,5 +338,4 @@ class Settings {
 		) );
 		exit;
 	}
-
 }

@@ -44,7 +44,7 @@ class AdminPage {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings';
-		if ( ! in_array( $tab, array( 'settings', 'automation_ttn', 'automation_order', 'monitoring' ), true ) ) {
+		if ( ! in_array( $tab, array( 'settings', 'automation_ttn', 'automation_order', 'monitoring', 'appearance' ), true ) ) {
 			$tab = 'settings';
 		}
 
@@ -81,6 +81,8 @@ class AdminPage {
 					$last_polled_at   = $ttn_repo->find_last_polled_at();
 					$next_cron_at     = wp_next_scheduled( 'nvx/tracking_cron_event' );
 					include NVX_PLUGIN_DIR . 'includes/Admin/views/monitoring-page.php';
+				} elseif ( 'appearance' === $tab ) {
+					include NVX_PLUGIN_DIR . 'includes/Admin/views/appearance-page.php';
 				} else {
 					$this->automation_page->render_content( 'ttn' );
 				}
