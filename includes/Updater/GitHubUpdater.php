@@ -235,12 +235,6 @@ class GitHubUpdater {
 
 		return '';
 	}
-			}
-		}
-
-		// Якщо окремого асету немає — використовуємо zipball
-		return $release['zipball_url'] ?? '';
-	}
 
 	/**
 	 * AJAX: примусова перевірка оновлень (без кешів GitHub і WordPress).

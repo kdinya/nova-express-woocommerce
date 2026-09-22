@@ -40,7 +40,7 @@ class GitHubUpdaterTest extends TestCase {
         $this->assertSame( 'https://github.com/kdinya/nova-express-woocommerce/releases/download/v2026.09.10/wc-nova-express.zip', $package );
     }
 
-    public function test_get_download_package_falls_back_to_zipball_if_no_assets(): void {
+    public function test_get_download_package_returns_empty_if_no_assets(): void {
         $reflection = new \ReflectionClass( $this->updater );
         $method     = $reflection->getMethod( 'get_download_package' );
         $method->setAccessible( true );
@@ -51,7 +51,7 @@ class GitHubUpdaterTest extends TestCase {
         );
 
         $package = $method->invoke( $this->updater, $release );
-        $this->assertSame( 'https://api.github.com/repos/kdinya/nova-express-woocommerce/zipball/v2026.09.10', $package );
+        $this->assertSame( '', $package );
     }
 
     public function test_check_for_update_ignores_when_transient_checked_is_empty(): void {
