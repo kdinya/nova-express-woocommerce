@@ -415,6 +415,10 @@ $rule_kind = isset( $rule_kind ) && 'order' === $rule_kind ? 'order' : 'ttn';
 				<textarea class="nvx-action-field" data-key="email_body" rows="4" placeholder="<?php esc_attr_e( 'Замовлення №{order_number}\nТТН: {waybill}\nСтатус: {status}', 'wc-nova-express' ); ?>"></textarea>
 			</label>
 			<div class="nvx-email-test-row">
+				<label class="nvx-field nvx-email-test-to-field">
+					<span><?php esc_html_e( 'Куди надіслати тест:', 'wc-nova-express' ); ?></span>
+					<input type="email" class="nvx-email-test-to" value="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" placeholder="<?php esc_attr_e( 'admin@example.com', 'wc-nova-express' ); ?>" />
+				</label>
 				<button type="button" class="nvx-btn nvx-btn--ghost nvx-email-test"><?php esc_html_e( '✉️ Тест email', 'wc-nova-express' ); ?></button>
 				<span class="nvx-inline-status nvx-email-test-status"></span>
 			</div>

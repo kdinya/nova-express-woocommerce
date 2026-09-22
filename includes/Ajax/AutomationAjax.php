@@ -334,17 +334,17 @@ class AutomationAjax {
 	public function test_email(): void {
 		$this->guard();
 
-		$raw_to = isset( $_POST['email_to'] ) ? sanitize_text_field( wp_unslash( $_POST['email_to'] ) ) : '';
+		// Тестова адреса передається окремо і використовується ВИКЛЮЧНО для тесту.
+		$raw_to = isset( $_POST['test_email_to'] )
+			? sanitize_text_field( wp_unslash( $_POST['test_email_to'] ) )
+			: ( isset( $_POST['email_to'] ) ? sanitize_text_field( wp_unslash( $_POST['email_to'] ) ) : '' );
+
 		$to_list = array_filter( array_map( 'trim', preg_split( '/[,;]+/', $raw_to ) ) );
 		$to_list = array_filter( $to_list, 'is_email' );
 
-		// Якщо поле "Кому" порожнє — надсилаємо на email поточного користувача або адміна сайту.
+		// Якщо тестова адреса не вказана або не валідна — резервний fallback на admin_email сайту.
 		if ( empty( $to_list ) ) {
-			$current_user = wp_get_current_user();
-			$fallback = ( $current_user && ! empty( $current_user->user_email ) )
-				? $current_user->user_email
-				: (string) get_option( 'admin_email' );
-
+			$fallback = (string) get_option( 'admin_email' );
 			if ( is_email( $fallback ) ) {
 				$to_list = array( $fallback );
 			}

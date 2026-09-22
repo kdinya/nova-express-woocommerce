@@ -452,15 +452,21 @@ jQuery(function ($) {
 		$block.find('.nvx-email-test').on('click', function () {
 			var $btn = $(this);
 			var $st = $block.find('.nvx-email-test-status');
-			var to = $block.find('.nvx-action-field[data-key="email_to"]').val() || '';
+			var testTo = ($block.find('.nvx-email-test-to').val() || '').trim();
 			var subject = $block.find('.nvx-action-field[data-key="email_subject"]').val() || '';
 			var body = $block.find('.nvx-action-field[data-key="email_body"]').val() || '';
+
+			if (!testTo) {
+				NvxCore.setStatus($st, 'Вкажіть email для тесту', 'error');
+				$block.find('.nvx-email-test-to').focus();
+				return;
+			}
 
 			NvxCore.setStatus($st, 'Надсилаємо тест…');
 			$btn.prop('disabled', true);
 
 			NvxCore.post('nvx_test_email', {
-				email_to: to,
+				test_email_to: testTo,
 				email_subject: subject,
 				email_body: body
 			})
