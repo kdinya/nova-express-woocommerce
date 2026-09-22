@@ -229,7 +229,7 @@ class Formatting {
 	/**
 	 * Форматує статус у вигляді: [Код] Назва статусу (час зміни)
 	 */
-	public static function format_ttn_status_display( array $row ): string {
+	public static function format_ttn_status_display( array $row, bool $include_time = true ): string {
 		$code = ! empty( $row['carrier_status_code'] ) ? (string) $row['carrier_status_code'] : '';
 		$text = ! empty( $row['carrier_status_text'] ) ? (string) $row['carrier_status_text'] : '';
 
@@ -242,8 +242,11 @@ class Formatting {
 		}
 
 		$prefix = '' !== $code ? '[' . $code . '] ' : '';
-		$time   = self::format_ttn_status_time( $row );
-		$suffix = '' !== $time ? ' (' . $time . ')' : '';
+		$suffix = '';
+		if ( $include_time ) {
+			$time   = self::format_ttn_status_time( $row );
+			$suffix = '' !== $time ? ' (' . $time . ')' : '';
+		}
 
 		return $prefix . $text . $suffix;
 	}

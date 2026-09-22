@@ -196,6 +196,7 @@ class OrderAjax {
 					'is_dispatched'         => $is_dispatched,
 					'last_updated_formatted'=> $time_fmt,
 					'status_display'         => \NovaExpress\Helpers\Formatting::format_ttn_status_display( $fresh ),
+					'status_short'           => \NovaExpress\Helpers\Formatting::format_ttn_status_display( $fresh, false ),
 				);
 			}
 		}

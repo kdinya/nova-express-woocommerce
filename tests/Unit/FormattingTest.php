@@ -54,6 +54,9 @@ final class FormattingTest extends TestCase {
         );
         $display_scan = Formatting::format_ttn_status_display( $row_with_scan );
         $this->assertSame( '[7] Прибув у відділення (21.09.2026 14:30)', $display_scan );
+
+        $display_no_time = Formatting::format_ttn_status_display( $row_with_status, false );
+        $this->assertSame( '[7] Прибув у відділення', $display_no_time );
     }
 
     public function testApplyOrderTemplatePlaceholders(): void {

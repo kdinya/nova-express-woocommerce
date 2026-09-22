@@ -70,6 +70,11 @@
    - **Never render unstyled default browser controls** (e.g., standard browser-blue checkboxes, default radio buttons, or mismatched inputs).
    - All admin settings, checkboxes, cards, badges, and checkout inputs must use the custom `.nvx-*` design classes with brand colors. Checkboxes must use custom SVG checkmarks and hover/focus rings matching `#7CB342`.
 
+10. **Strict Minimal Diffs & Zero Accidental Side-Effects (Surgical Changes Only):**
+   - When implementing fixes, features, or requested UI tweaks, modify ONLY the explicit target elements and code lines required for the task.
+   - Never remove, rename, refactor, or reformat adjacent UI elements, labels, timestamps, helper texts, CSS classes, or attributes unless specifically asked by the user.
+   - Before every commit, inspect `git diff` carefully to verify that no unrelated elements, date/time displays, or secondary UI widgets were accidentally removed or altered.
+
 ---
 
 ## 2. Complete Plugin Architecture & Technical Specifications
@@ -174,3 +179,4 @@ Before submitting or releasing code:
 11. [ ] **Checkout universality:** If checkout code changed, does it work in both classic checkout and Checkout Blocks without breaking themes/plugins?
 12. [ ] **Schema migration:** If tables changed, did `Installer` handle existing installations via versioned migration?
 13. [ ] **Design System:** Do all UI controls match the plugin green theme (`#7CB342`) without unstyled browser-blue checkboxes?
+14. [ ] **Zero Accidental Side-Effects (`git diff` review):** Did you inspect the diff line-by-line to ensure no unrelated UI elements, timestamps, labels, or classes were removed or modified?
