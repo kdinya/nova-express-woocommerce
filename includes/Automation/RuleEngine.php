@@ -263,18 +263,24 @@ private function run_rules( array $rules, \WC_Order $order, array $waybill_row, 
 
 		$key = 'nvx_evt_' . $fingerprint;
 
-		if ( function_exists( 'wp_cache_add' ) && wp_using_ext_object_cache() ) {
-			$added = wp_cache_add( $key, 1, 'nvx_events', 60 );
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			$added = wp_cache_add( $key, 1, 'nvx_events', 120 );
 			if ( ! $added ) {
 				return true;
 			}
+			return false;
 		}
 
-		if ( false !== get_transient( $key ) ) {
+		$now = time();
+		$expires = (int) get_option( $key, 0 );
+		if ( $expires > $now ) {
 			return true;
 		}
 
-		set_transient( $key, 1, 60 );
+		delete_option( $key );
+		if ( ! add_option( $key, $now + 120, '', 'no' ) ) {
+			return true;
+		}
 
 		return false;
 	}

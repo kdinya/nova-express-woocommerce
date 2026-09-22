@@ -318,8 +318,14 @@ jQuery(function ($) {
 	});
 
 	// ---- Відправка форми ----
-	function showAlert(type, message) {
-		$('#nvx-cw-alert').removeClass('nvx-alert--success nvx-alert--error').addClass('nvx-alert--' + type).html(message).show();
+	function showAlert(type, message, isHtml) {
+		var $box = $('#nvx-cw-alert').removeClass('nvx-alert--success nvx-alert--error').addClass('nvx-alert--' + type).empty();
+		if (isHtml) {
+			$box.html(message);
+		} else {
+			$box.text(message);
+		}
+		$box.show();
 	}
 
 	$('#nvx-cw-submit').on('click', function () {

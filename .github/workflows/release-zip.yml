@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Тег релізу (наприклад v2026.09.5)'
+        description: 'Тег релізу (наприклад v2026.09.9)'
         required: true
 
 permissions:
@@ -30,4 +30,12 @@ jobs:
       - name: Attach to release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" wc-nova-express.zip --clobber
+        run: |
+          gh release upload "$TAG" wc-nova-express.zip --clobber
+          sleep 2
+          ASSET_COUNT=$(gh release view "$TAG" --json assets --jq '[.assets[] | select(.name == "wc-nova-express.zip" and .size > 0)] | length')
+          if [ "$ASSET_COUNT" -lt 1 ]; then
+            echo "::error::Release asset wc-nova-express.zip was not uploaded or is empty!"
+            exit 1
+          fi
+          echo "Verified: wc-nova-express.zip attached successfully."

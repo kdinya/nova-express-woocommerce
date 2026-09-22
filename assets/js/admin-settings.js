@@ -357,50 +357,65 @@ jQuery(function ($) {
 			.done(function (res) {
 				if (!res || !res.success) {
 					var msg = (res && res.data && res.data.message) || 'Не вдалося перевірити оновлення.';
-					$updateBox.html('<div class="nvx-sync-log__item nvx-sync-log__item--error">' + msg + '</div>');
+					$updateBox.empty().append($('<div class="nvx-sync-log__item nvx-sync-log__item--error"></div>').text(msg));
 					return;
 				}
 
 				var d = res.data;
+				var safeLatest = $('<div>').text(d.latest_version || '').html();
+				var safeCurrent = $('<div>').text(d.current_version || '').html();
+				var safeUrl = '';
+				if (typeof d.html_url === 'string' && d.html_url.indexOf('https://github.com/kdinya/nova-express-woocommerce') === 0) {
+					safeUrl = d.html_url;
+				}
+
 				if (d.update_available) {
-					var changelogHtml = '';
+					var $changelogEl = null;
 					if (d.changelog) {
-						changelogHtml = '<div class="nvx-changelog-preview" style="margin-top:10px; max-height:180px; overflow-y:auto; font-size:12px; background:#f9fafb; padding:10px; border-radius:6px; border:1px solid #e5e7eb; white-space:pre-wrap;">' + $('<div>').text(d.changelog).html() + '</div>';
+						$changelogEl = $('<div class="nvx-changelog-preview" style="margin-top:10px; max-height:180px; overflow-y:auto; font-size:12px; background:#f9fafb; padding:10px; border-radius:6px; border:1px solid #e5e7eb; white-space:pre-wrap;"></div>').text(d.changelog);
 					}
 
-					var $html = $(
-						'<div class="nvx-sync-log__item nvx-sync-log__item--info" style="border-left-color:var(--nvx-accent, #2271b1);">' +
-							'<div><strong>Доступна нова версія: v' + d.latest_version + '</strong> (поточна: v' + d.current_version + ')</div>' +
-							changelogHtml +
-							'<div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">' +
-								'<button type="button" class="nvx-btn nvx-btn--primary" id="nvx-run-update-btn">' +
-									'⬇️ Оновити зараз до v' + d.latest_version +
-								'</button>' +
-								(d.html_url ? '<a href="' + d.html_url + '" target="_blank" rel="noopener noreferrer" class="nvx-btn nvx-btn--ghost" style="text-decoration:none;">Переглянути реліз на GitHub ↗</a>' : '') +
-							'</div>' +
-							'<div id="nvx-update-process-msg" style="margin-top:10px; font-weight:600; display:none;"></div>' +
-						'</div>'
-					);
-					$updateBox.html($html);
+					var $infoItem = $('<div class="nvx-sync-log__item nvx-sync-log__item--info" style="border-left-color:var(--nvx-accent, #2271b1);"></div>');
+					var $headerDiv = $('<div>').html('<strong>Доступна нова версія: v' + safeLatest + '</strong> (поточна: v' + safeCurrent + ')');
+					$infoItem.append($headerDiv);
+					if ($changelogEl) {
+						$infoItem.append($changelogEl);
+					}
+
+					var $actionsDiv = $('<div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></div>');
+					var $runBtn = $('<button type="button" class="nvx-btn nvx-btn--primary" id="nvx-run-update-btn"></button>').text('⬇️ Оновити зараз до v' + (d.latest_version || ''));
+					$actionsDiv.append($runBtn);
+
+					if (safeUrl) {
+						var $link = $('<a target="_blank" rel="noopener noreferrer" class="nvx-btn nvx-btn--ghost" style="text-decoration:none;">Переглянути реліз на GitHub ↗</a>').attr('href', safeUrl);
+						$actionsDiv.append($link);
+					}
+					$infoItem.append($actionsDiv);
+					$infoItem.append($('<div id="nvx-update-process-msg" style="margin-top:10px; font-weight:600; display:none;"></div>'));
+
+					$updateBox.empty().append($infoItem);
 				} else {
-					$updateBox.html(
-						'<div class="nvx-sync-log__item nvx-sync-log__item--success">' +
-							'<div>✓ У вас встановлена поточна версія (v' + d.current_version + '). Новіших релізів не виявлено.</div>' +
-							'<div style="margin-top:6px; font-size:12px; color:#475569;">Якщо реліз або код цієї версії було перезаписано на GitHub, ви можете оновити/перевстановити її зараз:</div>' +
-							'<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">' +
-								'<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-run-update-btn">' +
-									'🔄 Оновити / перевстановити v' + d.current_version +
-								'</button>' +
-								(d.html_url ? '<a href="' + d.html_url + '" target="_blank" rel="noopener noreferrer" class="nvx-btn nvx-btn--ghost" style="text-decoration:none;">Переглянути реліз на GitHub ↗</a>' : '') +
-							'</div>' +
-							'<div id="nvx-update-process-msg" style="margin-top:10px; font-weight:600; display:none;"></div>' +
-						'</div>'
-					);
+					var $successItem = $('<div class="nvx-sync-log__item nvx-sync-log__item--success"></div>');
+					$successItem.append($('<div>').html('✓ У вас встановлена поточна версія (v' + safeCurrent + '). Новіших релізів не виявлено.'));
+					$successItem.append($('<div style="margin-top:6px; font-size:12px; color:#475569;">Якщо реліз або код цієї версії було перезаписано на GitHub, ви можете оновити/перевстановити її зараз:</div>'));
+
+					var $reinstallActions = $('<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></div>');
+					var $reinstallBtn = $('<button type="button" class="nvx-btn nvx-btn--ghost" id="nvx-run-update-btn"></button>').text('🔄 Оновити / перевстановити v' + (d.current_version || ''));
+					$reinstallActions.append($reinstallBtn);
+
+					if (safeUrl) {
+						var $ghLink = $('<a target="_blank" rel="noopener noreferrer" class="nvx-btn nvx-btn--ghost" style="text-decoration:none;">Переглянути реліз на GitHub ↗</a>').attr('href', safeUrl);
+						$reinstallActions.append($ghLink);
+					}
+					$successItem.append($reinstallActions);
+					$successItem.append($('<div id="nvx-update-process-msg" style="margin-top:10px; font-weight:600; display:none;"></div>'));
+
+					$updateBox.empty().append($successItem);
 				}
 			})
 			.fail(function (xhr) {
 				var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || 'Помилка мережі при перевірці оновлень.';
-				$updateBox.html('<div class="nvx-sync-log__item nvx-sync-log__item--error">' + msg + '</div>');
+				$updateBox.empty().append($('<div class="nvx-sync-log__item nvx-sync-log__item--error"></div>').text(msg));
 			})
 			.always(function () {
 				$checkBtn.prop('disabled', false).text('🔄 Перевірити оновлення');

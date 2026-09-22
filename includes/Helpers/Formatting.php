@@ -34,7 +34,7 @@ class Formatting {
 		}
 
 		// 80XXXXXXXXX (11 цифр, код країни без початкової 3) — нетиповий, але приведемо.
-		if ( 11 === strlen( $digits ) && '0' === $digits[0] ) {
+		if ( 11 === strlen( $digits ) && '8' === $digits[0] ) {
 			return '3' . $digits;
 		}
 

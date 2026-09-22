@@ -41,12 +41,11 @@ class TtnManager {
 		// успішної відповіді Nova Poshta), тому паралельний другий виклик
 		// міг проскочити і створити другу реальну ТТН в кабінеті НП.
 		$lock_key = 'nvx_ttn_creating_' . $order->get_id();
-		if ( get_transient( $lock_key ) ) {
+		if ( ! $this->acquire_lock( $lock_key, 2 * MINUTE_IN_SECONDS ) ) {
 			throw new NovaPoshtaApiException(
 				__( 'Створення ТТН для цього замовлення вже виконується (попередній запит ще обробляється). Зачекайте кілька секунд і перевірте кабінет Нової Пошти, перш ніж повторювати.', 'wc-nova-express' )
 			);
 		}
-		set_transient( $lock_key, 1, 2 * MINUTE_IN_SECONDS );
 
 		$service_type = $overrides['service_type'] ?? $order->get_meta( '_nvx_service_type' ) ?: self::SERVICE_WAREHOUSE_WAREHOUSE;
 
@@ -75,7 +74,7 @@ class TtnManager {
 
 			// Звичайна помилка API (валідація тощо) — точно відомо, що ТТН
 			// не створено, тож немає причин тримати лок і затримувати повтор.
-			delete_transient( $lock_key );
+			$this->release_lock( $lock_key );
 			throw $e;
 		}
 
@@ -89,7 +88,7 @@ class TtnManager {
 				)
 			);
 		} catch ( \RuntimeException $e ) {
-			delete_transient( $lock_key );
+			$this->release_lock( $lock_key );
 			// ТТН уже в НП — повідомляємо явно, щоб адмін не створював дубль.
 			throw new NovaPoshtaApiException(
 				sprintf(
@@ -101,7 +100,7 @@ class TtnManager {
 			);
 		}
 
-		delete_transient( $lock_key );
+		$this->release_lock( $lock_key );
 
 		// Лише мета + нотатка. Статус замовлення / видалення — поза межами create_for_order.
 		// Автоматизації (у т.ч. change_status) йдуть окремо через do_action( nvx/ttn_created ).
@@ -332,15 +331,14 @@ class TtnManager {
 		$this->guard_single_active_ttn( $order );
 
 		$lock_key = 'nvx_ttn_creating_' . $order->get_id();
-		if ( false !== get_transient( $lock_key ) ) {
+		if ( ! $this->acquire_lock( $lock_key, 60 ) ) {
 			throw new NovaPoshtaApiException( __( 'Операція з ТТН для цього замовлення вже триває. Зачекайте хвилину.', 'wc-nova-express' ) );
 		}
-		set_transient( $lock_key, 1, 60 );
 
 		try {
 			return $this->do_attach_existing( $order, $waybill_number );
 		} finally {
-			delete_transient( $lock_key );
+			$this->release_lock( $lock_key );
 		}
 	}
 
@@ -720,5 +718,32 @@ class TtnManager {
 
 	public function repository(): TtnRepository {
 		return $this->repository;
+	}
+	/**
+	 * Атомарне захоплення блокування операції (захист від race condition при подвійному кліку).
+	 */
+	private function acquire_lock( string $key, int $ttl = 120 ): bool {
+		if ( function_exists( "wp_using_ext_object_cache" ) && wp_using_ext_object_cache() ) {
+			return (bool) wp_cache_add( $key, 1, "nvx_locks", $ttl );
+		}
+
+		$now = time();
+		$expires = (int) get_option( $key, 0 );
+		if ( $expires > $now ) {
+			return false;
+		}
+
+		delete_option( $key );
+		return (bool) add_option( $key, $now + $ttl, "", "no" );
+	}
+
+	/**
+	 * Звільнення блокування.
+	 */
+	private function release_lock( string $key ): void {
+		if ( function_exists( "wp_using_ext_object_cache" ) && wp_using_ext_object_cache() ) {
+			wp_cache_delete( $key, "nvx_locks" );
+		}
+		delete_option( $key );
 	}
 }
