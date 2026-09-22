@@ -34,11 +34,13 @@
      - Releases on GitHub must be published (not draft). Publishing triggers `.github/workflows/release-zip.yml`.
      - The workflow packages `wc-nova-express.zip` (verifying that tests and developer files are excluded) and attaches it along with `wc-nova-express.zip.sha256` to the release assets.
 
-4. **100% Test & Linter Verification Before Any Push:**
-   - PHP linting: `find . -type f -name "*.php" -not -path "./vendor/*" -exec php -l {} +` must pass with zero errors.
-   - JavaScript validation: `node --check assets/js/*.js` must pass.
-   - PHPUnit suite: `vendor/bin/phpunit --configuration phpunit.xml.dist` must pass 100%.
-   - Specifically verify:
+4. **Mandatory Syntax & Linter Verification Before Any Commit, Push, or Release (Zero Syntax Tolerance):**
+   - **Hard Blocker Policy:** A single syntax error in JavaScript (such as missing variable assignments, broken commas, unclosed brackets) completely crashes execution on WooCommerce checkout: field toggling fails, postcodes and unwanted address fields become visible, and orders cannot be placed. Never commit, push, package, or release code without running syntax validation on EVERY modified file.
+   - **JavaScript Validation:** Must execute `node --check <file>` on every modified JS file (e.g. `node --check assets/js/checkout.js`). Must exit with 0 errors.
+   - **PHP Linting:** Must execute `php -l <file>` on every modified PHP file (e.g. `find . -type f -name "*.php" -not -path "./vendor/*" -exec php -l {} +`). Must pass with zero syntax errors. If PHP CLI is temporarily absent in the sandbox, the agent MUST run a Node-based or regex/token parser check or ensure PHP is installed before proceeding.
+   - **JSON / Assets:** Ensure all JSON files, views, and assets are valid and well-formed.
+   - **PHPUnit suite:** `vendor/bin/phpunit --configuration phpunit.xml.dist` must pass 100% when environment allows.
+   - **Specifically verify:**
      - `tests/Unit/VersionConsistencyTest.php` (header vs constant vs readme).
      - `tests/Unit/ReleasePackagingTest.php` (ensures developer/test files are not packaged).
      - `tests/Unit/NovaPoshtaContractTest.php` (ensures payload schemas conform to Nova Poshta API specs).
@@ -150,7 +152,7 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
 Before submitting or releasing code:
 1. [ ] **Analyze feedback first:** Did you explain your plan to the user and receive confirmation?
 2. [ ] **Version consistency:** Are `wc-nova-express.php` (header & constant) and `readme.txt` (Stable tag) synchronized?
-3. [ ] **Syntax & Linting:** Did `php -l` and `node --check` pass on all modified files?
+3. [ ] **Strict Syntax Verification (CRITICAL):** Did `node --check` pass on all modified JS files and `php -l` on all modified PHP files with 0 errors? (NEVER push or release without syntax verification).
 4. [ ] **Test execution:** Did all PHPUnit tests pass cleanly (`vendor/bin/phpunit`)?
 5. [ ] **Security check:** Are nonces checked, capabilities verified (`manage_woocommerce`), and inputs sanitized?
 6. [ ] **HPOS verification:** Are all order data calls using WC Order methods (`get_meta`/`update_meta_data`)?
