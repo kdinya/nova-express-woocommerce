@@ -44,6 +44,15 @@
 
 6. **Self-Updating Instruction Requirement:**
    - Whenever a new feature, database table, hook, API integration, or architectural pattern is added to the plugin, the AI responsible **must append or update the relevant section in this document (`AGENTS.md`)**.
+7. **Source of Truth: Always Analyze the Latest Repository Version:**
+   - Before performing ANY task, **always clone or read the current repository files directly** (or verify the latest commit on `main`).
+   - **Never rely on chat history, memory, or previously discussed code states.** Other AI assistants may have edited the repository between conversations; the code you remember may be outdated.
+   - Re-verify file contents, architecture, and version numbers in the actual working copy before proposing or making changes.
+
+8. **Audience & Language Policy:**
+   - The plugin targets a **Ukrainian-only audience**. There are **no internationalization (i18n) requirements**: hardcoded Ukrainian strings in admin views and AJAX responses are acceptable and must be preserved.
+   - Do **not** spend effort wrapping strings in `__()`, `_e()`, or generating `.pot` translation files unless the user explicitly requests it later.
+
 
 ---
 
@@ -64,6 +73,7 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
   - Transport: WordPress HTTP API (`wp_remote_post`) with default 15s timeout.
   - Error Handling: Checks both HTTP response codes and Nova Poshta payload flags (`success === true`). Throws `NovaPoshtaApiException` on API errors or connection failures.
   - Fixtures & Contract Tests: Spec contracts are defined in `tests/Fixtures/NovaPoshta/` and tested via `NovaPoshtaContractTest.php`.
+  - **Never suppress or hide Nova Poshta API error details.** Always persist and surface the provider's error `codes` and `messages` to the operator (admin UI / order notes / logs) so failures are diagnosable.
 
 ### 2.3. Waybill (ТТН) Management & Security (`includes/Ttn/`)
 - **`TtnManager.php` & `TtnRepository.php`:**
@@ -76,6 +86,7 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
     - Maximum dimensions: **40 × 60 × 30 cm** (sum / individual limits).
     - Maximum declared value: **29,000 UAH**.
     - Maximum parcels/places: **1 place only**.
+  - **Phone Normalization:** Before any waybill creation API call, recipient/sender phone numbers MUST be normalized server-side to the Nova Poshta required format `+380XXXXXXXXX`. Never rely on frontend validation alone for phone format.
 
 ### 2.4. Local Warehouse & City Synchronization (`includes/Warehouse/`)
 - **`WarehouseRepository.php` & `WarehouseSync.php`:**
@@ -120,6 +131,14 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
 
 ---
 
+### 2.9. Frontend Checkout Compatibility (`includes/Frontend/`)
+- The checkout integration MUST be **universal**: it has to work reliably with **both** the classic WooCommerce checkout (`woocommerce_checkout_fields` hooks + jQuery selectors) and the modern **Cart & Checkout Blocks** used by current themes.
+- Any change to checkout behavior must preserve existing hooks, CSS classes, and JS selectors that custom themes and one-page checkout plugins may depend on.
+- When touching checkout code, always verify both paths: classic template rendering and block-based rendering. If a feature can only support one path, warn the user before implementing.
+
+### 2.10. Database Schema Changes (`includes/Install/Installer.php`)
+- Any change to plugin tables (`wp_nvx_cities`, `wp_nvx_warehouses`, `wp_nvx_ttn`, `wp_nvx_automation_log`, rules table) MUST go through the versioned migration checks in `Installer` (increment the DB version option, apply `dbDelta` or targeted `ALTER TABLE`), never through one-off manual queries that existing installs will not receive.
+
 ## 3. Mandatory Development Checklist for Any Change
 
 Before submitting or releasing code:
@@ -131,3 +150,6 @@ Before submitting or releasing code:
 6. [ ] **HPOS verification:** Are all order data calls using WC Order methods (`get_meta`/`update_meta_data`)?
 7. [ ] **UI check:** Are responsive styles intact on mobile/narrow screens?
 8. [ ] **Instruction update:** Did you document any new hooks, features, or behaviors in this `AGENTS.md` file?
+9. [ ] **Repository freshness:** Did you analyze the actual latest commit on `main` (not chat history) before making changes?
+10. [ ] **Checkout universality:** If checkout code changed, does it work in both classic checkout and Checkout Blocks without breaking themes/plugins?
+11. [ ] **Schema migration:** If tables changed, did `Installer` handle existing installations via versioned migration?
