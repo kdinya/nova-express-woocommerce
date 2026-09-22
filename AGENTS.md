@@ -20,12 +20,17 @@
 3. **Always Overwrite & Complete Releases (Full Release Lifecycle):**
    - Unless explicitly instructed otherwise by the user, **always produce a fully functional, verifiable release** rather than leaving work in a draft, unfinished branch, or unreleased state.
    - A task is NOT complete until the WordPress built-in updater (`GitHubUpdater`) is guaranteed to recognize and cleanly download the new version.
-   - **Version Consistency Rule (Calendar Versioning `YYYY.MM.N` or `YYYY.MM.NN`):** Every release requires updating the version in all 3 mandatory locations simultaneously:
-     1. `wc-nova-express.php`: Plugin header (`* Version: YYYY.MM.N`).
-     2. `wc-nova-express.php`: Constant definition (`define( 'NVX_VERSION', 'YYYY.MM.N' );`).
-     3. `readme.txt`: Header tag (`Stable tag: YYYY.MM.N`).
-   - **GitHub Tag & Asset Requirements:**
-     - The Git tag must match the version format (e.g., `v2026.09.10` or `2026.09.10`).
+   - **Version Format — STRICT (user-mandated, never deviate):**
+     - Format: `vYYYY.MM.NN` where `v2026` = year (4 digits), `.09` = month (2 digits), and the last number (`.NN`) is a **sequential release counter, NOT the day of the month**.
+     - Examples: `v2026.09.09` → next sequential version is `v2026.09.10` (NOT `v2026.09.22`, NOT date-based). Counter simply increments: 09 → 10 → 11...
+     - This exact format must be used in the Git tag (`v2026.09.09`), plugin header, `NVX_VERSION` constant, and `readme.txt` Stable tag (header/constant/readme without the leading `v`).
+   - **Overwrite-Until-Told-Otherwise Rule:**
+     - By default, new code changes OVERWRITE the current latest release: keep the existing version number and tag (e.g. stay on `v2026.09.09`), force-update the tag, delete and re-publish the GitHub Release, and let the workflow rebuild the ZIP/SHA-256 assets.
+     - Increment the sequential counter (e.g. `v2026.09.09` → `v2026.09.10`) ONLY when the user explicitly says to create a new version.
+   - **Version Consistency Rule:** Every release requires updating the version in all 3 mandatory locations simultaneously:
+     1. `wc-nova-express.php`: Plugin header (`* Version: YYYY.MM.NN`).
+     2. `wc-nova-express.php`: Constant definition (`define( 'NVX_VERSION', 'YYYY.MM.NN' );`).
+     3. `readme.txt`: Header tag (`Stable tag: YYYY.MM.NN`).
      - Releases on GitHub must be published (not draft). Publishing triggers `.github/workflows/release-zip.yml`.
      - The workflow packages `wc-nova-express.zip` (verifying that tests and developer files are excluded) and attaches it along with `wc-nova-express.zip.sha256` to the release assets.
 
