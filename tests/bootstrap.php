@@ -181,6 +181,7 @@ if ( ! class_exists( 'WC_Order' ) ) {
         public function get_shipping_last_name() { return $this->billing_last_name; }
         public function get_shipping_city() { return $this->shipping_city; }
         public function get_item_count() { return $this->item_count; }
+        public function get_items() { return array(); }
 
         public function get_meta( $key, $single = true, $context = 'view' ) {
             return isset( $this->meta[ $key ] ) ? $this->meta[ $key ] : '';
