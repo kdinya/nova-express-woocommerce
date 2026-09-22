@@ -10,7 +10,7 @@ $is_updated    = ! empty( $_GET['updated'] );
 
 $presets = array(
 	array(
-		'label' => __( 'Наш зелений (за замовчуванням)', 'wc-nova-express' ),
+		'label' => __( 'Зелений', 'wc-nova-express' ),
 		'color' => '#7CB342',
 	),
 	array(
@@ -37,9 +37,17 @@ $presets = array(
 ?>
 
 <div class="nvx-wrap">
+	<div class="nvx-header">
+		<div class="nvx-header__logo"><img src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/images/icon-64x64.png' ); ?>" alt="Nova Express Woo" /></div>
+		<div>
+			<h1><?php esc_html_e( 'Оформлення', 'wc-nova-express' ); ?></h1>
+			<p><?php esc_html_e( 'Налаштування колірної теми та зовнішнього вигляду панелі керування', 'wc-nova-express' ); ?></p>
+		</div>
+	</div>
+
 	<?php if ( $is_updated ) : ?>
-		<div class="notice notice-success is-dismissible" style="margin-bottom:18px;">
-			<p><?php esc_html_e( 'Колірну тему успішно збережено!', 'wc-nova-express' ); ?></p>
+		<div class="nvx-alert nvx-alert--success" style="margin-bottom:18px;">
+			<?php esc_html_e( 'Колірну тему успішно збережено!', 'wc-nova-express' ); ?>
 		</div>
 	<?php endif; ?>
 
