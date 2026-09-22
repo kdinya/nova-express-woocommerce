@@ -140,19 +140,28 @@ jQuery(function ($) {
 		return isNaN(num) ? 0 : num;
 	}
 
-	function updateSyncProgress(current, total, statusText) {
+	var WH_PAGE_SIZE = 500;
+
+	function updateSyncProgress(page, totalApiCount, statusText, isDone) {
 		var $progress = $('#nvx-sync-progress');
 		if (!$progress.length) {
 			return;
 		}
 		$progress.show();
 
-		var totalTarget = total || getApiWhCount();
+		var totalApi = totalApiCount || getApiWhCount() || 54000;
+		var totalPages = Math.max(1, Math.ceil(totalApi / WH_PAGE_SIZE));
+		var currentPage = Math.max(0, page || 0);
+
 		var pct = 0;
-		if (totalTarget > 0) {
-			pct = Math.min(100, Math.round((current / totalTarget) * 100));
+		if (isDone || currentPage >= totalPages) {
+			pct = 100;
+		} else if (totalPages > 0 && currentPage > 0) {
+			pct = Math.min(99, Math.round((currentPage / totalPages) * 100));
 		}
-		var remaining = (totalTarget > current) ? (totalTarget - current) : 0;
+
+		var processedEst = isDone ? totalApi : Math.min(totalApi, currentPage * WH_PAGE_SIZE);
+		var remainingEst = Math.max(0, totalApi - processedEst);
 
 		$('#nvx-sync-progress-fill').css('width', pct + '%');
 		$('#nvx-sync-progress-percent').text(pct + '%');
@@ -161,14 +170,16 @@ jQuery(function ($) {
 			$('#nvx-sync-progress-label').text(statusText);
 		}
 
-		var subText = current.toLocaleString('uk-UA');
-		if (totalTarget > 0) {
-			subText += ' з ' + totalTarget.toLocaleString('uk-UA');
-			if (remaining > 0 && pct < 100) {
-				subText += ' (залишилось ~' + remaining.toLocaleString('uk-UA') + ')';
+		var subText = '';
+		if (isDone) {
+			subText = 'Опрацьовано всі ' + totalApi.toLocaleString('uk-UA') + ' відділень (100%)';
+		} else if (currentPage > 0) {
+			subText = 'Сторінка ' + currentPage + ' з ~' + totalPages + ' · опрацьовано ~' + processedEst.toLocaleString('uk-UA') + ' з ' + totalApi.toLocaleString('uk-UA');
+			if (remainingEst > 0) {
+				subText += ' (залишилось ~' + remainingEst.toLocaleString('uk-UA') + ')';
 			}
 		} else {
-			subText += ' у базі магазину';
+			subText = 'Очікування запуску… 0 з ' + totalApi.toLocaleString('uk-UA');
 		}
 		$('#nvx-sync-progress-sub').text(subText);
 	}
@@ -237,14 +248,13 @@ jQuery(function ($) {
 		var retryCount = 0;
 		var $loading;
 
-		var currentInDb = parseInt(($('#nvx-wh-count').text() || '').replace(/[^\d]/g, ''), 10) || 0;
 		if (startPage > 1) {
 			logLine('info', 'Відновлення синхронізації зі сторінки ' + startPage + ' (раніше збережено сторінку ' + syncSavedPage + ')…');
 			$loading = logLine('info', 'Завантаження відділень… сторінка ' + startPage + '…');
-			updateSyncProgress(currentInDb, getApiWhCount(), 'Відновлення синхронізації (стор. ' + startPage + ')…');
+			updateSyncProgress(startPage - 1, getApiWhCount(), 'Відновлення синхронізації (стор. ' + startPage + ')…', false);
 		} else {
 			$loading = logLine('info', 'Завантаження відділень… сторінка 1 (це може зайняти кілька хвилин)');
-			updateSyncProgress(0, getApiWhCount(), 'Початок синхронізації…');
+			updateSyncProgress(0, getApiWhCount(), 'Початок синхронізації…', false);
 		}
 
 		function syncPage(page) {
@@ -286,7 +296,7 @@ jQuery(function ($) {
 
 					$('#nvx-wh-count').text(d.total_in_db.toLocaleString('uk-UA'));
 					$loading.text('Завантаження відділень… сторінка ' + d.page + ' · у базі: ' + d.total_in_db.toLocaleString('uk-UA'));
-					updateSyncProgress(d.total_in_db, getApiWhCount(), 'Завантаження відділень… сторінка ' + d.page);
+					updateSyncProgress(d.page, getApiWhCount(), 'Завантаження відділень… сторінка ' + d.page, false);
 
 					if (d.has_more) {
 						setTimeout(function () { syncPage(d.page + 1); }, 300);
@@ -296,7 +306,7 @@ jQuery(function ($) {
 						NVX_ADMIN.syncSavedPage = 0;
 						NVX_ADMIN.syncResumePage = 1;
 						$loading.remove();
-						updateSyncProgress(d.total_in_db, d.total_in_db, 'Синхронізацію успішно завершено!');
+						updateSyncProgress(d.page, d.total_in_db, 'Синхронізацію успішно завершено!', true);
 						var successMsg = 'База даних відділень успішно оновлена (' + d.total_in_db.toLocaleString('uk-UA') + ' у базі).';
 						if (d.deleted_stale && d.deleted_stale > 0) {
 							successMsg += ' Закритих відділень видалено: ' + d.deleted_stale.toLocaleString('uk-UA') + '.';
