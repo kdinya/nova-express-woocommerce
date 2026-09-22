@@ -1,3 +1,24 @@
+	// Відкриття вибору формату друку ТТН у фірмовому модальному вікні
+	$(document).on('click', '.nvx-waybill-card__print', function (e) {
+		var $btn = $(this);
+		var urlCustom = $btn.data('url-custom');
+		var urlNp100  = $btn.data('url-np100');
+		var urlNp85   = $btn.data('url-np85');
+		var urlNpDoc  = $btn.data('url-npdoc');
+		var ttnNum    = $btn.data('ttn');
+
+		if (window.NvxCore && window.NvxCore.openPrintModal && (urlNp100 || urlCustom)) {
+			e.preventDefault();
+			window.NvxCore.openPrintModal({
+				ttnNumber: ttnNum,
+				urlCustom: urlCustom,
+				urlNp100:  urlNp100,
+				urlNp85:   urlNp85,
+				urlNpDoc:  urlNpDoc
+			});
+		}
+	});
+
 /* Nova Express — картка замовлення: створення ТТН у новій вкладці + прив'язка наявної ТТН. */
 jQuery(function ($) {
 	'use strict';

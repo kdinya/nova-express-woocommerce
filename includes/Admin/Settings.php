@@ -51,6 +51,21 @@ class Settings {
 			'enable_phone_mask'        => 'yes',
 			'wipe_data_on_uninstall' => 'no',
 			'admin_primary_color'    => '#7CB342',
+			'label_width'            => 100,
+			'label_height'           => 150,
+			'label_margin_top'       => 8,
+			'label_margin_sides'     => 6,
+			'label_font_size'        => 'medium',
+			'label_align'            => 'center',
+			'label_show_barcode'     => 'yes',
+			'label_show_ttn'         => 'yes',
+			'label_show_recipient_name' => 'yes',
+			'label_show_recipient_phone'=> 'yes',
+			'label_show_recipient_address' => 'yes',
+			'label_show_order_number'=> 'yes',
+			'label_show_order_items' => 'no',
+			'label_show_order_total' => 'no',
+			'label_custom_note'      => '',
 		);
 
 		return wp_parse_args( get_option( self::OPTION_KEY, array() ), $defaults );
@@ -91,6 +106,27 @@ class Settings {
 		}
 
 		return 'unknown';
+	}
+
+	public static function get_label_template(): array {
+		$all = self::get_all();
+		return array(
+			'width'                 => (int) ( $all['label_width'] ?? 100 ),
+			'height'                => (int) ( $all['label_height'] ?? 150 ),
+			'margin_top'            => (int) ( $all['label_margin_top'] ?? 8 ),
+			'margin_sides'          => (int) ( $all['label_margin_sides'] ?? 6 ),
+			'font_size'             => (string) ( $all['label_font_size'] ?? 'medium' ),
+			'align'                 => (string) ( $all['label_align'] ?? 'center' ),
+			'show_barcode'          => 'yes' === ( $all['label_show_barcode'] ?? 'yes' ),
+			'show_ttn'              => 'yes' === ( $all['label_show_ttn'] ?? 'yes' ),
+			'show_recipient_name'   => 'yes' === ( $all['label_show_recipient_name'] ?? 'yes' ),
+			'show_recipient_phone'  => 'yes' === ( $all['label_show_recipient_phone'] ?? 'yes' ),
+			'show_recipient_address'=> 'yes' === ( $all['label_show_recipient_address'] ?? 'yes' ),
+			'show_order_number'     => 'yes' === ( $all['label_show_order_number'] ?? 'yes' ),
+			'show_order_items'      => 'yes' === ( $all['label_show_order_items'] ?? 'no' ),
+			'show_order_total'      => 'yes' === ( $all['label_show_order_total'] ?? 'no' ),
+			'custom_note'           => (string) ( $all['label_custom_note'] ?? '' ),
+		);
 	}
 
 	public function save(): void {
@@ -137,6 +173,21 @@ class Settings {
 			'additional_info_contains' => sanitize_text_field( wp_unslash( $_POST['additional_info_contains'] ?? '' ) ),
 			'enable_phone_mask'        => ! empty( $_POST['enable_phone_mask'] ) ? 'yes' : 'no',
 			'wipe_data_on_uninstall'  => ! empty( $_POST['wipe_data_on_uninstall'] ) ? 'yes' : 'no',
+			'label_width'             => max( 40, min( 300, (int) ( $_POST['label_width'] ?? 100 ) ) ),
+			'label_height'            => max( 30, min( 400, (int) ( $_POST['label_height'] ?? 150 ) ) ),
+			'label_margin_top'        => max( 0, min( 50, (int) ( $_POST['label_margin_top'] ?? 8 ) ) ),
+			'label_margin_sides'      => max( 0, min( 50, (int) ( $_POST['label_margin_sides'] ?? 6 ) ) ),
+			'label_font_size'         => in_array( $_POST['label_font_size'] ?? '', array( 'small', 'medium', 'large' ), true ) ? $_POST['label_font_size'] : 'medium',
+			'label_align'             => in_array( $_POST['label_align'] ?? '', array( 'center', 'left' ), true ) ? $_POST['label_align'] : 'center',
+			'label_show_barcode'      => ! empty( $_POST['label_show_barcode'] ) ? 'yes' : 'no',
+			'label_show_ttn'          => ! empty( $_POST['label_show_ttn'] ) ? 'yes' : 'no',
+			'label_show_recipient_name' => ! empty( $_POST['label_show_recipient_name'] ) ? 'yes' : 'no',
+			'label_show_recipient_phone'=> ! empty( $_POST['label_show_recipient_phone'] ) ? 'yes' : 'no',
+			'label_show_recipient_address' => ! empty( $_POST['label_show_recipient_address'] ) ? 'yes' : 'no',
+			'label_show_order_number' => ! empty( $_POST['label_show_order_number'] ) ? 'yes' : 'no',
+			'label_show_order_items'  => ! empty( $_POST['label_show_order_items'] ) ? 'yes' : 'no',
+			'label_show_order_total'  => ! empty( $_POST['label_show_order_total'] ) ? 'yes' : 'no',
+			'label_custom_note'       => sanitize_text_field( wp_unslash( $_POST['label_custom_note'] ?? '' ) ),
 		);
 
 		$sender_error = '';

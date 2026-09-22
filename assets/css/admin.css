@@ -1133,3 +1133,68 @@ body.woocommerce_page_nvx-express .wrap {
 	background: #e2e8f0;
 	color: #0f172a !important;
 }
+
+/* Друк ТТН: Модальне вікно вибору форматів */
+.nvx-print-modal-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 6px;
+}
+.nvx-print-option {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 12px 14px;
+	background: #fff;
+	border: 1px solid var(--nvx-border, #dde5d6);
+	border-radius: 8px;
+	text-decoration: none;
+	color: inherit;
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+.nvx-print-option:hover {
+	border-color: var(--nvx-primary, #7CB342);
+	background: #fbfdf9;
+	box-shadow: 0 2px 8px rgba(124, 179, 66, 0.15);
+	transform: translateY(-1px);
+}
+.nvx-print-option__icon {
+	width: 38px;
+	height: 38px;
+	flex-shrink: 0;
+	border-radius: 8px;
+	background: rgba(124, 179, 66, 0.12);
+	color: var(--nvx-primary, #7CB342);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.nvx-print-option__icon svg {
+	width: 22px;
+	height: 22px;
+}
+.nvx-print-option__content {
+	flex: 1;
+}
+.nvx-print-option__title {
+	font-weight: 600;
+	font-size: 14px;
+	color: #1e293b;
+	margin-bottom: 2px;
+}
+.nvx-print-option__desc {
+	font-size: 12px;
+	color: #64748b;
+	line-height: 1.3;
+}
+.nvx-print-option__arrow {
+	color: #94a3b8;
+	font-size: 16px;
+}
+
+/* Конструктор етикетки */
+.nvx-label-preview-box {
+	transition: all 0.2s ease;
+}

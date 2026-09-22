@@ -304,8 +304,132 @@ defined( 'ABSPATH' ) || exit;
 			</label>
 		</section>
 
+				<section class="nvx-card" id="nvx-label-template-card">
+			<h2><?php esc_html_e( '6. Конструктор користувацької етикетки (друк 100×150 або довільний)', 'wc-nova-express' ); ?></h2>
+			<p class="nvx-card__hint">
+				<?php esc_html_e( 'Налаштуйте вигляд спрощеної етикетки: увімкніть потрібні поля, штрих-код та перевірте макет у реальному часі на панелі попереднього перегляду.', 'wc-nova-express' ); ?>
+			</p>
+
+			<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:24px;align-items:start;">
+				<div>
+					<h3 style="font-size:14px;font-weight:600;margin-bottom:12px;"><?php esc_html_e( 'Параметри аркуша та шрифти', 'wc-nova-express' ); ?></h3>
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+						<label class="nvx-field">
+							<span><?php esc_html_e( 'Ширина (мм)', 'wc-nova-express' ); ?></span>
+							<input type="number" min="40" max="300" name="label_width" id="nvx_lbl_width" value="<?php echo esc_attr( $settings['label_width'] ?? 100 ); ?>" />
+						</label>
+						<label class="nvx-field">
+							<span><?php esc_html_e( 'Висота (мм)', 'wc-nova-express' ); ?></span>
+							<input type="number" min="30" max="400" name="label_height" id="nvx_lbl_height" value="<?php echo esc_attr( $settings['label_height'] ?? 150 ); ?>" />
+						</label>
+					</div>
+
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+						<label class="nvx-field">
+							<span><?php esc_html_e( 'Відступ зверху (мм)', 'wc-nova-express' ); ?></span>
+							<input type="number" min="0" max="50" name="label_margin_top" id="nvx_lbl_m_top" value="<?php echo esc_attr( $settings['label_margin_top'] ?? 8 ); ?>" />
+						</label>
+						<label class="nvx-field">
+							<span><?php esc_html_e( 'Відступи з боків (мм)', 'wc-nova-express' ); ?></span>
+							<input type="number" min="0" max="50" name="label_margin_sides" id="nvx_lbl_m_sides" value="<?php echo esc_attr( $settings['label_margin_sides'] ?? 6 ); ?>" />
+						</label>
+					</div>
+
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+						<label class="nvx-field">
+							<span><?php esc_html_e( 'Вирівнювання', 'wc-nova-express' ); ?></span>
+							<select name="label_align" id="nvx_lbl_align">
+								<option value="center" <?php selected( 'center', $settings['label_align'] ?? 'center' ); ?>><?php esc_html_e( 'По центру', 'wc-nova-express' ); ?></option>
+								<option value="left" <?php selected( 'left', $settings['label_align'] ?? 'center' ); ?>><?php esc_html_e( 'По лівому краю', 'wc-nova-express' ); ?></option>
+							</select>
+						</label>
+						<label class="nvx-field">
+							<span><?php esc_html_e( 'Розмір шрифту', 'wc-nova-express' ); ?></span>
+							<select name="label_font_size" id="nvx_lbl_font_size">
+								<option value="small" <?php selected( 'small', $settings['label_font_size'] ?? 'medium' ); ?>><?php esc_html_e( 'Дрібний', 'wc-nova-express' ); ?></option>
+								<option value="medium" <?php selected( 'medium', $settings['label_font_size'] ?? 'medium' ); ?>><?php esc_html_e( 'Стандартний', 'wc-nova-express' ); ?></option>
+								<option value="large" <?php selected( 'large', $settings['label_font_size'] ?? 'medium' ); ?>><?php esc_html_e( 'Великий', 'wc-nova-express' ); ?></option>
+							</select>
+						</label>
+					</div>
+
+					<h3 style="font-size:14px;font-weight:600;margin:18px 0 10px 0;"><?php esc_html_e( 'Елементи для друку', 'wc-nova-express' ); ?></h3>
+					<div style="display:flex;flex-direction:column;gap:8px;">
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_ttn" id="nvx_chk_ttn" value="1" <?php checked( 'yes', $settings['label_show_ttn'] ?? 'yes' ); ?> />
+							<span><?php esc_html_e( 'Номер ТТН (великий шрифт)', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_barcode" id="nvx_chk_barcode" value="1" <?php checked( 'yes', $settings['label_show_barcode'] ?? 'yes' ); ?> />
+							<span><?php esc_html_e( 'Штрих-код ТТН (сканується на пошті)', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_recipient_name" id="nvx_chk_name" value="1" <?php checked( 'yes', $settings['label_show_recipient_name'] ?? 'yes' ); ?> />
+							<span><?php esc_html_e( 'ПІБ одержувача', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_recipient_phone" id="nvx_chk_phone" value="1" <?php checked( 'yes', $settings['label_show_recipient_phone'] ?? 'yes' ); ?> />
+							<span><?php esc_html_e( 'Номер телефону одержувача', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_recipient_address" id="nvx_chk_address" value="1" <?php checked( 'yes', $settings['label_show_recipient_address'] ?? 'yes' ); ?> />
+							<span><?php esc_html_e( 'Місто та відділення / адреса', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_order_number" id="nvx_chk_order" value="1" <?php checked( 'yes', $settings['label_show_order_number'] ?? 'yes' ); ?> />
+							<span><?php esc_html_e( 'Номер замовлення магазину', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_order_items" id="nvx_chk_items" value="1" <?php checked( 'yes', $settings['label_show_order_items'] ?? 'no' ); ?> />
+							<span><?php esc_html_e( 'Список товарів у замовленні (комплектація)', 'wc-nova-express' ); ?></span>
+						</label>
+						<label class="nvx-check-line">
+							<input type="checkbox" name="label_show_order_total" id="nvx_chk_total" value="1" <?php checked( 'yes', $settings['label_show_order_total'] ?? 'no' ); ?> />
+							<span><?php esc_html_e( 'Сума / післяплата замовлення', 'wc-nova-express' ); ?></span>
+						</label>
+					</div>
+
+					<label class="nvx-field" style="margin-top:14px;">
+						<span><?php esc_html_e( 'Довільний текст / примітка знизу', 'wc-nova-express' ); ?></span>
+						<input type="text" name="label_custom_note" id="nvx_lbl_note" value="<?php echo esc_attr( $settings['label_custom_note'] ?? '' ); ?>" placeholder="Наприклад: Дякуємо за покупку!" />
+					</label>
+				</div>
+
+				<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;">
+					<h3 style="font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+						<span><?php esc_html_e( 'Попередній перегляд (Live Preview)', 'wc-nova-express' ); ?></span>
+						<span id="nvx-preview-dims" style="font-size:11px;font-weight:normal;color:#64748b;">100 × 150 мм</span>
+					</h3>
+					<p style="font-size:12px;color:#64748b;margin-bottom:12px;">
+						<?php esc_html_e( 'Оновлюється миттєво під час зміни параметрів ліворуч:', 'wc-nova-express' ); ?>
+					</p>
+
+					<div class="nvx-label-preview-wrap" style="background:#cbd5e1;padding:12px;border-radius:6px;display:flex;justify-content:center;">
+						<div id="nvx-label-preview-box" class="nvx-label-preview-box" style="background:#fff;border:1px dashed #94a3b8;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,0.08);width:260px;min-height:360px;padding:16px 12px;text-align:center;font-family:Arial,sans-serif;color:#000;">
+							<div id="prev-ttn" style="font-size:18px;font-weight:bold;margin-bottom:4px;">20451098765432</div>
+							<div id="prev-barcode" style="margin:4px 0 6px 0;">
+								<svg viewBox="0 0 160 38" width="100%" height="38" style="display:block;margin:0 auto;max-width:180px;">
+									<rect x="0" y="0" width="3" height="38" fill="#000"/><rect x="6" y="0" width="2" height="38" fill="#000"/><rect x="10" y="0" width="4" height="38" fill="#000"/><rect x="18" y="0" width="2" height="38" fill="#000"/><rect x="22" y="0" width="3" height="38" fill="#000"/><rect x="28" y="0" width="4" height="38" fill="#000"/><rect x="36" y="0" width="2" height="38" fill="#000"/><rect x="42" y="0" width="5" height="38" fill="#000"/><rect x="50" y="0" width="2" height="38" fill="#000"/><rect x="54" y="0" width="4" height="38" fill="#000"/><rect x="62" y="0" width="3" height="38" fill="#000"/><rect x="68" y="0" width="2" height="38" fill="#000"/><rect x="74" y="0" width="5" height="38" fill="#000"/><rect x="82" y="0" width="2" height="38" fill="#000"/><rect x="88" y="0" width="3" height="38" fill="#000"/><rect x="94" y="0" width="4" height="38" fill="#000"/><rect x="102" y="0" width="2" height="38" fill="#000"/><rect x="108" y="0" width="4" height="38" fill="#000"/><rect x="116" y="0" width="3" height="38" fill="#000"/><rect x="122" y="0" width="2" height="38" fill="#000"/><rect x="128" y="0" width="5" height="38" fill="#000"/><rect x="136" y="0" width="2" height="38" fill="#000"/><rect x="142" y="0" width="4" height="38" fill="#000"/><rect x="150" y="0" width="3" height="38" fill="#000"/>
+								</svg>
+							</div>
+							<div id="prev-name" style="font-size:14px;font-weight:600;margin-top:4px;">Коваленко Олександр</div>
+							<div id="prev-phone" style="font-size:11px;margin-top:2px;">Тел: +380 97 123 45 67</div>
+							<div id="prev-address" style="font-size:11px;margin-top:2px;color:#222;">м. Київ, Відділення №42 (до 30 кг)</div>
+							<div id="prev-order" style="margin-top:6px;"><span style="display:inline-block;padding:1px 5px;border:1px solid #333;border-radius:3px;font-size:11px;font-weight:bold;">Замовлення №1054</span></div>
+							<div id="prev-total" style="font-size:11px;font-weight:bold;margin-top:4px;">Сума: 1 450,00 ₴</div>
+							<div id="prev-items" style="margin-top:6px;border-top:1px solid #eee;padding-top:4px;font-size:10px;text-align:left;">
+								<div style="display:flex;justify-content:space-between;"><span>1. Чайник керамічний</span><span>1 шт.</span></div>
+								<div style="display:flex;justify-content:space-between;"><span>2. Чашка фарфорова</span><span>2 шт.</span></div>
+							</div>
+							<div id="prev-note" style="margin-top:8px;font-size:10px;font-style:italic;color:#555;">Дякуємо за покупку!</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
 		<section class="nvx-card">
-			<h2><?php esc_html_e( '6. Моніторинг статусів ТТН', 'wc-nova-express' ); ?></h2>
+			<h2><?php esc_html_e( '7. Моніторинг статусів ТТН', 'wc-nova-express' ); ?></h2>
 			<p class="nvx-card__hint"><?php esc_html_e( 'Плагін періодично опитує Nova Poshta API для всіх ТТН, статус яких ще не «Отримано».', 'wc-nova-express' ); ?></p>
 
 			<label class="nvx-field nvx-field--inline">
@@ -322,7 +446,7 @@ defined( 'ABSPATH' ) || exit;
 		</section>
 
 		<section class="nvx-card">
-			<h2><?php esc_html_e( '7. Дані плагіна при видаленні', 'wc-nova-express' ); ?></h2>
+			<h2><?php esc_html_e( '8. Дані плагіна при видаленні', 'wc-nova-express' ); ?></h2>
 			<p class="nvx-card__hint">
 				<?php esc_html_e( 'Стосується лише повного видалення плагіна через "Плагіни → Видалити" в адмінці WordPress (не звичайної деактивації).', 'wc-nova-express' ); ?>
 			</p>
@@ -338,7 +462,7 @@ defined( 'ABSPATH' ) || exit;
 
 
 		<section class="nvx-card" id="nvx-update-card">
-			<h2><?php esc_html_e( '8. Оновлення плагіна', 'wc-nova-express' ); ?></h2>
+			<h2><?php esc_html_e( '9. Оновлення плагіна', 'wc-nova-express' ); ?></h2>
 			<p class="nvx-card__hint">
 				<?php esc_html_e( 'Перевірка нових релізів напряму з репозиторію GitHub без затримок кешу WordPress.', 'wc-nova-express' ); ?>
 			</p>

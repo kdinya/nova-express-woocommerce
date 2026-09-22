@@ -138,10 +138,13 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
   - Updates order meta and triggers automation events when status changes occur.
 
 ### 2.7. Admin Experience & Customization (`includes/Admin/`)
-- **`Settings.php`:** General settings, sender defaults, API key, and dimensions fallback.
+- **`Settings.php`:** General settings, sender defaults, API key, dimensions fallback, and label template preferences (`label_width`, `label_height`, `label_margin_top`, `label_margin_sides`, `label_font_size`, `label_align`, `label_show_barcode`, `label_show_ttn`, `label_show_recipient_name`, `label_show_recipient_phone`, `label_show_recipient_address`, `label_show_order_number`, `label_show_order_items`, `label_show_order_total`, `label_custom_note`).
 - **`OrderMetaBox.php` & `CreateWaybillPage.php`:** Full-featured creation UI with responsive grid layout for narrow screens and mobile devices.
 - **`OrderListColumn.php`:** Displays TTN badge, carrier status code, and quick print links directly in WooCommerce Orders list.
-- **`LabelPrint.php`:** Supports direct printing of 100×100mm thermo-stickers and standard A4 layouts.
+- **`LabelPrint.php` & TTN Printing:**
+  - Provides format selection modal via `NvxCore.openPrintModal` (Custom HTML template, Nova Poshta 100×100 Zebra PDF, Nova Poshta 85×85 PDF, and Nova Poshta Express Waybill A4 PDF).
+  - Handles server-side secure redirects to Nova Poshta PDF print endpoints (`printMarking100x100`, `printMarking85x85`, `printDocument`) without exposing API keys in client JavaScript.
+  - Dynamically renders customizable HTML labels matching settings dimensions with pure-PHP Code 128 SVG barcode generation (`NovaExpress\Helpers\Barcode`).
 - **`Assets.php` & `appearance-page.php`:** Visual theme presets and custom color pickers for admin headers and badges.
 
 ### 2.8. Self-Updater Mechanism (`includes/Updater/GitHubUpdater.php`)

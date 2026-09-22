@@ -2,6 +2,8 @@
 
 namespace NovaExpress\Admin;
 
+use NovaExpress\Helpers\Barcode;
+use NovaExpress\Helpers\Formatting;
 use NovaExpress\Ttn\TtnRepository;
 
 defined( 'ABSPATH' ) || exit;
@@ -49,9 +51,11 @@ class LabelPrint {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$ttn_id = isset( $_GET['ttn_id'] ) ? (int) $_GET['ttn_id'] : 0;
+		$ttn_id   = isset( $_GET['ttn_id'] ) ? (int) $_GET['ttn_id'] : 0;
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$order_id = isset( $_GET['order_id'] ) ? (int) $_GET['order_id'] : 0;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$format   = isset( $_GET['format'] ) ? sanitize_key( wp_unslash( $_GET['format'] ) ) : 'custom';
 
 		$row = $ttn_id ? $this->repository->find_by_id( $ttn_id ) : null;
 		if ( ! $row && $order_id ) {
@@ -61,22 +65,138 @@ class LabelPrint {
 			wp_die( esc_html__( 'ТТН не знайдено.', 'wc-nova-express' ) );
 		}
 
-		$order = wc_get_order( (int) $row['order_id'] );
+		// Якщо обрано стандартний формат Нової Пошти — редіректимо на захищений PDF-друк НП
+		if ( in_array( $format, array( 'np_100x100', 'np_85x85', 'np_document' ), true ) ) {
+			$this->redirect_np_print( $row, $format );
+			return;
+		}
+
+		$order = ! empty( $row['order_id'] ) ? wc_get_order( (int) $row['order_id'] ) : ( $order_id ? wc_get_order( $order_id ) : null );
+
+		$this->output_html_label( $row, $order );
+	}
+
+	/**
+	 * Перенаправлення на офіційний PDF-друк Нової Пошти через API.
+	 */
+	private function redirect_np_print( array $row, string $format ): void {
+		$api_key = Settings::get_api_key();
+		if ( empty( $api_key ) ) {
+			wp_die( esc_html__( 'API-ключ Нової Пошти не налаштовано в плагіні.', 'wc-nova-express' ) );
+		}
+
+		$ref = ! empty( $row['document_ref'] ) ? (string) $row['document_ref'] : (string) $row['waybill_number'];
+		if ( empty( $ref ) ) {
+			wp_die( esc_html__( 'Ідентифікатор або номер ТТН відсутній.', 'wc-nova-express' ) );
+		}
+
+		$url = '';
+		switch ( $format ) {
+			case 'np_100x100':
+				// Маркування 100х100 (термопринтер Zebra PDF)
+				$url = sprintf(
+					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
+					rawurlencode( $ref ),
+					rawurlencode( $api_key )
+				);
+				break;
+
+			case 'np_85x85':
+				// Маркування 85х85 PDF
+				$url = sprintf(
+					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
+					rawurlencode( $ref ),
+					rawurlencode( $api_key )
+				);
+				break;
+
+			case 'np_document':
+				// Експрес-накладна А4 PDF
+				$url = sprintf(
+					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
+					rawurlencode( $ref ),
+					rawurlencode( $api_key )
+				);
+				break;
+		}
+
+		if ( $url ) {
+			wp_redirect( $url );
+			exit;
+		}
+
+		wp_die( esc_html__( 'Невідомий формат друку.', 'wc-nova-express' ) );
+	}
+
+	/**
+	 * HTML-етикетка з гнучкими налаштуваннями розміру та блоків.
+	 */
+	private function output_html_label( array $row, ?\WC_Order $order ): void {
+		$tpl = Settings::get_label_template();
 
 		$number = (string) $row['waybill_number'];
 		$last   = $order ? ( $order->get_shipping_last_name() ?: $order->get_billing_last_name() ) : '';
 		$first  = $order ? ( $order->get_shipping_first_name() ?: $order->get_billing_first_name() ) : '';
 		$name   = trim( $last . ' ' . $first );
 
-		// Єдиний формат друку — HTML-етикетка 100×150 мм (нижче). Офіційний
-		// PDF-друк Нової Пошти (100×100) прибрано з плагіна за рішенням адміна.
-		$this->output_html_label( $number, $name );
-	}
+		$phone = '';
+		if ( $order ) {
+			$raw_phone = $order->get_shipping_phone() ?: $order->get_billing_phone();
+			$phone     = $raw_phone ? Formatting::normalize_phone( $raw_phone ) : '';
+		}
 
-	/**
-	 * HTML-етикетка рівно 100×150 мм, дані у верхній частині, автодрук.
-	 */
-	private function output_html_label( string $number, string $name ): void {
+		// Адреса / відділення одержувача
+		$address = '';
+		if ( $order ) {
+			$city = (string) $order->get_meta( '_nvx_city_name' );
+			$wh   = (string) ( $order->get_meta( '_nvx_warehouse_label' ) ?: $order->get_meta( '_nvx_warehouse_name' ) );
+			if ( empty( $wh ) ) {
+				$wh = (string) $order->get_shipping_address_1();
+			}
+			$address = trim( $city . ( $city && $wh ? ', ' : '' ) . $wh );
+		}
+
+		// Номер замовлення
+		$order_num = $order ? $order->get_order_number() : '';
+
+		// Товари
+		$items = array();
+		if ( $order && ! empty( $tpl['show_order_items'] ) ) {
+			foreach ( $order->get_items() as $item ) {
+				if ( $item instanceof \WC_Order_Item_Product ) {
+					$items[] = array(
+						'name' => $item->get_name(),
+						'qty'  => $item->get_quantity(),
+					);
+				}
+			}
+		}
+
+		// Оголошена вартість / сума
+		$total_display = '';
+		if ( $order && ! empty( $tpl['show_order_total'] ) ) {
+			$total_display = wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) );
+		}
+
+		// Генерація штрих-коду
+		$barcode_svg = '';
+		if ( ! empty( $tpl['show_barcode'] ) && '' !== $number ) {
+			$barcode_svg = Barcode::code128_svg( $number, 54, 2 );
+		}
+
+		$width        = max( 40, (int) $tpl['width'] );
+		$height       = max( 30, (int) $tpl['height'] );
+		$margin_top   = max( 0, (int) $tpl['margin_top'] );
+		$margin_sides = max( 0, (int) $tpl['margin_sides'] );
+		$align        = 'left' === $tpl['align'] ? 'left' : 'center';
+
+		$font_size_map = array(
+			'small'  => array( 'ttn' => '18pt', 'name' => '12pt', 'text' => '10pt' ),
+			'medium' => array( 'ttn' => '22pt', 'name' => '14pt', 'text' => '11pt' ),
+			'large'  => array( 'ttn' => '26pt', 'name' => '16pt', 'text' => '13pt' ),
+		);
+		$sizes = $font_size_map[ $tpl['font_size'] ] ?? $font_size_map['medium'];
+
 		while ( ob_get_level() > 0 ) {
 			ob_end_clean();
 		}
@@ -90,38 +210,82 @@ class LabelPrint {
 	<title><?php echo esc_html( $number ); ?></title>
 	<style>
 		@page {
-			size: 100mm 150mm;
+			size: <?php echo (int) $width; ?>mm <?php echo (int) $height; ?>mm;
 			margin: 0;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0; }
 		html, body {
-			width: 100mm;
-			height: 150mm;
+			width: <?php echo (int) $width; ?>mm;
+			height: <?php echo (int) $height; ?>mm;
 			margin: 0;
 			padding: 0;
 			background: #fff;
 			color: #000;
 			font-family: Arial, Helvetica, "DejaVu Sans", sans-serif;
 		}
-		/* Аркуш рівно 100×150; контент притиснутий до ВЕРХУ */
 		.sheet {
-			width: 100mm;
-			height: 150mm;
-			padding: 8mm 6mm 0 6mm;
-			text-align: center;
+			width: <?php echo (int) $width; ?>mm;
+			height: <?php echo (int) $height; ?>mm;
+			padding: <?php echo (int) $margin_top; ?>mm <?php echo (int) $margin_sides; ?>mm 0 <?php echo (int) $margin_sides; ?>mm;
+			text-align: <?php echo esc_attr( $align ); ?>;
+		}
+		.ttn-wrap {
+			margin-bottom: 2mm;
 		}
 		.ttn {
-			font-size: 22pt;
+			font-size: <?php echo esc_attr( $sizes['ttn'] ); ?>;
 			font-weight: 700;
 			letter-spacing: 0.04em;
 			line-height: 1.15;
 			word-break: break-all;
 		}
+		.barcode {
+			margin: 1.5mm 0 2mm 0;
+			max-width: 100%;
+		}
+		.barcode svg {
+			display: block;
+			margin: 0 <?php echo 'left' === $align ? '0' : 'auto'; ?>;
+			max-width: 100%;
+			height: 50px;
+		}
 		.name {
 			margin-top: 1.5mm;
-			font-size: 14pt;
-			font-weight: 400;
+			font-size: <?php echo esc_attr( $sizes['name'] ); ?>;
+			font-weight: 600;
 			line-height: 1.25;
+		}
+		.info-row {
+			margin-top: 1.5mm;
+			font-size: <?php echo esc_attr( $sizes['text'] ); ?>;
+			line-height: 1.3;
+			color: #222;
+		}
+		.order-badge {
+			display: inline-block;
+			margin-top: 2mm;
+			padding: 1.5px 5px;
+			border: 1px solid #333;
+			border-radius: 3px;
+			font-weight: 700;
+			font-size: <?php echo esc_attr( $sizes['text'] ); ?>;
+		}
+		.items-table {
+			width: 100%;
+			margin-top: 2.5mm;
+			border-collapse: collapse;
+			font-size: 9.5pt;
+			text-align: left;
+		}
+		.items-table th, .items-table td {
+			padding: 1.5mm 1mm;
+			border-bottom: 1px solid #ddd;
+		}
+		.note {
+			margin-top: 3mm;
+			font-size: 9.5pt;
+			font-style: italic;
+			color: #444;
 		}
 		.no-print {
 			position: fixed;
@@ -132,11 +296,16 @@ class LabelPrint {
 			padding: 8px 16px;
 			font-size: 14px;
 			cursor: pointer;
+			background: #7CB342;
+			color: #fff;
+			border: none;
+			border-radius: 4px;
+			font-weight: bold;
 		}
 		@media print {
 			html, body, .sheet {
-				width: 100mm !important;
-				height: 150mm !important;
+				width: <?php echo (int) $width; ?>mm !important;
+				height: <?php echo (int) $height; ?>mm !important;
 			}
 			.no-print { display: none !important; }
 		}
@@ -144,13 +313,70 @@ class LabelPrint {
 </head>
 <body>
 	<div class="sheet">
-		<div class="ttn"><?php echo esc_html( $number ); ?></div>
-		<div class="name"><?php echo esc_html( $name ); ?></div>
+		<?php if ( ! empty( $tpl['show_ttn'] ) && '' !== $number ) : ?>
+			<div class="ttn-wrap">
+				<div class="ttn"><?php echo esc_html( $number ); ?></div>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $tpl['show_barcode'] ) && ! empty( $barcode_svg ) ) : ?>
+			<div class="barcode">
+				<?php echo $barcode_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $tpl['show_recipient_name'] ) && '' !== $name ) : ?>
+			<div class="name"><?php echo esc_html( $name ); ?></div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $tpl['show_recipient_phone'] ) && '' !== $phone ) : ?>
+			<div class="info-row"><strong>Тел:</strong> <?php echo esc_html( $phone ); ?></div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $tpl['show_recipient_address'] ) && '' !== $address ) : ?>
+			<div class="info-row"><?php echo esc_html( $address ); ?></div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $tpl['show_order_number'] ) && '' !== $order_num ) : ?>
+			<div>
+				<span class="order-badge">Замовлення №<?php echo esc_html( $order_num ); ?></span>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $total_display ) ) : ?>
+			<div class="info-row" style="margin-top:2mm;font-weight:bold;">
+				Сума: <?php echo wp_kses_post( $total_display ); ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $items ) ) : ?>
+			<table class="items-table">
+				<thead>
+					<tr>
+						<th>Товар</th>
+						<th style="width:30px;text-align:right;">К-сть</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $items as $it ) : ?>
+						<tr>
+							<td><?php echo esc_html( $it['name'] ); ?></td>
+							<td style="text-align:right;"><?php echo (int) $it['qty']; ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $tpl['custom_note'] ) ) : ?>
+			<div class="note"><?php echo esc_html( $tpl['custom_note'] ); ?></div>
+		<?php endif; ?>
 	</div>
+
 	<div class="no-print">
 		<button type="button" onclick="window.print()"><?php echo esc_html__( 'Друкувати', 'wc-nova-express' ); ?></button>
 		<p style="margin-top:8px;font-size:12px;color:#666;">
-			<?php echo esc_html__( 'У параметрах друку оберіть розмір паперу 100×150 мм (або «Властивості» → користувацький). Поля = 0.', 'wc-nova-express' ); ?>
+			<?php echo esc_html( sprintf( __( 'Розмір паперу у налаштуваннях друку: %d×%d мм. Поля = 0.', 'wc-nova-express' ), (int) $width, (int) $height ) ); ?>
 		</p>
 	</div>
 	<script>

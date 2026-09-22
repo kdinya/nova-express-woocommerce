@@ -1,3 +1,19 @@
+	$(document).on('click', '.nvx-cw-print-btn', function (e) {
+		e.preventDefault();
+		var $btn = $(this);
+		if (window.NvxCore && window.NvxCore.openPrintModal) {
+			window.NvxCore.openPrintModal({
+				ttnNumber: $btn.data('ttn'),
+				urlCustom: $btn.data('url-custom'),
+				urlNp100:  $btn.data('url-np100'),
+				urlNp85:   $btn.data('url-np85'),
+				urlNpDoc:  $btn.data('url-npdoc')
+			});
+		} else {
+			window.open($btn.data('url-custom'), '_blank');
+		}
+	});
+
 /* Nova Express — сторінка створення ТТН: місця, пошук адреси, відправка форми. */
 jQuery(function ($) {
 	'use strict';
@@ -396,10 +412,19 @@ jQuery(function ($) {
 					var ttnId = res.data.id || 0;
 					var printBase = $app.data('print-base') || '';
 					var customUrl = printBase + '&ttn_id=' + encodeURIComponent(ttnId) + '&order_id=' + encodeURIComponent(orderId) + '&format=custom';
-					var safeTtn = $('<div>').text(String(res.data.waybill_number || '')).html();
+					var np100Url = printBase + '&ttn_id=' + encodeURIComponent(ttnId) + '&order_id=' + encodeURIComponent(orderId) + '&format=np_100x100';
+					var np85Url  = printBase + '&ttn_id=' + encodeURIComponent(ttnId) + '&order_id=' + encodeURIComponent(orderId) + '&format=np_85x85';
+					var npDocUrl = printBase + '&ttn_id=' + encodeURIComponent(ttnId) + '&order_id=' + encodeURIComponent(orderId) + '&format=np_document';
+					var rawTtn = String(res.data.waybill_number || '');
+					var safeTtn = $('<div>').text(rawTtn).html();
 					var html = 'ТТН №<strong class="nvx-cw-success-ttn">' + safeTtn + '</strong> успішно створено.' +
 						'<div class="nvx-cw-print-actions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">' +
-						'<a class="nvx-btn nvx-btn--primary" href="' + customUrl + '" target="_blank" rel="noopener">Друкувати</a>' +
+						'<button type="button" class="nvx-btn nvx-btn--primary nvx-cw-print-btn" ' +
+							'data-ttn="' + safeTtn + '" ' +
+							'data-url-custom="' + customUrl + '" ' +
+							'data-url-np100="' + np100Url + '" ' +
+							'data-url-np85="' + np85Url + '" ' +
+							'data-url-npdoc="' + npDocUrl + '">Друкувати (обрати формат)</button>' +
 						'</div>';
 					showAlert('success', html, true);
 					$status.text('Готово ✓');
