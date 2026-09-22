@@ -213,167 +213,32 @@ class TrackingRunner {
 	 * Явний текст від НП «не знайдено / видалено» — прибираємо локально (підтверджено текстом).
 	 */
 	private function handle_confirmed_missing( array $row, array $status ): void {
-		$this->repository->delete( (int) $row['id'] );
+		$order_id = ! empty( $row['order_id'] ) ? (int) $row['order_id'] : 0;
+		$status_text = __( 'Номер не знайдено в системі Нової Пошти', 'wc-nova-express' );
 
-		$order = wc_get_order( (int) $row['order_id'] );
-		if ( $order instanceof \WC_Order && $order->get_meta( '_nvx_waybill_number' ) === $row['waybill_number'] ) {
-			$order->delete_meta_data( '_nvx_waybill_number' );
-			$order->delete_meta_data( '_nvx_waybill_ref' );
-			$order->add_order_note(
-				sprintf(
-					/* translators: %s: waybill number */
-					__( 'Nova Express Woo: ТТН №%s не знайдено в Новій Пошті (підтверджено відповіддю API) — прибрано з картки замовлення.', 'wc-nova-express' ),
-					$row['waybill_number']
-				)
-			);
-			$order->save();
-		}
-	}
-
-	/**
-	 * Номер був у запиті, але не в відповіді — НЕ видаляємо.
-	 */
-	private function handle_batch_miss( array $row ): void {
-		$this->repository->touch_polled( (int) $row['id'] );
-
-		$details = array();
-		if ( ! empty( $row['tracking_details'] ) ) {
-			$decoded = json_decode( (string) $row['tracking_details'], true );
-			if ( is_array( $decoded ) ) {
-				$details = $decoded;
-			}
-		}
-		$details['poll_miss_count'] = (int) ( $details['poll_miss_count'] ?? 0 ) + 1;
-		$details['last_poll_miss']  = current_time( 'mysql' );
-
-		global $wpdb;
-		$wpdb->update(
-			$this->repository->table_name(),
-			array(
-				'tracking_details' => wp_json_encode( $details, JSON_UNESCAPED_UNICODE ),
-				'updated_at'       => current_time( 'mysql' ),
-			),
-			array( 'id' => (int) $row['id'] ),
-			array( '%s', '%s' ),
-			array( '%d' )
-		);
-	}
-
-	/**
-	 * Лише явний текст про відсутність накладної. Порожній Status/Code — НЕ видалення.
-	 */
-	public static function looks_deleted( array $status ): bool {
-		$text = mb_strtolower( ( $status['Status'] ?? '' ) . ' ' . ( $status['StatusCode'] ?? '' ) );
-
-		foreach ( array( 'не знайдено', 'не існує', 'not found', 'номер не знайдено' ) as $needle ) {
-			if ( false !== mb_strpos( $text, $needle ) ) {
-				return true;
+		if ( $order_id > 0 ) {
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$order->update_meta_data( '_nvx_tracking_status', $status_text );
+				$order->update_meta_data( '_nvx_tracking_code', 'not_found' );
+				$order->add_order_note(
+					sprintf(
+						/* translators: %s: TTN number */
+						__( 'Нова Пошта: ТТН %s не знайдено або видалено в системі перевізника. Історію збережено.', 'wc-nova-express' ),
+						$row['waybill_number']
+					)
+				);
+				$order->save();
 			}
 		}
 
-		return false;
-	}
-
-	/**
-	 * Атомарне блокування. Попередня реалізація (get_transient() → перевірка
-	 * → set_transient()) — класичний TOCTOU race: два паралельні виклики
-	 * (ручний "Перевірити зараз" одночасно з cron, або два cron-воркери на
-	 * балансованому хостингу) можуть обидва пройти перевірку "лока немає"
-	 * до того, як хтось із них встигне його виставити, і обидва почнуть
-	 * опитування одночасно.
-	 *
-	 * Якщо є зовнішній object cache (Redis/Memcached) — wp_cache_add()
-	 * атомарний на рівні самого кеш-сервера. Якщо ні — транзієнти WP
-	 * зберігаються як звичайні рядки в wp_options, де на option_name є
-	 * UNIQUE KEY; тому "INSERT IGNORE" виграє гонку атомарно на рівні БД
-	 * незалежно від PHP-паралелізму.
-	 */
-	private function acquire_lock(): bool {
-		$now = time();
-
-		if ( wp_using_ext_object_cache() ) {
-			// wp_cache_add() повертає false, якщо ключ уже є — атомарно.
-			if ( ! wp_cache_add( self::LOCK_KEY, $now, 'nvx', self::LOCK_TTL ) ) {
-				return false;
-			}
-			return true;
-		}
-
-		global $wpdb;
-
-		$option_name = '_transient_' . self::LOCK_KEY;
-		$timeout_name = '_transient_timeout_' . self::LOCK_KEY;
-
-		// Прибираємо протухлий лок (не атомарно, але це лише прибирання
-		// сміття — сама гонка за новий лок нижче все одно атомарна).
-		$expires = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $timeout_name )
+		$this->repository->update_status(
+			(int) $row['id'],
+			'not_found',
+			$status_text,
+			0,
+			$status
 		);
-		if ( $expires && $expires < $now ) {
-			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name IN (%s, %s)", $option_name, $timeout_name ) );
-			wp_cache_delete( $option_name, 'options' );
-			wp_cache_delete( $timeout_name, 'options' );
-		}
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		$inserted = $wpdb->query(
-			$wpdb->prepare(
-				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
-				$option_name,
-				(string) $now
-			)
-		);
-
-		if ( ! $inserted ) {
-			// UNIQUE KEY на option_name відхилив вставку — лок уже тримає інший процес.
-			return false;
-		}
-
-		$wpdb->query(
-			$wpdb->prepare(
-				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
-				$timeout_name,
-				(string) ( $now + self::LOCK_TTL )
-			)
-		);
-
-		wp_cache_delete( $option_name, 'options' );
-		wp_cache_delete( $timeout_name, 'options' );
-
-		return true;
 	}
 
-	public function is_backed_off(): bool {
-		return (bool) get_transient( self::BACKOFF_KEY );
-	}
-
-	private function record_api_failure(): void {
-		$failures = (int) get_transient( self::BACKOFF_FAILURES_KEY );
-		$failures++;
-		set_transient( self::BACKOFF_FAILURES_KEY, $failures, HOUR_IN_SECONDS );
-
-		if ( $failures >= 2 ) {
-			if ( 2 === $failures ) {
-				$pause_seconds = 5 * MINUTE_IN_SECONDS;
-			} elseif ( 3 === $failures ) {
-				$pause_seconds = 15 * MINUTE_IN_SECONDS;
-			} else {
-				$pause_seconds = 30 * MINUTE_IN_SECONDS;
-			}
-			set_transient( self::BACKOFF_KEY, time() + $pause_seconds, $pause_seconds );
-		}
-	}
-
-	private function reset_api_failures(): void {
-		delete_transient( self::BACKOFF_FAILURES_KEY );
-		delete_transient( self::BACKOFF_KEY );
-	}
-
-	private function release_lock(): void {
-		if ( wp_using_ext_object_cache() ) {
-			wp_cache_delete( self::LOCK_KEY, 'nvx' );
-			return;
-		}
-		delete_transient( self::LOCK_KEY );
-	}
-}
+	

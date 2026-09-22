@@ -48,12 +48,10 @@ class TtnManager {
 			);
 		}
 
-		$service_type = $overrides['service_type'] ?? $order->get_meta( '_nvx_service_type' ) ?: self::SERVICE_WAREHOUSE_WAREHOUSE;
-
-		$payload = $this->build_payload( $order, $service_type, $overrides );
-
 		try {
-			$result = $this->client->create_waybill( $payload );
+			$service_type = $overrides['service_type'] ?? $order->get_meta( '_nvx_service_type' ) ?: self::SERVICE_WAREHOUSE_WAREHOUSE;
+			$payload      = $this->build_payload( $order, $service_type, $overrides );
+			$result       = $this->client->create_waybill( $payload );
 		} catch ( NovaPoshtaApiException $e ) {
 			$is_timeout = false !== stripos( $e->getMessage(), 'timeout' ) || false !== stripos( $e->getMessage(), 'timed out' );
 

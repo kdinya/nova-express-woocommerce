@@ -223,12 +223,18 @@ class GitHubUpdater {
 	}
 
 	private function get_download_package( array $release ): string {
-		// Шукаємо завантажений zip-асет у релізі
-		if ( ! empty( $release['assets'] ) && is_array( $release['assets'] ) ) {
-			foreach ( $release['assets'] as $asset ) {
-				if ( isset( $asset['browser_download_url'] ) && preg_match( '/\.zip$/i', $asset['browser_download_url'] ) ) {
-					return $asset['browser_download_url'];
-				}
+		if ( empty( $release['assets'] ) || ! is_array( $release['assets'] ) ) {
+			return '';
+		}
+
+		foreach ( $release['assets'] as $asset ) {
+			if ( ! empty( $asset['name'] ) && 'wc-nova-express.zip' === $asset['name'] && ! empty( $asset['browser_download_url'] ) ) {
+				return (string) $asset['browser_download_url'];
+			}
+		}
+
+		return '';
+	}
 			}
 		}
 
