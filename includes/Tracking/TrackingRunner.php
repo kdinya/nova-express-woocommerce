@@ -17,6 +17,8 @@ class TrackingRunner {
 	private const BATCH_SIZE = 100;
 	private const LOCK_KEY   = 'nvx_tracking_lock';
 	private const LOCK_TTL   = 300; // 5 хв.
+	private const BACKOFF_KEY          = 'nvx_tracking_backoff';
+	private const BACKOFF_FAILURES_KEY = 'nvx_tracking_consecutive_failures';
 
 	private NovaPoshtaClient $client;
 	private TtnRepository $repository;
@@ -46,6 +48,11 @@ class TrackingRunner {
 			return $stats;
 		}
 
+		if ( ! $force && $this->is_backed_off() ) {
+			$stats['skipped'] = 1;
+			return $stats;
+		}
+
 		if ( ! $force && ! $this->acquire_lock() ) {
 			$stats['skipped'] = 1;
 			return $stats;
@@ -68,7 +75,9 @@ class TrackingRunner {
 
 			try {
 				$results = $this->client->get_statuses( $documents );
+				$this->reset_api_failures();
 			} catch ( \Throwable $e ) {
+				$this->record_api_failure();
 				$stats['errors']++;
 				return $stats;
 			}
@@ -332,6 +341,32 @@ class TrackingRunner {
 		wp_cache_delete( $timeout_name, 'options' );
 
 		return true;
+	}
+
+	public function is_backed_off(): bool {
+		return (bool) get_transient( self::BACKOFF_KEY );
+	}
+
+	private function record_api_failure(): void {
+		$failures = (int) get_transient( self::BACKOFF_FAILURES_KEY );
+		$failures++;
+		set_transient( self::BACKOFF_FAILURES_KEY, $failures, HOUR_IN_SECONDS );
+
+		if ( $failures >= 2 ) {
+			if ( 2 === $failures ) {
+				$pause_seconds = 5 * MINUTE_IN_SECONDS;
+			} elseif ( 3 === $failures ) {
+				$pause_seconds = 15 * MINUTE_IN_SECONDS;
+			} else {
+				$pause_seconds = 30 * MINUTE_IN_SECONDS;
+			}
+			set_transient( self::BACKOFF_KEY, time() + $pause_seconds, $pause_seconds );
+		}
+	}
+
+	private function reset_api_failures(): void {
+		delete_transient( self::BACKOFF_FAILURES_KEY );
+		delete_transient( self::BACKOFF_KEY );
 	}
 
 	private function release_lock(): void {
