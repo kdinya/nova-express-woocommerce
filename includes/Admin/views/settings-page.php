@@ -86,6 +86,17 @@ defined( 'ABSPATH' ) || exit;
 				</div>
 			</div>
 
+			<div class="nvx-progress" id="nvx-sync-progress" style="display:none;">
+				<div class="nvx-progress__info">
+					<span class="nvx-progress__label" id="nvx-sync-progress-label">Синхронізація відділень…</span>
+					<span class="nvx-progress__percent" id="nvx-sync-progress-percent">0%</span>
+				</div>
+				<div class="nvx-progress__bar">
+					<div class="nvx-progress__fill" id="nvx-sync-progress-fill" style="width:0%;"></div>
+				</div>
+				<div class="nvx-progress__sub" id="nvx-sync-progress-sub">0 з 0 відділень</div>
+			</div>
+
 			<div class="nvx-sync-log" id="nvx-sync-log"></div>
 		</section>
 

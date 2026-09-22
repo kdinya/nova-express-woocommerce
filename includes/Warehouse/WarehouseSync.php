@@ -57,7 +57,10 @@ class WarehouseSync {
 		} else {
 			$started_at = (string) get_option( self::OPTION_STARTED_AT, '' );
 			if ( '' !== $started_at ) {
-				$deleted_stale = $this->repository->truncate_stale( $started_at );
+				// Буфер безпеки 60 секунд: закриті відділення мають дату з минулих тижнів/місяців,
+				// а записи, збережені на перших секундах цієї синхронізації, гарантовано не видаляться.
+				$cutoff = wp_date( 'Y-m-d H:i:s', max( 0, (int) strtotime( $started_at ) - 60 ) );
+				$deleted_stale = $this->repository->truncate_stale( $cutoff );
 				delete_option( self::OPTION_STARTED_AT );
 			}
 			delete_option( self::OPTION_LAST_PAGE );
@@ -84,14 +87,20 @@ class WarehouseSync {
 
 		while ( $attempts < $max_attempts ) {
 			try {
+				// Фіксуємо мітку старту синхронізації ДО оновлення записів першої сторінки в БД,
+				// щоб updated_at записів першої пачки гарантовано був >= started_at.
+				// Якщо синхронізація відновлюється зі сторінки > 1 і мітки немає — не створюємо її,
+				// щоб наприкінці випадково не видалити раніше завантажені сторінки 1..(page-1).
+				if ( 1 === $page && ! get_option( self::OPTION_STARTED_AT ) ) {
+					// Зсуваємо на 10 секунд назад як буфер проти мікророзбіжностей годинників PHP та MySQL.
+					$safe_start = wp_date( 'Y-m-d H:i:s', time() - 10 );
+					update_option( self::OPTION_STARTED_AT, $safe_start, false );
+				}
+
 				$rows = $this->client->get_warehouses_page( $page, self::PAGE_SIZE );
 
 				if ( ! empty( $rows ) ) {
 					$this->repository->upsert_batch( $rows );
-				}
-
-				if ( 1 === $page || ! get_option( self::OPTION_STARTED_AT ) ) {
-					update_option( self::OPTION_STARTED_AT, current_time( 'mysql' ), false );
 				}
 
 				$has_more      = count( $rows ) === self::PAGE_SIZE;

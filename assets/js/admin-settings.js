@@ -134,6 +134,46 @@ jQuery(function ($) {
 		return $line;
 	}
 
+	function getApiWhCount() {
+		var raw = $('#nvx-api-wh-count').text() || '';
+		var num = parseInt(raw.replace(/[^\d]/g, ''), 10);
+		return isNaN(num) ? 0 : num;
+	}
+
+	function updateSyncProgress(current, total, statusText) {
+		var $progress = $('#nvx-sync-progress');
+		if (!$progress.length) {
+			return;
+		}
+		$progress.show();
+
+		var totalTarget = total || getApiWhCount();
+		var pct = 0;
+		if (totalTarget > 0) {
+			pct = Math.min(100, Math.round((current / totalTarget) * 100));
+		}
+		var remaining = (totalTarget > current) ? (totalTarget - current) : 0;
+
+		$('#nvx-sync-progress-fill').css('width', pct + '%');
+		$('#nvx-sync-progress-percent').text(pct + '%');
+
+		if (statusText) {
+			$('#nvx-sync-progress-label').text(statusText);
+		}
+
+		var subText = current.toLocaleString('uk-UA');
+		if (totalTarget > 0) {
+			subText += ' з ' + totalTarget.toLocaleString('uk-UA');
+			if (remaining > 0 && pct < 100) {
+				subText += ' (залишилось ~' + remaining.toLocaleString('uk-UA') + ')';
+			}
+		} else {
+			subText += ' у базі магазину';
+		}
+		$('#nvx-sync-progress-sub').text(subText);
+	}
+
+
 	var syncSavedPage = parseInt(NVX_ADMIN.syncSavedPage, 10) || 0;
 	var syncResumePage = parseInt(NVX_ADMIN.syncResumePage, 10) || 1;
 
@@ -180,6 +220,9 @@ jQuery(function ($) {
 		updateSyncButtonUI();
 		NvxCore.post('nvx_reset_warehouses_sync', {});
 		$('#nvx-sync-log').empty();
+		$('#nvx-sync-progress').hide();
+		$('#nvx-sync-progress-fill').css('width', '0%');
+		$('#nvx-sync-progress-percent').text('0%');
 		logLine('info', 'Прогрес скинуто. Натисніть «Синхронізувати базу відділень» для завантаження з 1 сторінки.');
 	});
 
@@ -194,11 +237,14 @@ jQuery(function ($) {
 		var retryCount = 0;
 		var $loading;
 
+		var currentInDb = parseInt(($('#nvx-wh-count').text() || '').replace(/[^\d]/g, ''), 10) || 0;
 		if (startPage > 1) {
 			logLine('info', 'Відновлення синхронізації зі сторінки ' + startPage + ' (раніше збережено сторінку ' + syncSavedPage + ')…');
 			$loading = logLine('info', 'Завантаження відділень… сторінка ' + startPage + '…');
+			updateSyncProgress(currentInDb, getApiWhCount(), 'Відновлення синхронізації (стор. ' + startPage + ')…');
 		} else {
 			$loading = logLine('info', 'Завантаження відділень… сторінка 1 (це може зайняти кілька хвилин)');
+			updateSyncProgress(0, getApiWhCount(), 'Початок синхронізації…');
 		}
 
 		function syncPage(page) {
@@ -212,6 +258,7 @@ jQuery(function ($) {
 							retryCount++;
 							var wait = retryCount * 6;
 							$loading.text('Пауза ' + wait + 'с і повтор стор. ' + page + ' (спроба ' + retryCount + '/6): ' + msg);
+						$('#nvx-sync-progress-label').text('Пауза ' + wait + 'с (спроба ' + retryCount + '/6)…');
 							setTimeout(function () { syncPage(page); }, wait * 1000);
 							return;
 						}
@@ -222,6 +269,7 @@ jQuery(function ($) {
 						NVX_ADMIN.syncSavedPage = syncSavedPage;
 
 						$loading.remove();
+						$('#nvx-sync-progress-label').text('Синхронізацію призупинено');
 						logLine('error', 'Синхронізацію призупинено: ' + msg);
 						logLine('info', 'Ви можете продовжити — наступний запуск продовжить зі сторінки ' + syncResumePage + '.');
 						updateSyncButtonUI();
@@ -238,6 +286,7 @@ jQuery(function ($) {
 
 					$('#nvx-wh-count').text(d.total_in_db.toLocaleString('uk-UA'));
 					$loading.text('Завантаження відділень… сторінка ' + d.page + ' · у базі: ' + d.total_in_db.toLocaleString('uk-UA'));
+					updateSyncProgress(d.total_in_db, getApiWhCount(), 'Завантаження відділень… сторінка ' + d.page);
 
 					if (d.has_more) {
 						setTimeout(function () { syncPage(d.page + 1); }, 300);
@@ -247,6 +296,7 @@ jQuery(function ($) {
 						NVX_ADMIN.syncSavedPage = 0;
 						NVX_ADMIN.syncResumePage = 1;
 						$loading.remove();
+						updateSyncProgress(d.total_in_db, d.total_in_db, 'Синхронізацію успішно завершено!');
 						var successMsg = 'База даних відділень успішно оновлена (' + d.total_in_db.toLocaleString('uk-UA') + ' у базі).';
 						if (d.deleted_stale && d.deleted_stale > 0) {
 							successMsg += ' Закритих відділень видалено: ' + d.deleted_stale.toLocaleString('uk-UA') + '.';
@@ -271,7 +321,8 @@ jQuery(function ($) {
 					NVX_ADMIN.syncSavedPage = syncSavedPage;
 
 					$loading.remove();
-					logLine('error', 'Синхронізацію призупинено: ' + msg);
+					$('#nvx-sync-progress-label').text('Синхронізацію призупинено');
+						logLine('error', 'Синхронізацію призупинено: ' + msg);
 					logLine('info', 'Ви можете продовжити — наступний запуск продовжить зі сторінки ' + syncResumePage + '.');
 					updateSyncButtonUI();
 					$btn.prop('disabled', false);
