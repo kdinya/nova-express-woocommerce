@@ -176,11 +176,7 @@ class TtnManager {
 			throw new NovaPoshtaApiException( __( 'ТТН не належить цьому замовленню.', 'wc-nova-express' ) );
 		}
 
-		$carrier_code = (string) ( $row['carrier_status_code'] ?? '' );
-		$is_dispatched = ! empty( $row['is_delivered'] ) || ( '' !== $carrier_code && ! in_array( $carrier_code, array( '1', '2', '3', 'ttn_created', 'ttn_added' ), true ) );
-		if ( $is_dispatched && ! $force_local ) {
-			throw new NovaPoshtaApiException( __( 'Неможливо видалити ТТН: відправлення вже передано перевізнику або знаходиться в дорозі.', 'wc-nova-express' ) );
-		}
+
 
 		// Та сама логіка, що й cron: подія automation + без небезпечного auto-delete.
 		$runner = new \NovaExpress\Tracking\TrackingRunner(
