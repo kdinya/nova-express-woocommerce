@@ -87,6 +87,7 @@ jQuery(function ($) {
 					$el.hide();
 				}
 				$el.find('input, select').addBack('input, select').prop('required', false).removeAttr('required').removeClass('validate-required');
+				$row.removeClass('validate-required');
 				$el.find('label .required, label abbr.required').hide();
 			});
 		} else {
@@ -97,6 +98,24 @@ jQuery(function ($) {
 					$row.show();
 				} else {
 					$el.show();
+				}
+			});
+
+			// Для інших служб (зокрема Укрпошти) обов'язково робимо місто та індекс обов'язковими
+			var requiredSelectors = '#billing_city, #shipping_city, #billing_postcode, #shipping_postcode';
+			$(requiredSelectors).each(function () {
+				var $input = $(this);
+				$input.prop('required', true).attr('required', 'required');
+				var $row = $input.closest('.form-row, p.form-row, .wd-form-field');
+				$row.addClass('validate-required');
+				var $label = $row.find('label');
+				if ($label.length) {
+					var $req = $label.find('.required, abbr.required');
+					if ($req.length) {
+						$req.show();
+					} else {
+						$label.append(' <abbr class="required" title="обов’язково">*</abbr>');
+					}
 				}
 			});
 		}

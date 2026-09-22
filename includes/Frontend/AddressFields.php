@@ -300,12 +300,24 @@ class AddressFields {
 	 */
 	public function make_wc_address_optional( array $fields ): array {
 		if ( ! $this->cart_has_nova_express() ) {
+			// Якщо обрано іншу доставку (наприклад, Укрпошта) — обов'язково вимагаємо місто та індекс
+			foreach ( array( 'billing', 'shipping' ) as $group ) {
+				foreach ( array( 'city', 'postcode' ) as $key ) {
+					$field_name = $group . '_' . $key;
+					if ( isset( $fields[ $group ][ $field_name ] ) ) {
+						$fields[ $group ][ $field_name ]['required'] = true;
+					}
+				}
+			}
 			return $fields;
 		}
+
+		// Для Нової Пошти стандартні поля адреси, міста та індексу робимо необов'язковими (приховані)
 		foreach ( array( 'billing', 'shipping' ) as $group ) {
-			foreach ( array( 'state', 'city', 'postcode' ) as $key ) {
-				if ( isset( $fields[ $group ][ $group . '_' . $key ] ) ) {
-					$fields[ $group ][ $group . '_' . $key ]['required'] = false;
+			foreach ( array( 'state', 'city', 'postcode', 'address_1', 'address_2' ) as $key ) {
+				$field_name = $group . '_' . $key;
+				if ( isset( $fields[ $group ][ $field_name ] ) ) {
+					$fields[ $group ][ $field_name ]['required'] = false;
 				}
 			}
 		}
