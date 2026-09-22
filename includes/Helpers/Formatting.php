@@ -207,15 +207,18 @@ class Formatting {
 			return '';
 		}
 
-		$ts = strtotime( $time_str );
-		if ( false === $ts ) {
-			$dt = date_create_from_format( 'd.m.Y H:i:s', $time_str );
-			if ( ! $dt ) {
-				$dt = date_create_from_format( 'd.m.Y H:i', $time_str );
-			}
-			$ts = $dt ? $dt->getTimestamp() : false;
+		$time_str = trim( $time_str );
+
+		// Дата та час від Нової Пошти (DateScan, RecipientDateTime, TrackingUpdateDate)
+		// вже передаються у часовому поясі України — форматуємо без повторного зсуву.
+		if ( preg_match( '/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})(?::\d{2})?/', $time_str, $m ) ) {
+			return $m[3] . '.' . $m[2] . '.' . $m[1] . ' ' . $m[4];
+		}
+		if ( preg_match( '/^(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})(?::\d{2})?/', $time_str, $m ) ) {
+			return $m[1] . ' ' . $m[2];
 		}
 
+		$ts = strtotime( $time_str );
 		if ( false !== $ts && $ts > 0 ) {
 			return wp_date( 'd.m.Y H:i', $ts );
 		}

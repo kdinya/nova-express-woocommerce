@@ -51,9 +51,15 @@ $has_active_ttn = ! empty( $waybills );
 					<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--sm nvx-waybill-card__refresh">
 						<?php esc_html_e( 'Оновити', 'wc-nova-express' ); ?>
 					</button>
-					<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--sm nvx-waybill-card__delete">
-						<?php esc_html_e( 'Видалити', 'wc-nova-express' ); ?>
-					</button>
+					<?php
+					$carrier_code = (string) ( $w['carrier_status_code'] ?? '' );
+					$is_dispatched = ! empty( $w['is_delivered'] ) || ( '' !== $carrier_code && ! in_array( $carrier_code, array( '1', '2', '3', 'ttn_created', 'ttn_added' ), true ) );
+					if ( ! $is_dispatched ) :
+					?>
+						<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--sm nvx-waybill-card__delete">
+							<?php esc_html_e( 'Видалити', 'wc-nova-express' ); ?>
+						</button>
+					<?php endif; ?>
 				</div>
 			</div>
 		<?php endforeach; ?>

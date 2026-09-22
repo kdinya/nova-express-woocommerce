@@ -45,6 +45,15 @@ final class FormattingTest extends TestCase {
         $display = Formatting::format_ttn_status_display( $row_with_status );
         $this->assertStringContainsString( '[7]', $display );
         $this->assertStringContainsString( 'Прибув у відділення', $display );
+        $this->assertStringContainsString( '22.09.2026 12:00', $display );
+
+        $row_with_scan = array(
+            'carrier_status_code' => '7',
+            'carrier_status_text' => 'Прибув у відділення',
+            'tracking_details'    => json_encode( array( 'DateScan' => '21.09.2026 14:30:00' ) ),
+        );
+        $display_scan = Formatting::format_ttn_status_display( $row_with_scan );
+        $this->assertSame( '[7] Прибув у відділення (21.09.2026 14:30)', $display_scan );
     }
 
     public function testApplyOrderTemplatePlaceholders(): void {

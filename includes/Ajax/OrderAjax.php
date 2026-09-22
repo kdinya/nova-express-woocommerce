@@ -187,10 +187,13 @@ class OrderAjax {
 			if ( $fresh ) {
 				$last_time = ! empty( $fresh['last_polled_at'] ) ? $fresh['last_polled_at'] : ( $fresh['updated_at'] ?? '' );
 				$time_fmt  = $last_time ? mysql2date( 'd.m.Y H:i', $last_time, false ) : '';
+				$c_code = (string) ( $fresh['carrier_status_code'] ?? '' );
+				$is_dispatched = ! empty( $fresh['is_delivered'] ) || ( '' !== $c_code && ! in_array( $c_code, array( '1', '2', '3', 'ttn_created', 'ttn_added' ), true ) );
 				$result['waybill'] = array(
-					'carrier_status_code'   => (string) ( $fresh['carrier_status_code'] ?? '' ),
+					'carrier_status_code'   => $c_code,
 					'carrier_status_text'   => (string) ( $fresh['carrier_status_text'] ?? '' ),
 					'is_delivered'          => ! empty( $fresh['is_delivered'] ),
+					'is_dispatched'         => $is_dispatched,
 					'last_updated_formatted'=> $time_fmt,
 					'status_display'         => \NovaExpress\Helpers\Formatting::format_ttn_status_display( $fresh ),
 				);
