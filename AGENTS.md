@@ -67,10 +67,6 @@
    - **Never render unstyled default browser controls** (e.g., standard browser-blue checkboxes, default radio buttons, or mismatched inputs).
    - All admin settings, checkboxes, cards, badges, and checkout inputs must use the custom `.nvx-*` design classes with brand colors. Checkboxes must use custom SVG checkmarks and hover/focus rings matching `#7CB342`.
 
-10. **Form Mask & UX Standards (Smooth Deletion & Clear Error Feedback):**
-   - Any input mask (such as phone formatting `+38 (0XX) XXX-XX-XX`) must strictly allow **smooth backspacing and full field clearing**. It must never get stuck on formatting separators (hyphens, parentheses, spaces) or trap the cursor.
-   - Form controls must show **clear inline error messages** and highlight invalid fields with `.nvx-*-invalid` / `.nvx-*-error` styles when a user enters an incomplete or malformed value.
-
 ---
 
 ## 2. Complete Plugin Architecture & Technical Specifications
@@ -171,4 +167,3 @@ Before submitting or releasing code:
 10. [ ] **Checkout universality:** If checkout code changed, does it work in both classic checkout and Checkout Blocks without breaking themes/plugins?
 11. [ ] **Schema migration:** If tables changed, did `Installer` handle existing installations via versioned migration?
 12. [ ] **Design System:** Do all UI controls match the plugin green theme (`#7CB342`) without unstyled browser-blue checkboxes?
-13. [ ] **Mask & UX:** Can masked inputs be completely cleared with Backspace, and are inline errors visible?
