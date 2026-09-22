@@ -5,6 +5,7 @@
 ---
 
 ## 1. Core Operating Principles for AI Agents
+0. **Ask Before Modifying This Instruction:** If an AI assistant discovers, invents, or identifies any new pattern, requirement, architecture standard, or improvement that should be documented in this file (`AGENTS.md` / **інструкція**), it MUST explicitly ask the repository owner for permission first before modifying this file. Never edit or expand this instruction without explicit user approval.
 
 1. **Critical Thinking on Feedback & Strict Approval Flow:**
    - When the user provides critique, comments, or suggests changes, **never implement them blindly or impulsively**.
