@@ -29,9 +29,9 @@ final class PlacesNormalizationTest extends TestCase {
 
         $this->assertCount( 1, $places );
         $this->assertSame( 0.5, $places[0]['weight'] );
-        $this->assertSame( 10.0, $places[0]['width'] );
-        $this->assertSame( 10.0, $places[0]['height'] );
-        $this->assertSame( 10.0, $places[0]['length'] );
+        $this->assertSame( 10, $places[0]['width'] );
+        $this->assertSame( 10, $places[0]['height'] );
+        $this->assertSame( 10, $places[0]['length'] );
     }
 
     public function testNormalizePlacesCustomInput(): void {
