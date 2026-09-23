@@ -83,51 +83,62 @@ class LabelPrint {
 	 * Для стандартних форматів (100x100 Zebra, 85x85, A4) використовуються виключно
 	 * оригінальні друковані форми Нової Пошти через пряме перенаправлення до сервісу.
 	 */
+	/**
+	 * Формування офіційного URL для друку документа Нової Пошти.
+	 */
+	public static function get_np_print_url( string $format, string $waybill, string $api_key ): string {
+		$target = preg_replace( '/\s+/', '', trim( $waybill ) );
+		if ( empty( $target ) || empty( $api_key ) ) {
+			return '';
+		}
+
+		switch ( $format ) {
+			case 'np_100x100':
+				// Офіційне маркування 100х100 на принтер Zebra PDF
+				return sprintf(
+					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
+					rawurlencode( $target ),
+					rawurlencode( $api_key )
+				);
+
+			case 'np_85x85':
+				// Офіційне маркування 85х85 PDF (тип pdf8)
+				return sprintf(
+					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
+					rawurlencode( $target ),
+					rawurlencode( $api_key )
+				);
+
+			case 'np_document':
+				// Офіційна експрес-накладна А4 PDF
+				return sprintf(
+					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
+					rawurlencode( $target ),
+					rawurlencode( $api_key )
+				);
+
+			default:
+				return '';
+		}
+	}
+
 	private function stream_np_pdf( array $row, string $format ): void {
 		$api_key = Settings::get_api_key();
 		if ( empty( $api_key ) ) {
 			wp_die( esc_html__( 'API-ключ Нової Пошти не налаштовано в плагіні.', 'wc-nova-express' ) );
 		}
 
-		$ref = ! empty( $row['document_ref'] ) ? trim( (string) $row['document_ref'] ) : '';
-		if ( empty( $ref ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $ref ) ) {
-			$ref = trim( (string) $row['waybill_number'] );
+		$waybill = ! empty( $row['waybill_number'] ) ? trim( (string) $row['waybill_number'] ) : '';
+		$waybill = preg_replace( '/\s+/', '', $waybill );
+		if ( empty( $waybill ) && ! empty( $row['document_ref'] ) ) {
+			$waybill = trim( (string) $row['document_ref'] );
 		}
 
-		if ( empty( $ref ) ) {
-			wp_die( esc_html__( 'Ідентифікатор або номер ТТН відсутній.', 'wc-nova-express' ) );
+		if ( empty( $waybill ) ) {
+			wp_die( esc_html__( 'Номер або ідентифікатор ТТН відсутній.', 'wc-nova-express' ) );
 		}
 
-		$url = '';
-		switch ( $format ) {
-			case 'np_100x100':
-				// Офіційне маркування 100х100 на принтер Zebra PDF
-				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
-					rawurlencode( $ref ),
-					rawurlencode( $api_key )
-				);
-				break;
-
-			case 'np_85x85':
-				// Офіційне маркування 85х85 PDF (тип pdf8)
-				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
-					rawurlencode( $ref ),
-					rawurlencode( $api_key )
-				);
-				break;
-
-			case 'np_document':
-				// Офіційна експрес-накладна А4 PDF
-				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
-					rawurlencode( $ref ),
-					rawurlencode( $api_key )
-				);
-				break;
-		}
-
+		$url = self::get_np_print_url( $format, $waybill, $api_key );
 		if ( empty( $url ) ) {
 			wp_die( esc_html__( 'Невідомий формат друку.', 'wc-nova-express' ) );
 		}

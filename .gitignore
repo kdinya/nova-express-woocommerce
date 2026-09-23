@@ -16,3 +16,4 @@ Thumbs.db
 *.zip
 *.tar.gz
 *.log
+.phpunit.result.cache
