@@ -529,6 +529,7 @@ jQuery(function ($) {
 		$hint.text('Запит до Nova Poshta…');
 
 		var declaredCost = $('#nvx-cw-declared-cost').val() || $('#nvx-cw-declared-cost').attr('placeholder') || '200';
+		var places = collectPlaces();
 		post('nvx_calculate_delivery_price', {
 			sender_id: $('#nvx-cw-sender-id').val() || 'primary',
 			recipient_city_ref: cityRef,
@@ -536,7 +537,8 @@ jQuery(function ($) {
 			cargo_type: $('#nvx-cw-cargo-type').val() || 'Parcel',
 			weight: totalWeight(),
 			declared_cost: declaredCost,
-			seats: $('#nvx-cw-places .nvx-cw-place').length || 1
+			seats: places.length || 1,
+			places: places
 		}).done(function (res) {
 			if (res && res.success) {
 				$val.text(res.data.cost_fmt);

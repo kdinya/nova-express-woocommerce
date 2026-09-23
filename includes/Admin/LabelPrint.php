@@ -77,56 +77,65 @@ class LabelPrint {
 	}
 
 	/**
-	 * Перенаправлення на офіційний PDF-документ Нової Пошти згідно з офіційною документацією.
+	 * Перенаправлення на офіційний документ Нової Пошти згідно з офіційною документацією
+	 * (https://api-portal.novapost.com/methods/ua/api-docs-ua/ua/drukovani-formi).
 	 *
-	 * За документацією (https://api-portal.novapost.com/methods/ua/api-docs-ua/ua/drukovani-formi),
-	 * друк здійснюється безпосередньо з браузера за посиланням з API-ключем.
-	 * Використовуємо надійне клієнтське перенаправлення (meta-refresh + JS + пряма кнопка відкриття),
-	 * оскільки прямий серверний cURL-запит блокується Cloudflare з боку my.novaposhta.ua (повертає SPA HTML).
+	 * Для стандартних форматів (100x100 Zebra, 85x85, A4) використовуються виключно
+	 * оригінальні друковані форми Нової Пошти через пряме перенаправлення до сервісу.
 	 */
-		private function stream_np_pdf( array $row, string $format ): void {
-		$order = ! empty( $row['order_id'] ) ? wc_get_order( (int) $row['order_id'] ) : null;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ! $order && ! empty( $_GET['order_id'] ) ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$order = wc_get_order( (int) $_GET['order_id'] );
-		}
-		$order = ( $order instanceof \WC_Order ) ? $order : null;
-		
-		if ( 'np_document' === $format ) {
-			$this->output_document_a4( $row, $order );
-			return;
+	private function stream_np_pdf( array $row, string $format ): void {
+		$api_key = Settings::get_api_key();
+		if ( empty( $api_key ) ) {
+			wp_die( esc_html__( 'API-ключ Нової Пошти не налаштовано в плагіні.', 'wc-nova-express' ) );
 		}
 
-		$width = 'np_85x85' === $format ? 85 : 100;
-		$height = 'np_85x85' === $format ? 85 : 100;
-		$this->output_standard_marking( $row, $order, $width, $height );
-	}
-
-	/**
-	 * Рендеринг стандартного маркування Нової Пошти (100х100 або 85х85 мм) без залежності від сторонніх кукі/Cloudflare
-	 */
-	private function output_standard_marking( array $row, ?\WC_Order $order, int $width, int $height ): void {
-		$number = (string) $row['waybill_number'];
-		$last   = $order ? ( $order->get_shipping_last_name() ?: $order->get_billing_last_name() ) : '';
-		$first  = $order ? ( $order->get_shipping_first_name() ?: $order->get_billing_first_name() ) : '';
-		$recipient_name = trim( $last . ' ' . $first );
-
-		$phone = '';
-		if ( $order ) {
-			$raw_phone = $order->get_shipping_phone() ?: $order->get_billing_phone();
-			$phone     = $raw_phone ? Formatting::normalize_phone( $raw_phone ) : '';
+		$ref = ! empty( $row['document_ref'] ) ? trim( (string) $row['document_ref'] ) : '';
+		if ( empty( $ref ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $ref ) ) {
+			$ref = trim( (string) $row['waybill_number'] );
 		}
 
-		$city = $order ? (string) $order->get_meta( '_nvx_city_name' ) : '';
-		$wh   = $order ? (string) ( $order->get_meta( '_nvx_warehouse_label' ) ?: $order->get_meta( '_nvx_warehouse_name' ) ) : '';
-		if ( empty( $wh ) && $order ) {
-			$wh = (string) $order->get_shipping_address_1();
+		if ( empty( $ref ) ) {
+			wp_die( esc_html__( 'Ідентифікатор або номер ТТН відсутній.', 'wc-nova-express' ) );
 		}
 
-		$barcode_svg = '' !== $number ? Barcode::code128_svg( $number, 54, 2 ) : '';
-		$order_num = $order ? $order->get_order_number() : '';
-		$total_display = $order ? wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) : '';
+		$url = '';
+		switch ( $format ) {
+			case 'np_100x100':
+				// Офіційне маркування 100х100 на принтер Zebra PDF
+				$url = sprintf(
+					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
+					rawurlencode( $ref ),
+					rawurlencode( $api_key )
+				);
+				break;
+
+			case 'np_85x85':
+				// Офіційне маркування 85х85 PDF (тип pdf8)
+				$url = sprintf(
+					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
+					rawurlencode( $ref ),
+					rawurlencode( $api_key )
+				);
+				break;
+
+			case 'np_document':
+				// Офіційна експрес-накладна А4 PDF
+				$url = sprintf(
+					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
+					rawurlencode( $ref ),
+					rawurlencode( $api_key )
+				);
+				break;
+		}
+
+		if ( empty( $url ) ) {
+			wp_die( esc_html__( 'Невідомий формат друку.', 'wc-nova-express' ) );
+		}
+
+		if ( ! headers_sent() ) {
+			wp_redirect( $url, 302 );
+			exit;
+		}
 
 		while ( ob_get_level() > 0 ) {
 			ob_end_clean();
@@ -138,382 +147,14 @@ class LabelPrint {
 <html lang="uk">
 <head>
 	<meta charset="utf-8" />
-	<title><?php echo esc_html( 'Маркування №' . $number ); ?></title>
-	<style>
-		@page {
-			size: <?php echo (int) $width; ?>mm <?php echo (int) $height; ?>mm;
-			margin: 0;
-		}
-		* { box-sizing: border-box; margin: 0; padding: 0; }
-		html, body {
-			width: <?php echo (int) $width; ?>mm;
-			height: <?php echo (int) $height; ?>mm;
-			background: #fff;
-			color: #000;
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-			-webkit-print-color-adjust: exact;
-			print-color-adjust: exact;
-		}
-		.nvx-np-label {
-			width: 100%;
-			height: 100%;
-			padding: 4mm;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-			border: 1px dashed #bbb;
-		}
-		@media print {
-			.nvx-np-label { border: none; }
-			.nvx-print-bar { display: none !important; }
-		}
-		.nvx-print-bar {
-			position: fixed;
-			bottom: 15px;
-			right: 15px;
-			background: #1c2333;
-			color: #fff;
-			padding: 8px 16px;
-			border-radius: 20px;
-			font-size: 13px;
-			box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-			display: flex;
-			gap: 10px;
-			align-items: center;
-			z-index: 9999;
-		}
-		.nvx-print-btn {
-			background: #e11c1b;
-			color: #fff;
-			border: none;
-			padding: 6px 14px;
-			border-radius: 12px;
-			cursor: pointer;
-			font-weight: 600;
-		}
-		.nvx-np-header {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			border-bottom: 2px solid #000;
-			padding-bottom: 2mm;
-			margin-bottom: 2mm;
-		}
-		.nvx-np-brand {
-			font-size: 13pt;
-			font-weight: 900;
-			color: #e11c1b;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-		}
-		.nvx-np-seats {
-			font-size: 11pt;
-			font-weight: 700;
-			border: 1.5px solid #000;
-			padding: 1px 6px;
-			border-radius: 3px;
-		}
-		.nvx-np-barcode-wrap {
-			text-align: center;
-			margin: 2mm 0;
-		}
-		.nvx-np-barcode-svg svg {
-			max-width: 100%;
-			height: 48px;
-		}
-		.nvx-np-ttn {
-			font-size: 16pt;
-			font-weight: 800;
-			letter-spacing: 1px;
-			margin-top: 1mm;
-		}
-		.nvx-np-section {
-			border-top: 1px solid #000;
-			padding-top: 1.5mm;
-			margin-top: 1.5mm;
-			font-size: 9.5pt;
-			line-height: 1.25;
-		}
-		.nvx-np-section-title {
-			font-size: 7.5pt;
-			text-transform: uppercase;
-			color: #555;
-			font-weight: 700;
-			margin-bottom: 1px;
-		}
-		.nvx-np-recipient {
-			font-size: 11pt;
-			font-weight: 800;
-		}
-		.nvx-np-phone {
-			font-weight: 700;
-		}
-		.nvx-np-address {
-			font-size: 9pt;
-			font-weight: 600;
-			margin-top: 1px;
-		}
-		.nvx-np-meta-grid {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 4px;
-			font-size: 8.5pt;
-			border-top: 1px solid #000;
-			padding-top: 1.5mm;
-			margin-top: 1.5mm;
-		}
-	</style>
-</head>
-<body>
-	<div class="nvx-print-bar">
-		<span>Маркування <?php echo (int) $width; ?>×<?php echo (int) $height; ?> мм</span>
-		<button type="button" class="nvx-print-btn" onclick="window.print();">Друк</button>
-	</div>
-	<div class="nvx-np-label">
-		<div>
-			<div class="nvx-np-header">
-				<div class="nvx-np-brand">НОВА ПОШТА</div>
-				<div class="nvx-np-seats">Місце 1/1</div>
-			</div>
-			<div class="nvx-np-barcode-wrap">
-				<div class="nvx-np-barcode-svg"><?php echo $barcode_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
-				<div class="nvx-np-ttn"><?php echo esc_html( Formatting::format_waybill_number( $number ) ); ?></div>
-			</div>
-			<div class="nvx-np-section">
-				<div class="nvx-np-section-title">Одержувач:</div>
-				<div class="nvx-np-recipient"><?php echo esc_html( $recipient_name ?: 'Клієнт' ); ?></div>
-				<?php if ( $phone ) : ?>
-					<div class="nvx-np-phone"><?php echo esc_html( $phone ); ?></div>
-				<?php endif; ?>
-				<div class="nvx-np-address">
-					<?php echo esc_html( $city ? $city . ', ' . $wh : $wh ); ?>
-				</div>
-			</div>
-		</div>
-
-		<div class="nvx-np-meta-grid">
-			<div>
-				<?php if ( $order_num ) : ?>
-					<div>Замовлення: <strong>#<?php echo esc_html( $order_num ); ?></strong></div>
-				<?php endif; ?>
-				<div>Тип: <strong>Посилка</strong></div>
-			</div>
-			<div style="text-align:right;">
-				<?php if ( $total_display ) : ?>
-					<div>Оголошена: <strong><?php echo wp_strip_all_tags( $total_display ); ?></strong></div>
-				<?php endif; ?>
-			</div>
-		</div>
-	</div>
+	<meta http-equiv="refresh" content="0;url=<?php echo esc_url( $url ); ?>" />
+	<title><?php echo esc_html( 'Друк документа Нової Пошти — №' . $row['waybill_number'] ); ?></title>
 	<script>
-		window.addEventListener('load', function() {
-			window.print();
-		});
+		window.location.replace(<?php echo wp_json_encode( $url ); ?>);
 	</script>
-</body>
-</html>
-		<?php
-		exit;
-	}
-
-	/**
-	 * Рендеринг експрес-накладної Нової Пошти формату А4
-	 */
-	private function output_document_a4( array $row, ?\WC_Order $order ): void {
-		$number = (string) $row['waybill_number'];
-		$last   = $order ? ( $order->get_shipping_last_name() ?: $order->get_billing_last_name() ) : '';
-		$first  = $order ? ( $order->get_shipping_first_name() ?: $order->get_billing_first_name() ) : '';
-		$recipient_name = trim( $last . ' ' . $first );
-
-		$phone = '';
-		if ( $order ) {
-			$raw_phone = $order->get_shipping_phone() ?: $order->get_billing_phone();
-			$phone     = $raw_phone ? Formatting::normalize_phone( $raw_phone ) : '';
-		}
-
-		$city = $order ? (string) $order->get_meta( '_nvx_city_name' ) : '';
-		$wh   = $order ? (string) ( $order->get_meta( '_nvx_warehouse_label' ) ?: $order->get_meta( '_nvx_warehouse_name' ) ) : '';
-		if ( empty( $wh ) && $order ) {
-			$wh = (string) $order->get_shipping_address_1();
-		}
-
-		$barcode_svg = '' !== $number ? Barcode::code128_svg( $number, 58, 2 ) : '';
-		$order_num = $order ? $order->get_order_number() : '';
-		$total_display = $order ? wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) : '';
-
-		while ( ob_get_level() > 0 ) {
-			ob_end_clean();
-		}
-		nocache_headers();
-		header( 'Content-Type: text/html; charset=utf-8' );
-		?>
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-	<meta charset="utf-8" />
-	<title><?php echo esc_html( 'Експрес-накладна А4 №' . $number ); ?></title>
-	<style>
-		@page { size: A4 portrait; margin: 10mm; }
-		* { box-sizing: border-box; margin: 0; padding: 0; }
-		html, body {
-			background: #fff;
-			color: #1c2333;
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-			-webkit-print-color-adjust: exact;
-			print-color-adjust: exact;
-		}
-		.nvx-a4-wrap {
-			max-width: 190mm;
-			margin: 0 auto;
-			padding: 5mm;
-			border: 2px solid #222;
-			border-radius: 4px;
-		}
-		@media print {
-			.nvx-print-bar { display: none !important; }
-			.nvx-a4-wrap { border: 2px solid #222; }
-		}
-		.nvx-print-bar {
-			position: fixed;
-			bottom: 20px;
-			right: 20px;
-			background: #1c2333;
-			color: #fff;
-			padding: 10px 20px;
-			border-radius: 30px;
-			font-size: 14px;
-			box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-			display: flex;
-			gap: 12px;
-			align-items: center;
-			z-index: 9999;
-		}
-		.nvx-print-btn {
-			background: #e11c1b;
-			color: #fff;
-			border: none;
-			padding: 8px 18px;
-			border-radius: 14px;
-			cursor: pointer;
-			font-weight: 700;
-		}
-		.nvx-a4-head {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			border-bottom: 2px solid #222;
-			padding-bottom: 4mm;
-			margin-bottom: 4mm;
-		}
-		.nvx-a4-logo {
-			font-size: 22pt;
-			font-weight: 900;
-			color: #e11c1b;
-			letter-spacing: 0.5px;
-		}
-		.nvx-a4-title {
-			font-size: 14pt;
-			font-weight: 800;
-			text-transform: uppercase;
-		}
-		.nvx-a4-grid {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 6mm;
-			margin-bottom: 5mm;
-		}
-		.nvx-a4-box {
-			border: 1px solid #777;
-			padding: 4mm;
-			border-radius: 4px;
-		}
-		.nvx-a4-box h4 {
-			font-size: 10.5pt;
-			text-transform: uppercase;
-			border-bottom: 1px solid #ccc;
-			padding-bottom: 2mm;
-			margin-bottom: 2mm;
-			color: #333;
-		}
-		.nvx-a4-table {
-			width: 100%;
-			border-collapse: collapse;
-			margin-top: 4mm;
-		}
-		.nvx-a4-table th, .nvx-a4-table td {
-			border: 1px solid #888;
-			padding: 6px 10px;
-			font-size: 10pt;
-			text-align: left;
-		}
-		.nvx-a4-table th { background: #f1f3f5; font-weight: 700; }
-	</style>
 </head>
-<body>
-	<div class="nvx-print-bar">
-		<span>Експрес-накладна А4</span>
-		<button type="button" class="nvx-print-btn" onclick="window.print();">Роздрукувати</button>
-	</div>
-	<div class="nvx-a4-wrap">
-		<div class="nvx-a4-head">
-			<div>
-				<div class="nvx-a4-logo">НОВА ПОШТА</div>
-				<div class="nvx-a4-title">Експрес-накладна</div>
-			</div>
-			<div style="text-align:right;">
-				<div style="margin-bottom:4px;"><?php echo $barcode_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
-				<div style="font-size:14pt; font-weight:800;"><?php echo esc_html( Formatting::format_waybill_number( $number ) ); ?></div>
-			</div>
-		</div>
-
-		<div class="nvx-a4-grid">
-			<div class="nvx-a4-box">
-				<h4>Відправник</h4>
-				<p style="font-weight:700; font-size:11pt;"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></p>
-				<p style="font-size:9.5pt; margin-top:2px;">Інтернет-магазин</p>
-			</div>
-			<div class="nvx-a4-box">
-				<h4>Одержувач</h4>
-				<p style="font-weight:700; font-size:11pt;"><?php echo esc_html( $recipient_name ?: 'Клієнт' ); ?></p>
-				<?php if ( $phone ) : ?>
-					<p style="font-weight:700; font-size:10pt; margin-top:2px;"><?php echo esc_html( $phone ); ?></p>
-				<?php endif; ?>
-				<p style="font-size:9.5pt; margin-top:2px;"><?php echo esc_html( $city ? $city . ', ' . $wh : $wh ); ?></p>
-			</div>
-		</div>
-
-		<table class="nvx-a4-table">
-			<thead>
-				<tr>
-					<th>Параметр</th>
-					<th>Значення</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>Номер замовлення</td>
-					<td><strong>#<?php echo esc_html( $order_num ); ?></strong></td>
-				</tr>
-				<tr>
-					<td>Кількість місць</td>
-					<td>1</td>
-				</tr>
-				<tr>
-					<td>Оголошена вартість</td>
-					<td><strong><?php echo wp_strip_all_tags( $total_display ); ?></strong></td>
-				</tr>
-				<tr>
-					<td>Опис відправлення</td>
-					<td>Товари інтернет-магазину</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
-	<script>
-		window.addEventListener('load', function() {
-			window.print();
-		});
-	</script>
+<body style="font-family:sans-serif;text-align:center;padding:40px;">
+	<p>Відкриваємо офіційний документ Нової Пошти... <a href="<?php echo esc_url( $url ); ?>">Натисніть сюди, якщо перенаправлення не спрацювало автоматично</a>.</p>
 </body>
 </html>
 		<?php

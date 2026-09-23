@@ -240,15 +240,47 @@ class OrderAjax {
 			wp_send_json_error( array( 'message' => __( 'Оберіть місто отримувача та відправника.', 'wc-nova-express' ) ), 400 );
 		}
 
+		$places_raw    = isset( $_POST['places'] ) && is_array( $_POST['places'] ) ? wp_unslash( $_POST['places'] ) : array();
+		$options_seat  = array();
+		$places_weight = 0.0;
+		$vol_weight    = 0.0;
+
+		foreach ( $places_raw as $p ) {
+			if ( ! is_array( $p ) ) {
+				continue;
+			}
+			$w  = min( 120.0, max( 1.0, (float) ( $p['width'] ?? 10 ) ) );
+			$h  = min( 120.0, max( 1.0, (float) ( $p['height'] ?? 10 ) ) );
+			$l  = min( 120.0, max( 1.0, (float) ( $p['length'] ?? 10 ) ) );
+			$wt = max( 0.1, (float) ( $p['weight'] ?? 0.1 ) );
+
+			$places_weight += $wt;
+			$vol_weight    += ( $w * $h * $l ) / 4000.0;
+
+			$options_seat[] = array(
+				'weight'           => (string) round( $wt, 2 ),
+				'volumetricWidth'  => (string) round( $w, 1 ),
+				'volumetricLength' => (string) round( $l, 1 ),
+				'volumetricHeight' => (string) round( $h, 1 ),
+			);
+		}
+
+		$effective_weight = max( $weight, $places_weight, $vol_weight, 0.1 );
+		$seats_count      = ! empty( $options_seat ) ? count( $options_seat ) : max( 1, (int) ( $_POST['seats'] ?? 1 ) );
+
 		$params = array(
 			'CitySender'    => $city_sender,
 			'CityRecipient' => $city_recipient,
-			'Weight'        => (string) round( $weight, 2 ),
+			'Weight'        => (string) round( $effective_weight, 2 ),
 			'ServiceType'   => $service,
 			'Cost'          => (string) round( $cost, 2 ),
 			'CargoType'     => sanitize_text_field( wp_unslash( $_POST['cargo_type'] ?? 'Parcel' ) ),
-			'SeatsAmount'   => (string) max( 1, (int) ( $_POST['seats'] ?? 1 ) ),
+			'SeatsAmount'   => (string) $seats_count,
 		);
+
+		if ( ! empty( $options_seat ) ) {
+			$params['OptionsSeat'] = $options_seat;
+		}
 
 		$result = PriceCalculator::calculate( $client, $params );
 
