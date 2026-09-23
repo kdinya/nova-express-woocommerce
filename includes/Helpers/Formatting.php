@@ -252,4 +252,22 @@ class Formatting {
 
 		return $prefix . $text . $suffix;
 	}
+
+	/**
+	 * Форматування номера ТТН для друку та відображення (розбивка на блоки).
+	 * Для стандартних 14-значних ТТН Нової Пошти: 20 4501 2345 6789.
+	 *
+	 * @param string $number Номер накладної.
+	 * @return string
+	 */
+	public static function format_waybill_number( string $number ): string {
+		$clean = preg_replace( '/\D+/', '', $number );
+		if ( 14 === strlen( $clean ) ) {
+			return substr( $clean, 0, 2 ) . ' ' . substr( $clean, 2, 4 ) . ' ' . substr( $clean, 6, 4 ) . ' ' . substr( $clean, 10, 4 );
+		}
+		if ( strlen( $clean ) > 4 ) {
+			return trim( chunk_split( $clean, 4, ' ' ) );
+		}
+		return $number;
+	}
 }

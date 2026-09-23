@@ -92,4 +92,11 @@ final class FormattingTest extends TestCase {
         $res_unmatched = Formatting::resolve_additional_info( $template, $order, 'Франко' );
         $this->assertSame( '', $res_unmatched );
     }
+
+    public function testFormatWaybillNumber(): void {
+        $this->assertSame( '20 4501 2345 6789', Formatting::format_waybill_number( '20450123456789' ) );
+        $this->assertSame( '20 4501 2345 6789', Formatting::format_waybill_number( '20-4501-2345-6789' ) );
+        $this->assertSame( '1234 5678', Formatting::format_waybill_number( '12345678' ) );
+        $this->assertSame( '123', Formatting::format_waybill_number( '123' ) );
+    }
 }

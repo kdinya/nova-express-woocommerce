@@ -86,6 +86,12 @@ class LabelPrint {
 	 */
 		private function stream_np_pdf( array $row, string $format ): void {
 		$order = ! empty( $row['order_id'] ) ? wc_get_order( (int) $row['order_id'] ) : null;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! $order && ! empty( $_GET['order_id'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$order = wc_get_order( (int) $_GET['order_id'] );
+		}
+		$order = ( $order instanceof \WC_Order ) ? $order : null;
 		
 		if ( 'np_document' === $format ) {
 			$this->output_document_a4( $row, $order );
