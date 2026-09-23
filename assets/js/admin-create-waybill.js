@@ -202,7 +202,7 @@ jQuery(function ($) {
 	$('#nvx-cw-city-search').on('input', function () {
 		var q = $(this).val();
 		clearTimeout(cityTimer);
-		if (q.length < 1) {
+		if (q.length < 3) {
 			$('#nvx-cw-city-suggest').empty();
 			return;
 		}
@@ -233,7 +233,7 @@ jQuery(function ($) {
 					$box.append($item);
 				});
 			});
-		}, 200);
+		}, 350);
 	});
 
 	$(document).on('click', function (e) {
@@ -286,6 +286,9 @@ jQuery(function ($) {
 		});
 	}
 	$('#nvx-cw-warehouse-search').on('focus click', function () {
+		if (this.select) {
+			this.select();
+		}
 		fetchWarehousesSuggest('');
 	});
 	
@@ -301,7 +304,7 @@ jQuery(function ($) {
 		$('#nvx-cw-warehouse-label').val('');
 		warehouseTimer = setTimeout(function () {
 			fetchWarehousesSuggest(q);
-		}, 200);
+		}, 250);
 	});
 
 	// ---- Пошук вулиці (живий API, локально вулиці не кешуються) ----
@@ -556,9 +559,7 @@ jQuery(function ($) {
 		});
 	}
 
-		$('#nvx-cw-cargo-type').on('change', function () {
-		updateDeliveryPrice();
-	});
+	
 	$('#nvx-cw-calc-price').on('click', function (e) {
 		e.preventDefault();
 		updateDeliveryPrice();

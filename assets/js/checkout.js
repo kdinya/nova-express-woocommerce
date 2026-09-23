@@ -206,15 +206,13 @@ jQuery(function ($) {
 		$input.val('');
 		$('#nvx_warehouse_suggest').empty();
 
-		if ($('#nvx_city_ref').val()) {
-			fetchCheckoutWarehouses('');
-		}
+		// Не показуємо список автоматично при перемиканні типу точки — чекаємо кліку в поле
 	});
 
 	$(document).on('input', '#nvx_city_search', function () {
 		var q = $(this).val();
 		clearTimeout(cityTimer);
-		if (q.length < 2) {
+		if (q.length < 3) {
 			$('#nvx_city_suggest').empty();
 			return;
 		}
@@ -237,7 +235,7 @@ jQuery(function ($) {
 					$box.append($item);
 				});
 			});
-		}, 200);
+		}, 350);
 	});
 
 	function selectCheckoutCity($item) {
@@ -256,10 +254,7 @@ jQuery(function ($) {
 		$('#nvx_warehouse_search').val('');
 		$('#nvx_warehouse_suggest').empty();
 
-		var pointType = $('#nvx_point_type').val() || 'warehouse';
-		if ($('#nvx_delivery_type').val() !== 'courier') {
-			fetchCheckoutWarehouses('');
-		}
+		// Не показуємо список автоматично при виборі міста — чекаємо кліку в поле відділення
 	}
 
 	$(document).on('mousedown', '#nvx_city_suggest .nvx-suggest-item', function (e) {
@@ -271,8 +266,11 @@ jQuery(function ($) {
 		selectCheckoutCity($(this));
 	});
 
-	$(document).on('focus', '#nvx_warehouse_search', function () {
-		fetchCheckoutWarehouses($(this).val() || '');
+	$(document).on('focus click', '#nvx_warehouse_search', function () {
+		if (this.select) {
+			this.select();
+		}
+		fetchCheckoutWarehouses('');
 	});
 
 	$(document).on('input', '#nvx_warehouse_search', function () {

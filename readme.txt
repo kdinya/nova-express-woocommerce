@@ -4,7 +4,7 @@ Tags: woocommerce, nova poshta, shipping, ukraine, tracking
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2026.09.14
+Stable tag: 2026.09.15
 License: GPLv2 or later
 
 Доставка Новою Поштою для WooCommerce: без розрахунку вартості на чекауті (лише вибір відділення/адреси),
