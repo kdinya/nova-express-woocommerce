@@ -222,9 +222,11 @@ class OrderAjax {
 
 		$sender_id = sanitize_text_field( wp_unslash( $_POST['sender_id'] ?? 'primary' ) );
 		$profile   = \NovaExpress\Admin\Settings::get_sender_profile( $sender_id ) ?: array();
-		$city_sender = $profile['city_ref'] ?? ( $settings['sender_city_ref'] ?? '' );
+		$city_sender      = $profile['city_ref'] ?? ( $settings['sender_city_ref'] ?? '' );
+		$sender_warehouse = $profile['warehouse_ref'] ?? ( $settings['sender_warehouse_ref'] ?? '' );
 
-		$city_recipient = sanitize_text_field( wp_unslash( $_POST['recipient_city_ref'] ?? '' ) );
+		$city_recipient      = sanitize_text_field( wp_unslash( $_POST['recipient_city_ref'] ?? '' ) );
+		$recipient_warehouse = sanitize_text_field( wp_unslash( $_POST['recipient_warehouse_ref'] ?? '' ) );
 		$service_raw    = sanitize_text_field( wp_unslash( $_POST['service_type'] ?? TtnManager::SERVICE_WAREHOUSE_WAREHOUSE ) );
 
 		try {
@@ -278,6 +280,13 @@ class OrderAjax {
 			'SeatsAmount'   => (string) $seats_count,
 		);
 
+		if ( ! empty( $sender_warehouse ) ) {
+			$params['SenderAddress'] = $sender_warehouse;
+		}
+		if ( ! empty( $recipient_warehouse ) ) {
+			$params['RecipientAddress'] = $recipient_warehouse;
+		}
+
 		if ( ! empty( $options_seat ) ) {
 			$params['OptionsSeat'] = $options_seat;
 		}
@@ -289,11 +298,16 @@ class OrderAjax {
 		}
 
 		$price = (float) $result['cost'];
+		$is_point_transfer = ! empty( $sender_warehouse )
+			&& ! empty( $recipient_warehouse )
+			&& $sender_warehouse === $recipient_warehouse;
+
 		wp_send_json_success(
 			array(
-				'cost'     => $price,
-				'cost_fmt' => number_format_i18n( $price, 2 ) . ' грн',
-				'raw'      => $result['raw'],
+				'cost'              => $price,
+				'cost_fmt'          => number_format_i18n( $price, 2 ) . ' грн',
+				'is_point_transfer' => $is_point_transfer,
+				'raw'               => $result['raw'],
 			)
 		);
 	}

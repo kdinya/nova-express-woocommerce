@@ -536,6 +536,7 @@ jQuery(function ($) {
 		post('nvx_calculate_delivery_price', {
 			sender_id: $('#nvx-cw-sender-id').val() || 'primary',
 			recipient_city_ref: cityRef,
+			recipient_warehouse_ref: $('#nvx-cw-warehouse-ref').val() || '',
 			service_type: $('#nvx-cw-service-type').val() || 'warehouse_warehouse',
 			cargo_type: $('#nvx-cw-cargo-type').val() || 'Parcel',
 			weight: totalWeight(),
@@ -545,7 +546,11 @@ jQuery(function ($) {
 		}).done(function (res) {
 			if (res && res.success) {
 				$val.text(res.data.cost_fmt);
-				$hint.text('Орієнтовна сума за тарифами НП (вага, міста, сервіс)');
+				if (res.data.is_point_transfer) {
+					$hint.text('Послуга «Пункт передачі» (відділення відправлення й отримання збігаються)');
+				} else {
+					$hint.text('Орієнтовна сума за тарифами НП (вага, міста, сервіс)');
+				}
 			} else {
 				$val.text('—');
 				$hint.text((res && res.data && res.data.message) || 'Не вдалося розрахувати');
