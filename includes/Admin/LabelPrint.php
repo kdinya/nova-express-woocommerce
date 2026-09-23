@@ -77,7 +77,12 @@ class LabelPrint {
 	}
 
 	/**
-	 * Отримання та стрімінг офіційного PDF-документа Нової Пошти через серверний запит.
+	 * Перенаправлення на офіційний PDF-документ Нової Пошти згідно з офіційною документацією.
+	 *
+	 * За документацією (https://api-portal.novapost.com/methods/ua/api-docs-ua/ua/drukovani-formi),
+	 * друк здійснюється безпосередньо з браузера за посиланням з API-ключем.
+	 * Використовуємо надійне клієнтське перенаправлення (meta-refresh + JS + пряма кнопка відкриття),
+	 * оскільки прямий серверний cURL-запит блокується Cloudflare з боку my.novaposhta.ua (повертає SPA HTML).
 	 */
 	private function stream_np_pdf( array $row, string $format ): void {
 		$api_key = Settings::get_api_key();
@@ -85,42 +90,47 @@ class LabelPrint {
 			wp_die( esc_html__( 'API-ключ Нової Пошти не налаштовано в плагіні.', 'wc-nova-express' ) );
 		}
 
-		$ref = ! empty( $row['document_ref'] ) ? (string) $row['document_ref'] : (string) $row['waybill_number'];
+		// Відповідно до документації Нової Пошти: параметр orders[] приймає Ref або номер ЕН
+		$ref = ! empty( $row['document_ref'] ) ? trim( (string) $row['document_ref'] ) : '';
+		if ( empty( $ref ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $ref ) ) {
+			$ref = trim( (string) $row['waybill_number'] );
+		}
+
 		if ( empty( $ref ) ) {
 			wp_die( esc_html__( 'Ідентифікатор або номер ТТН відсутній.', 'wc-nova-express' ) );
 		}
 
-		$url = '';
-		$filename_prefix = 'np';
+		$url   = '';
+		$title = 'Друк документа Нової Пошти';
 		switch ( $format ) {
 			case 'np_100x100':
-				// Маркування 100х100 (термопринтер Zebra PDF)
+				// Маркування 100х100 (термопринтер Zebra PDF) згідно з документацією
 				$url = sprintf(
 					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
-				$filename_prefix = 'marking-100x100';
+				$title = 'Маркування Нової Пошти 100×100';
 				break;
 
 			case 'np_85x85':
-				// Маркування 85х85 PDF
+				// Маркування 85х85 PDF (тип pdf8) згідно з документацією
 				$url = sprintf(
 					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
-				$filename_prefix = 'marking-85x85';
+				$title = 'Маркування Нової Пошти 85×85';
 				break;
 
 			case 'np_document':
-				// Експрес-накладна А4 PDF
+				// Експрес-накладна А4 PDF згідно з документацією
 				$url = sprintf(
 					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
-				$filename_prefix = 'document';
+				$title = 'Експрес-накладна Нової Пошти';
 				break;
 		}
 
@@ -128,59 +138,97 @@ class LabelPrint {
 			wp_die( esc_html__( 'Невідомий формат друку.', 'wc-nova-express' ) );
 		}
 
-		$response = wp_remote_get( $url, array(
-			'timeout'    => 25,
-			'sslverify'  => false,
-			'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-			'headers'    => array(
-				'Accept' => 'application/pdf, application/octet-stream, */*',
-			),
-		) );
-
-		if ( is_wp_error( $response ) ) {
-			wp_die(
-				esc_html( sprintf( __( 'Помилка отримання документа від Нової Пошти: %s', 'wc-nova-express' ), $response->get_error_message() ) ),
-				esc_html__( 'Помилка друку', 'wc-nova-express' ),
-				array( 'back_link' => true )
-			);
+		while ( ob_get_level() > 0 ) {
+			ob_end_clean();
 		}
-
-		$status_code  = wp_remote_retrieve_response_code( $response );
-		$body         = wp_remote_retrieve_body( $response );
-		$content_type = wp_remote_retrieve_header( $response, 'content-type' );
-
-		$is_pdf = ( false !== strpos( (string) $content_type, 'pdf' ) ) || ( 0 === strncmp( $body, '%PDF', 4 ) );
-
-		if ( 200 === (int) $status_code && $is_pdf && strlen( $body ) > 50 ) {
-			while ( ob_get_level() > 0 ) {
-				ob_end_clean();
-			}
-			nocache_headers();
-			header( 'Content-Type: application/pdf' );
-			header( 'Content-Disposition: inline; filename="' . esc_attr( $filename_prefix . '-' . $row['waybill_number'] . '.pdf' ) . '"' );
-			header( 'Content-Length: ' . strlen( $body ) );
-			echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			exit;
+		nocache_headers();
+		header( 'Content-Type: text/html; charset=utf-8' );
+		?>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="refresh" content="0;url=<?php echo esc_url( $url ); ?>" />
+	<title><?php echo esc_html( $title . ' — №' . $row['waybill_number'] ); ?></title>
+	<style>
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
+			background: #f4f6f3;
+			color: #2e382d;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			margin: 0;
+			padding: 20px;
+			box-sizing: border-box;
 		}
-
-		$error_msg = esc_html__( 'Не вдалося сформувати PDF від Нової Пошти. Можливі причини: недійсний API-ключ або ТТН ще не внесена до системи друку.', 'wc-nova-express' );
-		if ( false !== strpos( $body, 'errors' ) ) {
-			$json = json_decode( $body, true );
-			if ( ! empty( $json['errors'] ) && is_array( $json['errors'] ) ) {
-				$error_msg .= ' ' . implode( '; ', array_map( 'esc_html', $json['errors'] ) );
-			}
+		.nvx-redirect-card {
+			background: #ffffff;
+			border: 1px solid #dde5d6;
+			border-radius: 8px;
+			padding: 32px 28px;
+			max-width: 480px;
+			width: 100%;
+			text-align: center;
+			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 		}
-
-		wp_die(
-			$error_msg, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			esc_html__( 'Помилка друку', 'wc-nova-express' ),
-			array( 'back_link' => true )
-		);
+		.nvx-redirect-spinner {
+			width: 36px;
+			height: 36px;
+			border: 3px solid #e2ebd8;
+			border-top-color: #7CB342;
+			border-radius: 50%;
+			animation: nvx-spin 0.8s linear infinite;
+			margin: 0 auto 18px;
+		}
+		@keyframes nvx-spin {
+			to { transform: rotate(360deg); }
+		}
+		h2 {
+			font-size: 18px;
+			margin: 0 0 10px;
+			color: #1a2318;
+		}
+		p {
+			font-size: 14px;
+			line-height: 1.5;
+			color: #555;
+			margin: 0 0 20px;
+		}
+		.nvx-btn-redirect {
+			display: inline-block;
+			background: #7CB342;
+			color: #ffffff !important;
+			text-decoration: none;
+			padding: 10px 22px;
+			font-size: 14px;
+			font-weight: 600;
+			border-radius: 6px;
+			transition: background 0.15s ease;
+		}
+		.nvx-btn-redirect:hover {
+			background: #689f38;
+		}
+	</style>
+	<script>
+		window.location.replace(<?php echo wp_json_encode( $url ); ?>);
+	</script>
+</head>
+<body>
+	<div class="nvx-redirect-card">
+		<div class="nvx-redirect-spinner"></div>
+		<h2><?php echo esc_html( $title ); ?></h2>
+		<p><?php echo esc_html( sprintf( __( 'Відкриваємо документ №%s у системі Нової Пошти...', 'wc-nova-express' ), $row['waybill_number'] ) ); ?><br />
+		<small><?php esc_html_e( 'Якщо завантаження не розпочалося автоматично, натисніть кнопку нижче:', 'wc-nova-express' ); ?></small></p>
+		<a class="nvx-btn-redirect" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Відкрити документ PDF', 'wc-nova-express' ); ?></a>
+	</div>
+</body>
+</html>
+		<?php
+		exit;
 	}
 
-	/**
-	 * HTML-етикетка з гнучкими налаштуваннями розміру та блоків.
-	 */
 	private function output_html_label( array $row, ?\WC_Order $order ): void {
 		$tpl = Settings::get_label_template();
 

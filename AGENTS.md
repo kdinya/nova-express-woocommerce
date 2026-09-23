@@ -75,6 +75,11 @@
    - Never remove, rename, refactor, or reformat adjacent UI elements, labels, timestamps, helper texts, CSS classes, or attributes unless specifically asked by the user.
    - Before every commit, inspect `git diff` carefully to verify that no unrelated elements, date/time displays, or secondary UI widgets were accidentally removed or altered.
 
+
+11. **Mandatory Consultation with Official Nova Poshta Documentation:**
+    - Whenever fixing, modifying, or adding functionality related to Nova Poshta API, endpoints, printing, webhooks, or parameters, the AI agent MUST strictly consult the official Nova Poshta documentation (https://api-portal.novapost.com/ and https://developers.novaposhta.ua) before making assumptions or inventing custom endpoints/formats.
+    - Always verify exact paths, query parameters, URL structures, supported formats, and error codes against the official specs.
+
 ---
 
 ## 2. Complete Plugin Architecture & Technical Specifications
@@ -183,3 +188,4 @@ Before submitting or releasing code:
 12. [ ] **Schema migration:** If tables changed, did `Installer` handle existing installations via versioned migration?
 13. [ ] **Design System:** Do all UI controls match the plugin green theme (`#7CB342`) without unstyled browser-blue checkboxes?
 14. [ ] **Zero Accidental Side-Effects (`git diff` review):** Did you inspect the diff line-by-line to ensure no unrelated UI elements, timestamps, labels, or classes were removed or modified?
+15. [ ] **Nova Poshta Documentation Compliance:** Did you verify any Nova Poshta API methods, URLs, or parameters against the official documentation (https://api-portal.novapost.com/)?
