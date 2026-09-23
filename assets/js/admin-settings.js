@@ -464,8 +464,8 @@ jQuery(function ($) {
 
 					$updateBox.empty().append($infoItem);
 				} else {
-					var $successItem = $('<div class="nvx-sync-log__item nvx-sync-log__item--success"></div>');
-					$successItem.append($('<div>').html('✓ У вас встановлена поточна версія (v' + safeCurrent + '). Новіших релізів не виявлено.'));
+					var $successItem = $('<div class="nvx-sync-log__item nvx-sync-log__item--themed"></div>');
+					$successItem.append($('<div>').html('<span style="color:var(--nvx-primary); font-weight:bold;">✓</span> У вас встановлена поточна версія (v' + safeCurrent + '). Новіших релізів не виявлено.'));
 					$successItem.append($('<div style="margin-top:6px; font-size:12px; color:#475569;">Якщо реліз або код цієї версії було перезаписано на GitHub, ви можете оновити/перевстановити її зараз:</div>'));
 
 					var $reinstallActions = $('<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></div>');

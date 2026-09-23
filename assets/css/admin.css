@@ -226,6 +226,7 @@
 	padding:9px 14px; border-radius:9px; font-size:12.5px; border-left:3px solid transparent;
 }
 .nvx-sync-log__item--info{ background:#fff7e6; border-left-color:#e0a838; color:#8a6414; }
+.nvx-sync-log__item--themed{ background:var(--nvx-primary-soft, #f1f8e9); border-left-color:var(--nvx-primary, #7CB342); color:var(--nvx-text, #1c2333); }
 .nvx-sync-log__item--success{ background:var(--nvx-success-soft); border-left-color:var(--nvx-success); color:var(--nvx-success); }
 .nvx-sync-log__item--error{ background:var(--nvx-danger-soft); border-left-color:var(--nvx-danger); color:var(--nvx-danger); }
 
@@ -305,7 +306,7 @@
 /* Статуси замовлень WooCommerce: назва (зелена) + wc-код / стандартна назва, нижче — опис */
 .nvx-status-guide__body{ display:flex; flex-direction:column; gap:3px; min-width:0; line-height:1.35; }
 .nvx-status-guide__headline{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
-.nvx-status-guide__name{ color:var(--nvx-success); font-weight:700; }
+.nvx-status-guide__name{ color:var(--nvx-primary); font-weight:700; }
 .nvx-status-guide__slug{ color:var(--nvx-text-soft); font-size:12px; }
 .nvx-status-guide__desc{ color:var(--nvx-text); }
 

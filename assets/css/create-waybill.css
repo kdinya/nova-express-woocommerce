@@ -12,9 +12,9 @@ body.nvx-standalone *{ box-sizing:border-box; }
 
 .nvx-cw-header{
 	display:flex; align-items:center; gap:16px;
-	background:linear-gradient(135deg, #7CB342 0%, #8BC34A 50%, #689f38 100%);
+	background:var(--nvx-header-gradient, linear-gradient(135deg, #7CB342 0%, #8BC34A 50%, #689f38 100%));
 	color:#fff; padding:22px 26px; border-radius:16px; margin-bottom:20px;
-	box-shadow:0 10px 28px rgba(124,179,66,.28);
+	box-shadow:var(--nvx-header-shadow, 0 10px 28px rgba(124,179,66,.28));
 	flex-wrap:wrap; box-sizing:border-box; max-width:100%;
 }
 .nvx-cw-header__title{ flex:1 1 200px; min-width:0; }
@@ -117,7 +117,7 @@ body.nvx-standalone *{ box-sizing:border-box; }
 
 .nvx-btn--large{
 	padding:14px 32px; font-size:14.5px; border-radius:12px;
-	background:linear-gradient(135deg, #7CB342 0%, #8BC34A 100%);
+	background:var(--nvx-header-gradient, linear-gradient(135deg, #7CB342 0%, #8BC34A 100%));
 	box-shadow:0 6px 18px rgba(91,77,251,.35); flex-shrink:0;
 }
 .nvx-btn--large:hover{ box-shadow:0 8px 22px rgba(91,77,251,.45); transform:translateY(-1px); }

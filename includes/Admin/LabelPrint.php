@@ -177,7 +177,7 @@ class LabelPrint {
 			width: 36px;
 			height: 36px;
 			border: 3px solid #e2ebd8;
-			border-top-color: #7CB342;
+			border-top-color: var(--nvx-primary, #7CB342);
 			border-radius: 50%;
 			animation: nvx-spin 0.8s linear infinite;
 			margin: 0 auto 18px;
@@ -198,7 +198,7 @@ class LabelPrint {
 		}
 		.nvx-btn-redirect {
 			display: inline-block;
-			background: #7CB342;
+			background: var(--nvx-primary, #7CB342);
 			color: #ffffff !important;
 			text-decoration: none;
 			padding: 10px 22px;
@@ -208,7 +208,7 @@ class LabelPrint {
 			transition: background 0.15s ease;
 		}
 		.nvx-btn-redirect:hover {
-			background: #689f38;
+			background: var(--nvx-primary-dark, #689f38);
 		}
 	</style>
 	<script>
@@ -397,7 +397,7 @@ class LabelPrint {
 			padding: 8px 16px;
 			font-size: 14px;
 			cursor: pointer;
-			background: #7CB342;
+			background: var(--nvx-primary, #7CB342);
 			color: #fff;
 			border: none;
 			border-radius: 4px;
