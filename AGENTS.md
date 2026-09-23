@@ -50,6 +50,10 @@
    - When fixing, modifying, or adding functionality related to the Nova Poshta API, endpoints, printing, webhooks, or parameters, consult the official documentation (https://api-portal.novapost.com/ and https://developers.novaposhta.ua) before assuming or inventing endpoints/formats. Verify exact paths, query parameters, formats, and error codes against the official specs.
    - If the official documentation is not reachable from your current environment, say so explicitly in your reply rather than guessing or relying on memory.
 
+10. **Never Commit Under an AI Tool's Own Identity:**
+    - Before making any commit, check the local `git config user.name` / `user.email`. Never leave or introduce a commit author/committer identity that belongs to an AI coding tool itself or a placeholder created for one (e.g. `assistant@lovable.dev`, `support@lovable.dev`, `ai@example.com`, or a personal-looking address set up specifically for an AI's git access) — always commit as the repository owner's own configured identity.
+    - If the environment's git identity is unset, misconfigured, or clearly belongs to an AI tool, stop and ask the repository owner which identity to use rather than committing under whatever is currently set.
+
 ---
 
 ## 2. Plugin Architecture — Quick Map
