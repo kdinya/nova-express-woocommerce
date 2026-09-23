@@ -1,7 +1,11 @@
+/* Nova Express — сторінка створення ТТН: місця, пошук адреси, відправка форми. */
+jQuery(function ($) {
+	'use strict';
+
 	$(document).on('click', '.nvx-cw-print-btn', function (e) {
 		e.preventDefault();
 		var $btn = $(this);
-		if (window.NvxCore && window.NvxCore.openPrintModal) {
+		if (window.NvxCore && typeof window.NvxCore.openPrintModal === 'function') {
 			window.NvxCore.openPrintModal({
 				ttnNumber: $btn.data('ttn'),
 				urlCustom: $btn.data('url-custom'),
@@ -13,10 +17,6 @@
 			window.open($btn.data('url-custom'), '_blank');
 		}
 	});
-
-/* Nova Express — сторінка створення ТТН: місця, пошук адреси, відправка форми. */
-jQuery(function ($) {
-	'use strict';
 
 	var $app = $('.nvx-cw-app');
 	var ajaxUrl = $app.data('ajax-url');

@@ -44,6 +44,9 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 	<?php wp_print_styles( array( 'dashicons' ) ); ?>
 	<link rel="stylesheet" href="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/css/admin.css' ); ?>?v=<?php echo esc_attr( NVX_VERSION ); ?>" />
 	<link rel="stylesheet" href="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/css/create-waybill.css' ); ?>?v=<?php echo esc_attr( NVX_VERSION ); ?>" />
+	<style>
+		<?php echo \NovaExpress\Admin\Assets::generate_dynamic_css( \NovaExpress\Admin\Settings::get_admin_color() ); ?>
+	</style>
 </head>
 <body class="nvx-standalone">
 
@@ -328,6 +331,7 @@ $order_weight = $order_weight > 0 ? max( 0.1, round( $order_weight, 2 ) ) : 0.1;
 </div>
 
 <script src="<?php echo esc_url( includes_url( 'js/jquery/jquery.min.js' ) ); ?>"></script>
+<script src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/js/admin-core.js' ); ?>?v=<?php echo esc_attr( NVX_VERSION ); ?>"></script>
 <script src="<?php echo esc_url( NVX_PLUGIN_URL . 'assets/js/admin-create-waybill.js' ); ?>?v=<?php echo esc_attr( NVX_VERSION ); ?>"></script>
 </body>
 </html>
