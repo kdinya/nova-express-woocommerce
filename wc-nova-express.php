@@ -27,7 +27,7 @@ if ( defined( 'NVX_VERSION' ) ) {
 define( 'NVX_PLUGIN_FILE', __FILE__ );
 define( 'NVX_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NVX_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'NVX_VERSION', '2026.09.13' );
+define( 'NVX_VERSION', '2026.09.14' );
 define( 'NVX_DB_VERSION', '1.8.1' );
 
 /**
