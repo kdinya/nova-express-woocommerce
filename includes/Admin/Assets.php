@@ -91,7 +91,7 @@ class Assets {
 		}
 	}
 
-	private static function generate_dynamic_css( string $hex ): string {
+	public static function generate_dynamic_css( string $hex ): string {
 		$hex = ltrim( $hex, '#' );
 		if ( strlen( $hex ) === 3 ) {
 			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
