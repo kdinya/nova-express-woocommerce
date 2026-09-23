@@ -1198,3 +1198,21 @@ body.woocommerce_page_nvx-express .wrap {
 .nvx-label-preview-box {
 	transition: all 0.2s ease;
 }
+
+/* Grid layout конструктора етикетки */
+.nvx-label-builder-grid {
+	display: grid;
+	grid-template-columns: 1fr 340px;
+	gap: 20px;
+	align-items: start;
+	margin-top: 15px;
+}
+@media (max-width: 1024px) {
+	.nvx-label-builder-grid {
+		grid-template-columns: 1fr;
+	}
+}
+.nvx-sticky-card {
+	position: sticky;
+	top: 40px;
+}

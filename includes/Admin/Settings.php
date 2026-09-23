@@ -20,6 +20,7 @@ class Settings {
 	public function register_save_hook(): void {
 		add_action( 'admin_post_nvx_save_settings', array( $this, 'save' ) );
 		add_action( 'admin_post_nvx_save_appearance', array( $this, 'save_appearance' ) );
+		add_action( 'admin_post_nvx_save_label_template', array( $this, 'save_label_template' ) );
 	}
 
 	public static function get_all(): array {
@@ -363,6 +364,43 @@ class Settings {
 		$settings = self::get_all();
 		$color    = ! empty( $settings['admin_primary_color'] ) ? sanitize_hex_color( $settings['admin_primary_color'] ) : '';
 		return ! empty( $color ) ? $color : '#7CB342';
+	}
+
+	public function save_label_template(): void {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( esc_html__( 'Недостатньо прав.', 'wc-nova-express' ) );
+		}
+
+		check_admin_referer( 'nvx_save_label_template' );
+
+		$settings = self::get_all();
+		$settings['label_width']                = max( 40, min( 300, (int) ( $_POST['label_width'] ?? 100 ) ) );
+		$settings['label_height']               = max( 30, min( 400, (int) ( $_POST['label_height'] ?? 150 ) ) );
+		$settings['label_margin_top']           = max( 0, min( 50, (int) ( $_POST['label_margin_top'] ?? 8 ) ) );
+		$settings['label_margin_sides']         = max( 0, min( 50, (int) ( $_POST['label_margin_sides'] ?? 6 ) ) );
+		$settings['label_font_size']            = in_array( $_POST['label_font_size'] ?? '', array( 'small', 'medium', 'large' ), true ) ? $_POST['label_font_size'] : 'medium';
+		$settings['label_align']                = in_array( $_POST['label_align'] ?? '', array( 'center', 'left' ), true ) ? $_POST['label_align'] : 'center';
+		$settings['label_show_barcode']         = ! empty( $_POST['label_show_barcode'] ) ? 'yes' : 'no';
+		$settings['label_show_ttn']             = ! empty( $_POST['label_show_ttn'] ) ? 'yes' : 'no';
+		$settings['label_show_recipient_name']    = ! empty( $_POST['label_show_recipient_name'] ) ? 'yes' : 'no';
+		$settings['label_show_recipient_phone']   = ! empty( $_POST['label_show_recipient_phone'] ) ? 'yes' : 'no';
+		$settings['label_show_recipient_address'] = ! empty( $_POST['label_show_recipient_address'] ) ? 'yes' : 'no';
+		$settings['label_show_order_number']    = ! empty( $_POST['label_show_order_number'] ) ? 'yes' : 'no';
+		$settings['label_show_order_items']     = ! empty( $_POST['label_show_order_items'] ) ? 'yes' : 'no';
+		$settings['label_show_order_total']     = ! empty( $_POST['label_show_order_total'] ) ? 'yes' : 'no';
+		$settings['label_custom_note']          = sanitize_text_field( wp_unslash( $_POST['label_custom_note'] ?? '' ) );
+
+		update_option( self::OPTION_KEY, $settings );
+
+		wp_safe_redirect( add_query_arg(
+			array(
+				'page'    => 'nvx-express',
+				'tab'     => 'label_template',
+				'updated' => '1',
+			),
+			admin_url( 'admin.php' )
+		) );
+		exit;
 	}
 
 	public function save_appearance(): void {

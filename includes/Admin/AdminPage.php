@@ -44,13 +44,14 @@ class AdminPage {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings';
-		if ( ! in_array( $tab, array( 'settings', 'automation_ttn', 'automation_order', 'monitoring', 'appearance' ), true ) ) {
+		if ( ! in_array( $tab, array( 'settings', 'label_template', 'automation_ttn', 'automation_order', 'monitoring', 'appearance' ), true ) ) {
 			$tab = 'settings';
 		}
 
 		$base = admin_url( 'admin.php?page=nvx-express' );
 		$tabs = array(
 			'settings'          => __( 'Налаштування', 'wc-nova-express' ),
+			'label_template'    => __( 'Шаблон етикетки', 'wc-nova-express' ),
 			'automation_ttn'    => __( 'Автоматизації ТТН', 'wc-nova-express' ),
 			'automation_order'  => __( 'Автоматизації замовлень', 'wc-nova-express' ),
 			'monitoring'        => __( 'Моніторинг ТТН', 'wc-nova-express' ),
@@ -71,6 +72,9 @@ class AdminPage {
 				<?php
 				if ( 'settings' === $tab ) {
 					$this->settings_page->render_content();
+				} elseif ( 'label_template' === $tab ) {
+					$settings = \NovaExpress\Admin\Settings::get_all();
+					include NVX_PLUGIN_DIR . 'includes/Admin/views/label-template-page.php';
 				} elseif ( 'automation_order' === $tab ) {
 					$this->automation_page->render_content( 'order' );
 				} elseif ( 'monitoring' === $tab ) {

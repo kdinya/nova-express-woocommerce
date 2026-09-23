@@ -138,7 +138,7 @@ The plugin is structured around a central singleton IoC container (`includes/Plu
   - Updates order meta and triggers automation events when status changes occur.
 
 ### 2.7. Admin Experience & Customization (`includes/Admin/`)
-- **`Settings.php`:** General settings, sender defaults, API key, dimensions fallback, and label template preferences (`label_width`, `label_height`, `label_margin_top`, `label_margin_sides`, `label_font_size`, `label_align`, `label_show_barcode`, `label_show_ttn`, `label_show_recipient_name`, `label_show_recipient_phone`, `label_show_recipient_address`, `label_show_order_number`, `label_show_order_items`, `label_show_order_total`, `label_custom_note`).
+- **`Settings.php` & `AdminPage.php`:** General settings, sender defaults, API key, dedicated "Шаблон етикетки" tab, and label template preferences (`label_width`, `label_height`, `label_margin_top`, `label_margin_sides`, `label_font_size`, `label_align`, `label_show_barcode`, `label_show_ttn`, `label_show_recipient_name`, `label_show_recipient_phone`, `label_show_recipient_address`, `label_show_order_number`, `label_show_order_items`, `label_show_order_total`, `label_custom_note`).
 - **`OrderMetaBox.php` & `CreateWaybillPage.php`:** Full-featured creation UI with responsive grid layout for narrow screens and mobile devices.
 - **`OrderListColumn.php`:** Displays TTN badge, carrier status code, and quick print links directly in WooCommerce Orders list.
 - **`LabelPrint.php` & TTN Printing:**

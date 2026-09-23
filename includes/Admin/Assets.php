@@ -83,6 +83,12 @@ class Assets {
 		if ( $is_settings_page ) {
 			wp_enqueue_script( 'nvx-admin-settings', NVX_PLUGIN_URL . 'assets/js/admin-settings.js', array( 'nvx-admin-core' ), $settings_ver, true );
 		}
+
+		if ( $is_shell_page && 'label_template' === $tab ) {
+			$template_file = NVX_PLUGIN_DIR . 'assets/js/admin-label-template.js';
+			$template_ver  = file_exists( $template_file ) ? (string) filemtime( $template_file ) : NVX_VERSION;
+			wp_enqueue_script( 'nvx-admin-label-template', NVX_PLUGIN_URL . 'assets/js/admin-label-template.js', array( 'jquery', 'nvx-admin-core' ), $template_ver, true );
+		}
 	}
 
 	private static function generate_dynamic_css( string $hex ): string {

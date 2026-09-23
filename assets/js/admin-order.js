@@ -1,5 +1,11 @@
+/* Nova Express — картка замовлення: створення ТТН у новій вкладці + прив'язка наявної ТТН. */
+jQuery(function ($) {
+	'use strict';
+
 	// Відкриття вибору формату друку ТТН у фірмовому модальному вікні
 	$(document).on('click', '.nvx-waybill-card__print', function (e) {
+		e.preventDefault();
+		e.stopPropagation();
 		var $btn = $(this);
 		var urlCustom = $btn.data('url-custom');
 		var urlNp100  = $btn.data('url-np100');
@@ -7,8 +13,7 @@
 		var urlNpDoc  = $btn.data('url-npdoc');
 		var ttnNum    = $btn.data('ttn');
 
-		if (window.NvxCore && window.NvxCore.openPrintModal && (urlNp100 || urlCustom)) {
-			e.preventDefault();
+		if (window.NvxCore && typeof window.NvxCore.openPrintModal === 'function') {
 			window.NvxCore.openPrintModal({
 				ttnNumber: ttnNum,
 				urlCustom: urlCustom,
@@ -16,12 +21,10 @@
 				urlNp85:   urlNp85,
 				urlNpDoc:  urlNpDoc
 			});
+		} else {
+			window.open(urlCustom || '#', '_blank');
 		}
 	});
-
-/* Nova Express — картка замовлення: створення ТТН у новій вкладці + прив'язка наявної ТТН. */
-jQuery(function ($) {
-	'use strict';
 
 	var $panel = $('.nvx-order-panel');
 	if (!$panel.length) {
