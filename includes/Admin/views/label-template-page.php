@@ -116,38 +116,54 @@ $tmpl = \NovaExpress\Admin\Settings::get_label_template();
 						<p class="description" style="margin-bottom: 12px;">
 							<?php esc_html_e( 'Виберіть поля, які мають друкуватись на етикетці:', 'wc-nova-express' ); ?>
 						</p>
-						<div class="nvx-checkbox-grid" style="display:flex;flex-direction:column;gap:10px;">
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+						<div class="nvx-checkbox-grid" style="display:flex;flex-direction:column;gap:8px;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_ttn" id="nvx_chk_ttn" value="1" <?php checked( true, $tmpl['show_ttn'] ); ?>>
-								<strong><?php esc_html_e( 'Номер ТТН (великим шрифтом)', 'wc-nova-express' ); ?></strong>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Номер ТТН (великим шрифтом)', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_barcode" id="nvx_chk_barcode" value="1" <?php checked( true, $tmpl['show_barcode'] ); ?>>
-								<span><?php esc_html_e( 'Штрих-код ТТН (векторний Code 128 SVG)', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Штрих-код ТТН (векторний Code 128 SVG)', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_recipient_name" id="nvx_chk_name" value="1" <?php checked( true, $tmpl['show_recipient_name'] ); ?>>
-								<span><?php esc_html_e( 'ПІБ одержувача', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'ПІБ одержувача', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_recipient_phone" id="nvx_chk_phone" value="1" <?php checked( true, $tmpl['show_recipient_phone'] ); ?>>
-								<span><?php esc_html_e( 'Номер телефону одержувача', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Номер телефону одержувача', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_recipient_address" id="nvx_chk_address" value="1" <?php checked( true, $tmpl['show_recipient_address'] ); ?>>
-								<span><?php esc_html_e( 'Адреса доставки / номер відділення чи поштомату', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Адреса доставки / номер відділення чи поштомату', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_order_number" id="nvx_chk_order" value="1" <?php checked( true, $tmpl['show_order_number'] ); ?>>
-								<span><?php esc_html_e( 'Номер замовлення в магазині', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Номер замовлення в магазині', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_order_items" id="nvx_chk_items" value="1" <?php checked( true, $tmpl['show_order_items'] ); ?>>
-								<span><?php esc_html_e( 'Склад замовлення (список товарів і кількість)', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Склад замовлення (список товарів і кількість)', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
-							<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+							<label class="nvx-field nvx-field--checkbox">
 								<input type="checkbox" name="label_show_order_total" id="nvx_chk_total" value="1" <?php checked( true, $tmpl['show_order_total'] ); ?>>
-								<span><?php esc_html_e( 'Оголошена вартість / сума до сплати', 'wc-nova-express' ); ?></span>
+								<div class="nvx-checkbox-text">
+									<span class="nvx-checkbox-title"><?php esc_html_e( 'Оголошена вартість / сума до сплати', 'wc-nova-express' ); ?></span>
+								</div>
 							</label>
 						</div>
 					</div>

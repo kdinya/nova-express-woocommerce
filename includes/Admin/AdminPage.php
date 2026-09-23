@@ -51,10 +51,10 @@ class AdminPage {
 		$base = admin_url( 'admin.php?page=nvx-express' );
 		$tabs = array(
 			'settings'          => __( 'Налаштування', 'wc-nova-express' ),
-			'label_template'    => __( 'Шаблон етикетки', 'wc-nova-express' ),
 			'automation_ttn'    => __( 'Автоматизації ТТН', 'wc-nova-express' ),
 			'automation_order'  => __( 'Автоматизації замовлень', 'wc-nova-express' ),
 			'monitoring'        => __( 'Моніторинг ТТН', 'wc-nova-express' ),
+			'label_template'    => __( 'Шаблон етикетки', 'wc-nova-express' ),
 			'appearance'        => __( 'Оформлення', 'wc-nova-express' ),
 		);
 		?>

@@ -96,7 +96,7 @@ class LabelPrint {
 			case 'np_100x100':
 				// Маркування 100х100 (термопринтер Zebra PDF)
 				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printMarking100x100/orders%%5B%%5D/%s/type/pdf/apiKey/%s/zebra',
+					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
@@ -106,7 +106,7 @@ class LabelPrint {
 			case 'np_85x85':
 				// Маркування 85х85 PDF
 				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printMarking85x85/orders%%5B%%5D/%s/type/pdf8/apiKey/%s',
+					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
@@ -116,7 +116,7 @@ class LabelPrint {
 			case 'np_document':
 				// Експрес-накладна А4 PDF
 				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printDocument/orders%%5B%%5D/%s/type/pdf/apiKey/%s',
+					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
