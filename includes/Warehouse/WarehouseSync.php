@@ -89,7 +89,10 @@ class WarehouseSync {
 	 */
 	public function sync_page( int $page ): array {
 		$attempts     = 0;
-		$max_attempts = 5;
+		// 2 спроби максимум: тривалі ретраї всередині одного PHP-запиту тримають PHP-FPM воркер
+		// і MySQL-з'єднання відкритими хвилинами (на шеред-хостингу це вичерпує пул з'єднань).
+		// Повторні спроби з паузами ініціює браузер (admin-settings.js) окремими AJAX-запитами.
+		$max_attempts = 2;
 		$last_error   = null;
 
 		while ( $attempts < $max_attempts ) {
@@ -127,8 +130,6 @@ class WarehouseSync {
 					throw $e;
 				}
 
-				// 2с, 4с, 8с, 16с…
-				usleep( (int) ( pow( 2, $attempts ) * 1000000 ) );
 			}
 		}
 

@@ -78,6 +78,22 @@ class WarehouseAjax {
 			return;
 		}
 
+		// Блокування від паралельних синхронізацій (подвійний клік, дві вкладки адміна):
+		// патерн acquire_lock/release_lock, як у TtnManager (wp_cache_add за наявності
+		// object-cache, інакше option з TTL і самопідчисткою). Одна синхронізація = один
+		// активний прогін, зайві AJAX-запити отримають 409 і не навантажують БД/PHP-FPM.
+		$lock_token = $this->acquire_lock( 'nvx_warehouse_sync_lock', 3 * MINUTE_IN_SECONDS );
+		if ( ! $lock_token ) {
+			wp_send_json_error(
+				array(
+					'message'    => __( 'Синхронізація відділень вже виконується. Дочекайтеся завершення поточного запуску.', 'wc-nova-express' ),
+					'saved_page' => $this->sync->get_saved_page(),
+				),
+				409
+			);
+			return;
+		}
+
 		$posted_api_key = isset( $_REQUEST['api_key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['api_key'] ) ) : '';
 		if ( '' !== $posted_api_key ) {
 			$settings = \NovaExpress\Admin\Settings::get_all();
@@ -100,6 +116,7 @@ class WarehouseAjax {
 			$result               = $this->sync->sync_page( $page );
 			$result['saved_page'] = $this->sync->get_saved_page();
 		} catch ( NovaPoshtaApiException $e ) {
+			$this->release_lock( 'nvx_warehouse_sync_lock', $lock_token );
 			wp_send_json_error(
 				array(
 					'message'    => $e->getMessage(),
@@ -111,6 +128,7 @@ class WarehouseAjax {
 		} catch ( \Throwable $e ) {
 			// Будь-яка інша помилка (БД, мережа, неочікувана відповідь API) —
 			// повертаємо як JSON, а не даємо запиту "тихо" впасти в білий екран.
+			$this->release_lock( 'nvx_warehouse_sync_lock', $lock_token );
 			wp_send_json_error(
 				array(
 					'message' => sprintf(
@@ -124,7 +142,62 @@ class WarehouseAjax {
 			);
 		}
 
+		$this->release_lock( 'nvx_warehouse_sync_lock', $lock_token );
 		wp_send_json_success( $result );
+	}
+
+	/**
+	 * Захоплення блокування синхронізації (шаблон TtnManager::acquire_lock):
+	 * wp_cache_add за наявності зовнішнього object-cache, інакше option з TTL.
+	 */
+	private function acquire_lock( string $key, int $ttl = 180 ): ?string {
+		$token = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : bin2hex( random_bytes( 16 ) );
+
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			$acquired = (bool) wp_cache_add( $key, $token, 'nvx_locks', $ttl );
+			return $acquired ? $token : null;
+		}
+
+		$now     = time();
+		$current = get_option( $key );
+
+		if ( is_array( $current ) && isset( $current['expires'] ) ) {
+			if ( (int) $current['expires'] > $now ) {
+				return null;
+			}
+		} elseif ( is_numeric( $current ) && (int) $current > $now ) {
+			return null;
+		}
+
+		delete_option( $key );
+		$payload = array(
+			'token'   => $token,
+			'expires' => $now + $ttl,
+		);
+
+		$added = (bool) add_option( $key, $payload, '', 'no' );
+		return $added ? $token : null;
+	}
+
+	/**
+	 * Звільнення блокування лише якщо токен збігається з поточним власником.
+	 */
+	private function release_lock( string $key, ?string $token = null ): void {
+		if ( null === $token || '' === $token ) {
+			return;
+		}
+
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			if ( wp_cache_get( $key, 'nvx_locks' ) === $token ) {
+				wp_cache_delete( $key, 'nvx_locks' );
+			}
+			return;
+		}
+
+		$current = get_option( $key );
+		if ( is_array( $current ) && isset( $current['token'] ) && $current['token'] === $token ) {
+			delete_option( $key );
+		}
 	}
 
 	public function search_cities(): void {

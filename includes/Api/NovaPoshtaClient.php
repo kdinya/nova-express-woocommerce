@@ -73,7 +73,9 @@ class NovaPoshtaClient {
 			'Page'     => (string) max( 1, $page ),
 			'Limit'    => (string) max( 1, min( 500, $limit ) ),
 		);
-		$response = $this->call( 'Address', 'getWarehouses', $props, 60 );
+		// 25с достатньо для сторінки на 500 відділень: 60с тримали PHP-воркер і MySQL-з'єднання
+		// занадто довго при зависаннях API (внесок у "Error establishing a database connection").
+		$response = $this->call( 'Address', 'getWarehouses', $props, 25 );
 		return $response['data'] ?? array();
 	}
 

@@ -249,6 +249,7 @@ jQuery(function ($) {
 		var $btn = $(this);
 
 		$btn.prop('disabled', true);
+		$('#nvx-refresh-api-count').prop('disabled', true);
 		$('#nvx-reset-sync-link').hide();
 		$('#nvx-sync-log').empty();
 
@@ -292,6 +293,7 @@ jQuery(function ($) {
 						logLine('info', 'Ви можете продовжити — наступний запуск продовжить зі сторінки ' + syncResumePage + '.');
 						updateSyncButtonUI();
 						$btn.prop('disabled', false);
+					$('#nvx-refresh-api-count').prop('disabled', false);
 						return;
 					}
 
@@ -323,9 +325,19 @@ jQuery(function ($) {
 						$('#nvx-api-wh-count').text(d.total_in_db.toLocaleString('uk-UA'));
 						updateSyncButtonUI();
 						$btn.prop('disabled', false);
+					$('#nvx-refresh-api-count').prop('disabled', false);
 					}
 				})
 				.fail(function (xhr) {
+					if (xhr && xhr.status === 409) {
+						$loading.remove();
+						$('#nvx-sync-progress-label').text('Синхронізація вже виконується');
+						logLine('error', 'Синхронізація відділень вже виконується (у іншій вкладці або запиті). Дочекайтеся її завершення.');
+						updateSyncButtonUI();
+						$btn.prop('disabled', false);
+						$('#nvx-refresh-api-count').prop('disabled', false);
+						return;
+					}
 					var msg = 'Запит не вдався (HTTP ' + (xhr && xhr.status ? xhr.status : '?') + ').';
 					if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
 						msg = xhr.responseJSON.data.message;
@@ -344,6 +356,7 @@ jQuery(function ($) {
 					logLine('info', 'Ви можете продовжити — наступний запуск продовжить зі сторінки ' + syncResumePage + '.');
 					updateSyncButtonUI();
 					$btn.prop('disabled', false);
+					$('#nvx-refresh-api-count').prop('disabled', false);
 				});
 		}
 
@@ -520,12 +533,14 @@ jQuery(function ($) {
 						var msg = (res && res.data && res.data.message) || 'Помилка встановлення оновлення.';
 						$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
 						$btn.prop('disabled', false);
+					$('#nvx-refresh-api-count').prop('disabled', false);
 					}
 				})
 				.fail(function (xhr) {
 					var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || 'Помилка під час встановлення оновлення.';
 					$procMsg.css('color', '#dc3232').text('Помилка: ' + msg);
 					$btn.prop('disabled', false);
+					$('#nvx-refresh-api-count').prop('disabled', false);
 				});
 		});
 	});

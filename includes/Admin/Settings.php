@@ -297,15 +297,12 @@ class Settings {
 		$api_warehouses_count = null;
 
 		if ( ! empty( $settings['api_key'] ) ) {
+			// Перевіряємо виключно вже наявний кеш — більше не робимо синхронного запиту до API Нової Пошти
+			// під час відкриття сторінки налаштувань. Оновлення кількості виконується виключно вручну
+			// за кнопкою оновлення (AJAX nvx_check_warehouses_count), щоб усунути зайві блокування і навантаження.
 			$cached_api_count = get_transient( 'nvx_np_warehouses_total_count' );
 			if ( false !== $cached_api_count && is_numeric( $cached_api_count ) ) {
 				$api_warehouses_count = (int) $cached_api_count;
-			} else {
-				$client               = new \NovaExpress\Api\NovaPoshtaClient( $settings['api_key'] );
-				$api_warehouses_count = $client->get_warehouses_total_count();
-				if ( null !== $api_warehouses_count ) {
-					set_transient( 'nvx_np_warehouses_total_count', $api_warehouses_count, HOUR_IN_SECONDS );
-				}
 			}
 		}
 
