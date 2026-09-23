@@ -58,6 +58,9 @@ class Settings {
 			'label_margin_sides'     => 6,
 			'label_font_size'        => 'medium',
 			'label_align'            => 'center',
+			'label_ttn_font_size'   => 22,
+			'label_barcode_height'  => 50,
+			'label_item_spacing'    => 2,
 			'label_show_barcode'     => 'yes',
 			'label_show_ttn'         => 'yes',
 			'label_show_recipient_name' => 'yes',
@@ -118,6 +121,9 @@ class Settings {
 			'margin_sides'          => (int) ( $all['label_margin_sides'] ?? 6 ),
 			'font_size'             => (string) ( $all['label_font_size'] ?? 'medium' ),
 			'align'                 => (string) ( $all['label_align'] ?? 'center' ),
+			'ttn_font_size'         => (int) ( $all['label_ttn_font_size'] ?? 22 ),
+			'barcode_height'        => (int) ( $all['label_barcode_height'] ?? 50 ),
+			'item_spacing'          => (int) ( $all['label_item_spacing'] ?? 2 ),
 			'show_barcode'          => 'yes' === ( $all['label_show_barcode'] ?? 'yes' ),
 			'show_ttn'              => 'yes' === ( $all['label_show_ttn'] ?? 'yes' ),
 			'show_recipient_name'   => 'yes' === ( $all['label_show_recipient_name'] ?? 'yes' ),
@@ -380,6 +386,9 @@ class Settings {
 		$settings['label_margin_sides']         = max( 0, min( 50, (int) ( $_POST['label_margin_sides'] ?? 6 ) ) );
 		$settings['label_font_size']            = in_array( $_POST['label_font_size'] ?? '', array( 'small', 'medium', 'large' ), true ) ? $_POST['label_font_size'] : 'medium';
 		$settings['label_align']                = in_array( $_POST['label_align'] ?? '', array( 'center', 'left' ), true ) ? $_POST['label_align'] : 'center';
+		$settings['label_ttn_font_size']          = max( 12, min( 48, (int) ( $_POST['label_ttn_font_size'] ?? 22 ) ) );
+		$settings['label_barcode_height']         = max( 20, min( 120, (int) ( $_POST['label_barcode_height'] ?? 50 ) ) );
+		$settings['label_item_spacing']           = max( 0, min( 20, (int) ( $_POST['label_item_spacing'] ?? 2 ) ) );
 		$settings['label_show_barcode']         = ! empty( $_POST['label_show_barcode'] ) ? 'yes' : 'no';
 		$settings['label_show_ttn']             = ! empty( $_POST['label_show_ttn'] ) ? 'yes' : 'no';
 		$settings['label_show_recipient_name']    = ! empty( $_POST['label_show_recipient_name'] ) ? 'yes' : 'no';

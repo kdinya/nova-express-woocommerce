@@ -65,9 +65,9 @@ class LabelPrint {
 			wp_die( esc_html__( 'ТТН не знайдено.', 'wc-nova-express' ) );
 		}
 
-		// Якщо обрано стандартний формат Нової Пошти — редіректимо на захищений PDF-друк НП
+		// Якщо обрано стандартний формат Нової Пошти — стрімимо офіційний PDF через серверний проксі
 		if ( in_array( $format, array( 'np_100x100', 'np_85x85', 'np_document' ), true ) ) {
-			$this->redirect_np_print( $row, $format );
+			$this->stream_np_pdf( $row, $format );
 			return;
 		}
 
@@ -77,9 +77,9 @@ class LabelPrint {
 	}
 
 	/**
-	 * Перенаправлення на офіційний PDF-друк Нової Пошти через API.
+	 * Отримання та стрімінг офіційного PDF-документа Нової Пошти через серверний запит.
 	 */
-	private function redirect_np_print( array $row, string $format ): void {
+	private function stream_np_pdf( array $row, string $format ): void {
 		$api_key = Settings::get_api_key();
 		if ( empty( $api_key ) ) {
 			wp_die( esc_html__( 'API-ключ Нової Пошти не налаштовано в плагіні.', 'wc-nova-express' ) );
@@ -91,41 +91,91 @@ class LabelPrint {
 		}
 
 		$url = '';
+		$filename_prefix = 'np';
 		switch ( $format ) {
 			case 'np_100x100':
 				// Маркування 100х100 (термопринтер Zebra PDF)
 				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printMarking100x100/orders[]/%s/type/pdf/apiKey/%s/zebra',
+					'https://my.novaposhta.ua/orders/printMarking100x100/orders%%5B%%5D/%s/type/pdf/apiKey/%s/zebra',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
+				$filename_prefix = 'marking-100x100';
 				break;
 
 			case 'np_85x85':
 				// Маркування 85х85 PDF
 				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printMarking85x85/orders[]/%s/type/pdf8/apiKey/%s',
+					'https://my.novaposhta.ua/orders/printMarking85x85/orders%%5B%%5D/%s/type/pdf8/apiKey/%s',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
+				$filename_prefix = 'marking-85x85';
 				break;
 
 			case 'np_document':
 				// Експрес-накладна А4 PDF
 				$url = sprintf(
-					'https://my.novaposhta.ua/orders/printDocument/orders[]/%s/type/pdf/apiKey/%s',
+					'https://my.novaposhta.ua/orders/printDocument/orders%%5B%%5D/%s/type/pdf/apiKey/%s',
 					rawurlencode( $ref ),
 					rawurlencode( $api_key )
 				);
+				$filename_prefix = 'document';
 				break;
 		}
 
-		if ( $url ) {
-			wp_redirect( $url );
+		if ( empty( $url ) ) {
+			wp_die( esc_html__( 'Невідомий формат друку.', 'wc-nova-express' ) );
+		}
+
+		$response = wp_remote_get( $url, array(
+			'timeout'    => 25,
+			'sslverify'  => false,
+			'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+			'headers'    => array(
+				'Accept' => 'application/pdf, application/octet-stream, */*',
+			),
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			wp_die(
+				esc_html( sprintf( __( 'Помилка отримання документа від Нової Пошти: %s', 'wc-nova-express' ), $response->get_error_message() ) ),
+				esc_html__( 'Помилка друку', 'wc-nova-express' ),
+				array( 'back_link' => true )
+			);
+		}
+
+		$status_code  = wp_remote_retrieve_response_code( $response );
+		$body         = wp_remote_retrieve_body( $response );
+		$content_type = wp_remote_retrieve_header( $response, 'content-type' );
+
+		$is_pdf = ( false !== strpos( (string) $content_type, 'pdf' ) ) || ( 0 === strncmp( $body, '%PDF', 4 ) );
+
+		if ( 200 === (int) $status_code && $is_pdf && strlen( $body ) > 50 ) {
+			while ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			nocache_headers();
+			header( 'Content-Type: application/pdf' );
+			header( 'Content-Disposition: inline; filename="' . esc_attr( $filename_prefix . '-' . $row['waybill_number'] . '.pdf' ) . '"' );
+			header( 'Content-Length: ' . strlen( $body ) );
+			echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			exit;
 		}
 
-		wp_die( esc_html__( 'Невідомий формат друку.', 'wc-nova-express' ) );
+		$error_msg = esc_html__( 'Не вдалося сформувати PDF від Нової Пошти. Можливі причини: недійсний API-ключ або ТТН ще не внесена до системи друку.', 'wc-nova-express' );
+		if ( false !== strpos( $body, 'errors' ) ) {
+			$json = json_decode( $body, true );
+			if ( ! empty( $json['errors'] ) && is_array( $json['errors'] ) ) {
+				$error_msg .= ' ' . implode( '; ', array_map( 'esc_html', $json['errors'] ) );
+			}
+		}
+
+		wp_die(
+			$error_msg, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			esc_html__( 'Помилка друку', 'wc-nova-express' ),
+			array( 'back_link' => true )
+		);
 	}
 
 	/**
@@ -179,9 +229,10 @@ class LabelPrint {
 		}
 
 		// Генерація штрих-коду
+		$barcode_height = max( 20, (int) ( $tpl['barcode_height'] ?? 50 ) );
 		$barcode_svg = '';
 		if ( ! empty( $tpl['show_barcode'] ) && '' !== $number ) {
-			$barcode_svg = Barcode::code128_svg( $number, 54, 2 );
+			$barcode_svg = Barcode::code128_svg( $number, $barcode_height, 2 );
 		}
 
 		$width        = max( 40, (int) $tpl['width'] );
@@ -196,6 +247,8 @@ class LabelPrint {
 			'large'  => array( 'ttn' => '26pt', 'name' => '16pt', 'text' => '13pt' ),
 		);
 		$sizes = $font_size_map[ $tpl['font_size'] ] ?? $font_size_map['medium'];
+		$ttn_size = ! empty( $tpl['ttn_font_size'] ) ? ( (int) $tpl['ttn_font_size'] . 'pt' ) : $sizes['ttn'];
+		$item_spacing = max( 0, (int) ( $tpl['item_spacing'] ?? 2 ) );
 
 		while ( ob_get_level() > 0 ) {
 			ob_end_clean();
@@ -230,40 +283,40 @@ class LabelPrint {
 			text-align: <?php echo esc_attr( $align ); ?>;
 		}
 		.ttn-wrap {
-			margin-bottom: 2mm;
+			margin-bottom: <?php echo (int) $item_spacing; ?>mm;
 		}
 		.ttn {
-			font-size: <?php echo esc_attr( $sizes['ttn'] ); ?>;
+			font-size: <?php echo esc_attr( $ttn_size ); ?>;
 			font-weight: 700;
 			letter-spacing: 0.04em;
 			line-height: 1.15;
 			word-break: break-all;
 		}
 		.barcode {
-			margin: 1.5mm 0 2mm 0;
+			margin: <?php echo (int) $item_spacing; ?>mm 0;
 			max-width: 100%;
 		}
 		.barcode svg {
 			display: block;
 			margin: 0 <?php echo 'left' === $align ? '0' : 'auto'; ?>;
 			max-width: 100%;
-			height: 50px;
+			height: <?php echo (int) $barcode_height; ?>px;
 		}
 		.name {
-			margin-top: 1.5mm;
+			margin-top: <?php echo (int) $item_spacing; ?>mm;
 			font-size: <?php echo esc_attr( $sizes['name'] ); ?>;
 			font-weight: 600;
 			line-height: 1.25;
 		}
 		.info-row {
-			margin-top: 1.5mm;
+			margin-top: <?php echo (int) $item_spacing; ?>mm;
 			font-size: <?php echo esc_attr( $sizes['text'] ); ?>;
 			line-height: 1.3;
 			color: #222;
 		}
 		.order-badge {
 			display: inline-block;
-			margin-top: 2mm;
+			margin-top: <?php echo (int) $item_spacing; ?>mm;
 			padding: 1.5px 5px;
 			border: 1px solid #333;
 			border-radius: 3px;
@@ -272,7 +325,7 @@ class LabelPrint {
 		}
 		.items-table {
 			width: 100%;
-			margin-top: 2.5mm;
+			margin-top: <?php echo (int) $item_spacing; ?>mm;
 			border-collapse: collapse;
 			font-size: 9.5pt;
 			text-align: left;
@@ -282,7 +335,7 @@ class LabelPrint {
 			border-bottom: 1px solid #ddd;
 		}
 		.note {
-			margin-top: 3mm;
+			margin-top: <?php echo (int) $item_spacing; ?>mm;
 			font-size: 9.5pt;
 			font-style: italic;
 			color: #444;
