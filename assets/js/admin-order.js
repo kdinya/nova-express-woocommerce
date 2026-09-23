@@ -2,28 +2,29 @@
 jQuery(function ($) {
 	'use strict';
 
+	function triggerPrintModal(opts, attempts) {
+		attempts = attempts || 0;
+		if (window.NvxCore && typeof window.NvxCore.openPrintModal === 'function') {
+			window.NvxCore.openPrintModal(opts);
+		} else if (attempts < 10) {
+			setTimeout(function () {
+				triggerPrintModal(opts, attempts + 1);
+			}, 100);
+		}
+	}
+
 	// Відкриття вибору формату друку ТТН у фірмовому модальному вікні
 	$(document).on('click', '.nvx-waybill-card__print', function (e) {
 		e.preventDefault();
 		e.stopPropagation();
 		var $btn = $(this);
-		var urlCustom = $btn.data('url-custom');
-		var urlNp100  = $btn.data('url-np100');
-		var urlNp85   = $btn.data('url-np85');
-		var urlNpDoc  = $btn.data('url-npdoc');
-		var ttnNum    = $btn.data('ttn');
-
-		if (window.NvxCore && typeof window.NvxCore.openPrintModal === 'function') {
-			window.NvxCore.openPrintModal({
-				ttnNumber: ttnNum,
-				urlCustom: urlCustom,
-				urlNp100:  urlNp100,
-				urlNp85:   urlNp85,
-				urlNpDoc:  urlNpDoc
-			});
-		} else {
-			window.open(urlCustom || '#', '_blank');
-		}
+		triggerPrintModal({
+			ttnNumber: $btn.data('ttn'),
+			urlCustom: $btn.data('url-custom'),
+			urlNp100:  $btn.data('url-np100'),
+			urlNp85:   $btn.data('url-np85'),
+			urlNpDoc:  $btn.data('url-npdoc')
+		});
 	});
 
 	var $panel = $('.nvx-order-panel');

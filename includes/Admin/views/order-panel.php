@@ -49,15 +49,14 @@ $has_active_ttn = ! empty( $waybills );
 				</div>
 
 				<div class="nvx-waybill-card__actions">
-					<a class="nvx-btn nvx-btn--primary nvx-btn--sm nvx-waybill-card__print" target="_blank" rel="noopener"
+					<button type="button" class="nvx-btn nvx-btn--primary nvx-btn--sm nvx-waybill-card__print"
 						data-ttn="<?php echo esc_attr( $w['waybill_number'] ); ?>"
 						data-url-custom="<?php echo esc_url( \NovaExpress\Admin\LabelPrint::url( (int) $w['id'], (int) $order->get_id(), 'custom' ) ); ?>"
 						data-url-np100="<?php echo esc_url( \NovaExpress\Admin\LabelPrint::url( (int) $w['id'], (int) $order->get_id(), 'np_100x100' ) ); ?>"
 						data-url-np85="<?php echo esc_url( \NovaExpress\Admin\LabelPrint::url( (int) $w['id'], (int) $order->get_id(), 'np_85x85' ) ); ?>"
-						data-url-npdoc="<?php echo esc_url( \NovaExpress\Admin\LabelPrint::url( (int) $w['id'], (int) $order->get_id(), 'np_document' ) ); ?>"
-						href="<?php echo esc_url( \NovaExpress\Admin\LabelPrint::url( (int) $w['id'], (int) $order->get_id(), 'custom' ) ); ?>">
+						data-url-npdoc="<?php echo esc_url( \NovaExpress\Admin\LabelPrint::url( (int) $w['id'], (int) $order->get_id(), 'np_document' ) ); ?>">
 						<?php esc_html_e( 'Друк', 'wc-nova-express' ); ?>
-					</a>
+					</button>
 					<button type="button" class="nvx-btn nvx-btn--ghost nvx-btn--sm nvx-waybill-card__refresh">
 						<?php esc_html_e( 'Оновити', 'wc-nova-express' ); ?>
 					</button>
