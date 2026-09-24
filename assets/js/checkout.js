@@ -502,6 +502,9 @@ jQuery(function ($) {
 
 	// Блокуємо оформлення замовлення з неповним номером і показуємо повідомлення
 	$(document.body).on('checkout_place_order', function () {
+		if (isNovaExpressChosen()) {
+			$('#billing_postcode, #shipping_postcode').val('');
+		}
 		if (typeof window.NVX_CHECKOUT !== 'undefined' && !window.NVX_CHECKOUT.enablePhoneMask) {
 			return;
 		}

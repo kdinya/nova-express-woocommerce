@@ -114,12 +114,18 @@ class AddressFields {
 		if ( '' !== $city_name && '' === $order->get_meta( '_nvx_city_name' ) ) {
 			$order->update_meta_data( '_nvx_city_name', $city_name );
 			$order->set_shipping_city( $city_name );
+			$order->set_billing_city( $city_name );
 		}
+		$order->set_shipping_postcode( '' );
+		$order->set_billing_postcode( '' );
 		if ( '' !== $warehouse && '' === $order->get_meta( '_nvx_warehouse_label' ) ) {
 			// На блоковому чекауті це просто вільний текст (без Ref) — адміну
 			// доведеться підтвердити відділення на сторінці створення ТТН.
 			$order->update_meta_data( '_nvx_warehouse_label', $warehouse );
 			$order->set_shipping_address_1( $warehouse );
+			$order->set_billing_address_1( $warehouse );
+			$order->set_shipping_address_2( '' );
+			$order->set_billing_address_2( '' );
 		}
 
 		$order->save();
@@ -273,23 +279,31 @@ class AddressFields {
 		// у картці замовлення, листах, PDF-накладних та чеках.
 		if ( ! empty( $city_name ) ) {
 			$order->set_shipping_city( $city_name );
-			if ( empty( $order->get_billing_city() ) ) {
-				$order->set_billing_city( $city_name );
-			}
+			$order->set_billing_city( $city_name );
 		}
+
+		// Для Нової Пошти поштовий індекс сторонніх служб (наприклад, Укрпошти) не потрібен
+		$order->set_shipping_postcode( '' );
+		$order->set_billing_postcode( '' );
 
 		if ( TtnManager::SERVICE_WAREHOUSE_WAREHOUSE === $service_type && ! empty( $warehouse_label ) ) {
 			$order->set_shipping_address_1( $warehouse_label );
-			if ( empty( $order->get_billing_address_1() ) ) {
-				$order->set_billing_address_1( $warehouse_label );
-			}
+			$order->set_billing_address_1( $warehouse_label );
+			$order->set_shipping_address_2( '' );
+			$order->set_billing_address_2( '' );
 		} elseif ( TtnManager::SERVICE_DOORS_DOORS === $service_type ) {
 			$address_line = trim( $street_name . ' ' . $building );
 			if ( ! empty( $address_line ) ) {
 				$order->set_shipping_address_1( $address_line );
+				$order->set_billing_address_1( $address_line );
 			}
 			if ( ! empty( $apartment ) ) {
-				$order->set_shipping_address_2( __( 'кв./офіс ', 'wc-nova-express' ) . $apartment );
+				$apt_text = __( 'кв./офіс ', 'wc-nova-express' ) . $apartment;
+				$order->set_shipping_address_2( $apt_text );
+				$order->set_billing_address_2( $apt_text );
+			} else {
+				$order->set_shipping_address_2( '' );
+				$order->set_billing_address_2( '' );
 			}
 		}
 	}

@@ -56,14 +56,20 @@ class OrderMetaBox {
 			$address['address_1'] = trim( $street_name . ' ' . $building );
 			if ( '' !== $apartment ) {
 				$address['address_2'] = __( 'кв./офіс ', 'wc-nova-express' ) . $apartment;
+			} else {
+				unset( $address['address_2'] );
 			}
 		} elseif ( '' !== $warehouse_label ) {
 			$address['address_1'] = $warehouse_label;
+			unset( $address['address_2'] );
 		}
 
 		if ( '' !== $city_name ) {
 			$address['city'] = $city_name;
 		}
+
+		// Для замовлень Нової Пошти виключаємо поштовий індекс сторонніх служб
+		unset( $address['postcode'] );
 
 		return $address;
 	}
